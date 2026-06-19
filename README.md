@@ -13,6 +13,6 @@ GitHub Pages:
 Cloudflare Pages:
 - Create a Pages project connected to the GitHub repo.
 - Build command: leave blank
-- Output directory: `/` if this folder is the repo root, or `outputs/neha-guide` if deployed from the larger workspace.
+- Output directory: `/` if this folder is the repo root.
 
 No backend or build step is required.
