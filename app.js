@@ -10,10 +10,16 @@ const state = {
   venueMap: "exhibit",
   pendingConflict: null,
   drinkRedeemed: localStorage.getItem("nehaFreeDrinkRedeemed") === "true",
+  lead: JSON.parse(localStorage.getItem("nehaLead") || "null"),
   saved: JSON.parse(localStorage.getItem("nehaSaved") || '{"watch":{},"attend":{}}')
 };
 
 const els = {
+  leadGate: document.querySelector("#leadGate"),
+  leadForm: document.querySelector("#leadForm"),
+  leadName: document.querySelector("#leadName"),
+  leadAgency: document.querySelector("#leadAgency"),
+  leadEmail: document.querySelector("#leadEmail"),
   title: document.querySelector("#viewTitle"),
   search: document.querySelector("#searchInput"),
   dayTabs: document.querySelector("#dayTabs"),
@@ -91,6 +97,23 @@ document.querySelectorAll(".nav-item").forEach((button) => {
   button.addEventListener("click", () => setView(button.dataset.view));
 });
 
+els.leadForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const lead = {
+    name: els.leadName.value.trim(),
+    agency: els.leadAgency.value.trim(),
+    email: els.leadEmail.value.trim(),
+    capturedAt: new Date().toISOString()
+  };
+  if (!lead.name || !lead.agency || !lead.email || !els.leadEmail.checkValidity()) {
+    els.leadForm.reportValidity();
+    return;
+  }
+  state.lead = lead;
+  localStorage.setItem("nehaLead", JSON.stringify(lead));
+  renderLeadGate();
+});
+
 els.search.addEventListener("input", (event) => {
   state.query = event.target.value.trim().toLowerCase();
   renderSchedule();
@@ -128,6 +151,8 @@ els.freeDrinkButton.addEventListener("click", () => {
   localStorage.setItem("nehaFreeDrinkRedeemed", "true");
   renderFreeDrink();
 });
+
+renderLeadGate();
 
 async function loadData() {
   if (window.NEHA_DATA?.sessions?.length && window.NEHA_DATA?.guide) {
@@ -187,7 +212,14 @@ function renderAll() {
   renderPlaces();
   renderVenue();
   renderFreeDrink();
+  renderLeadGate();
   updateSavedCounts();
+}
+
+function renderLeadGate() {
+  const hasLead = Boolean(state.lead?.name && state.lead?.agency && state.lead?.email);
+  els.leadGate.hidden = hasLead;
+  document.body.classList.toggle("lead-locked", !hasLead);
 }
 
 function renderFreeDrink() {

@@ -7,6 +7,29 @@
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
+    <div id="leadGate" class="lead-gate" hidden>
+      <form id="leadForm" class="lead-card">
+        <img class="lead-logo" src="assets/hs-govtech-logo.png" alt="HS GovTech logo">
+        <p class="eyebrow">NEHA AEC 2026 Guide</p>
+        <h2>Welcome</h2>
+        <p class="lead-copy">Tell us who is using the guide, then you are in for the rest of the conference on this phone.</p>
+        <label>
+          Name
+          <input id="leadName" name="name" type="text" autocomplete="name" required>
+        </label>
+        <label>
+          What agency are you with?
+          <input id="leadAgency" name="agency" type="text" autocomplete="organization" required>
+        </label>
+        <label>
+          Email
+          <input id="leadEmail" name="email" type="email" autocomplete="email" required>
+        </label>
+        <button type="submit">Enter Guide</button>
+        <p class="lead-note">Saved only on this device for now. Central lead export can be connected next.</p>
+      </form>
+    </div>
+
     <div class="app-shell">
       <aside class="rail" aria-label="Primary navigation">
         <div class="brand-lockup">
