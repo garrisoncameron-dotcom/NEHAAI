@@ -105,6 +105,11 @@ body.lead-locked {
   font-weight: 900;
 }
 
+.lead-card button:disabled {
+  background: #9aa8b5;
+  cursor: wait;
+}
+
 button,
 input,
 select {

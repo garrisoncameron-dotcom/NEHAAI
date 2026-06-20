@@ -20,6 +20,7 @@ const els = {
   leadName: document.querySelector("#leadName"),
   leadAgency: document.querySelector("#leadAgency"),
   leadEmail: document.querySelector("#leadEmail"),
+  leadNote: document.querySelector("#leadNote"),
   title: document.querySelector("#viewTitle"),
   search: document.querySelector("#searchInput"),
   dayTabs: document.querySelector("#dayTabs"),
@@ -97,21 +98,37 @@ document.querySelectorAll(".nav-item").forEach((button) => {
   button.addEventListener("click", () => setView(button.dataset.view));
 });
 
-els.leadForm.addEventListener("submit", (event) => {
+els.leadForm.addEventListener("submit", async (event) => {
   event.preventDefault();
+  const submitButton = els.leadForm.querySelector('button[type="submit"]');
   const lead = {
     name: els.leadName.value.trim(),
     agency: els.leadAgency.value.trim(),
     email: els.leadEmail.value.trim(),
-    capturedAt: new Date().toISOString()
+    capturedAt: new Date().toISOString(),
+    source: "NEHA AEC 2026 Guide",
+    page: location.href,
+    userAgent: navigator.userAgent
   };
   if (!lead.name || !lead.agency || !lead.email || !els.leadEmail.checkValidity()) {
     els.leadForm.reportValidity();
     return;
   }
-  state.lead = lead;
-  localStorage.setItem("nehaLead", JSON.stringify(lead));
-  renderLeadGate();
+  submitButton.disabled = true;
+  submitButton.textContent = "Saving...";
+  try {
+    await submitLead(lead);
+    state.lead = lead;
+    localStorage.setItem("nehaLead", JSON.stringify(lead));
+    localStorage.setItem("nehaLeadSubmittedAt", new Date().toISOString());
+    renderLeadGate();
+  } catch (error) {
+    els.leadNote.textContent = "Could not save your pass yet. Please check your connection and try again.";
+    console.error(error);
+  } finally {
+    submitButton.disabled = false;
+    submitButton.textContent = "Enter Guide";
+  }
 });
 
 els.search.addEventListener("input", (event) => {
@@ -169,6 +186,19 @@ async function loadData() {
     })
   ]);
   return [sessions, guide];
+}
+
+async function submitLead(lead) {
+  const endpoint = window.NEHA_LEAD_ENDPOINT || "";
+  if (!endpoint) {
+    console.warn("Lead endpoint is not configured. Saving locally only.");
+    return;
+  }
+  await fetch(endpoint, {
+    method: "POST",
+    mode: "no-cors",
+    body: JSON.stringify(lead)
+  });
 }
 
 function setView(view) {
