@@ -1,10 +1,12 @@
 const SHEET_ID = "1ya26Sqt2GlpUDspUcreXEhDySgYGIlUGcsApV6zDf5s";
 const SHEET_NAME = "NEHA Leads";
 const TRIVIA_SHEET_NAME = "Trivia Scores";
+const DEMO_SHEET_NAME = "Demo Requests";
 
 function doPost(e) {
   const payload = JSON.parse(e.postData.contents || "{}");
   if (payload.type === "triviaScore") return recordTriviaScore_(payload);
+  if (payload.type === "demoRequest") return recordDemoRequest_(payload);
   return recordLead_(payload);
 }
 
@@ -66,6 +68,25 @@ function recordTriviaScore_(payload) {
     .setMimeType(ContentService.MimeType.JSON);
 }
 
+function recordDemoRequest_(payload) {
+  const sheet = getDemoSheet_();
+  sheet.appendRow([
+    new Date(),
+    payload.name || "",
+    payload.agency || "",
+    payload.email || "",
+    payload.phone || "",
+    payload.notes || "",
+    payload.requestedAt || "",
+    payload.source || "",
+    payload.page || ""
+  ]);
+
+  return ContentService
+    .createTextOutput(JSON.stringify({ ok: true }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
 function getLeadSheet_() {
   const spreadsheet = SpreadsheetApp.openById(SHEET_ID);
   let sheet = spreadsheet.getSheetByName(SHEET_NAME);
@@ -81,6 +102,28 @@ function getLeadSheet_() {
       "Source",
       "Page",
       "User Agent"
+    ]);
+  }
+
+  return sheet;
+}
+
+function getDemoSheet_() {
+  const spreadsheet = SpreadsheetApp.openById(SHEET_ID);
+  let sheet = spreadsheet.getSheetByName(DEMO_SHEET_NAME);
+  if (!sheet) sheet = spreadsheet.insertSheet(DEMO_SHEET_NAME);
+
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow([
+      "Received At",
+      "Name",
+      "Agency",
+      "Email",
+      "Phone",
+      "Notes",
+      "Requested At",
+      "Source",
+      "Page"
     ]);
   }
 

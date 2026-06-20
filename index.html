@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-title" content="NEHA Guide">
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="apple-touch-icon" href="assets/icon-192.png">
-    <link rel="stylesheet" href="styles.css?v=20260619-morenav">
+    <link rel="stylesheet" href="styles.css?v=20260619-demo">
   </head>
   <body>
     <div id="leadGate" class="lead-gate" hidden>
@@ -56,12 +56,14 @@
           <button class="nav-item more-item" data-view="kc" type="button">KC</button>
           <button class="nav-item more-item" data-view="venue" type="button">Venue</button>
           <button class="nav-item podcast-nav more-item" data-view="podcast" type="button">Podcast</button>
+          <button class="nav-item demo-nav more-item" data-view="demo" type="button">Book Demo</button>
           <button class="nav-item drink-nav more-item" data-view="drink" type="button">FREE DRINK</button>
         </nav>
         <div id="moreMenu" class="more-menu" hidden>
           <button class="more-menu-item" data-view="kc" type="button">Kansas City</button>
           <button class="more-menu-item" data-view="venue" type="button">Venue</button>
           <button class="more-menu-item" data-view="podcast" type="button">Podcast</button>
+          <button class="more-menu-item demo-nav" data-view="demo" type="button">Book Demo</button>
           <button class="more-menu-item drink-nav" data-view="drink" type="button">FREE DRINK</button>
         </div>
         <div class="rail-summary">
@@ -177,6 +179,40 @@
           <div id="podcastGrid" class="podcast-grid"></div>
         </section>
 
+        <section id="demoView" class="view">
+          <div class="demo-panel">
+            <div class="demo-copy">
+              <p class="eyebrow">HSCloud Suite</p>
+              <h2>Book a Demo</h2>
+              <p>Enter your information and someone will reach out to facilitate an HSCloud Suite demo.</p>
+            </div>
+            <form id="demoForm" class="demo-form">
+              <label>
+                Name
+                <input id="demoName" name="name" type="text" autocomplete="name" required>
+              </label>
+              <label>
+                Agency
+                <input id="demoAgency" name="agency" type="text" autocomplete="organization" required>
+              </label>
+              <label>
+                Email
+                <input id="demoEmail" name="email" type="email" autocomplete="email" required>
+              </label>
+              <label>
+                Phone
+                <input id="demoPhone" name="phone" type="tel" autocomplete="tel">
+              </label>
+              <label class="wide-field">
+                What would you like to see?
+                <textarea id="demoNotes" name="notes" rows="4" placeholder="Permitting, inspections, citizen portal, mobile field tools, data/reporting..."></textarea>
+              </label>
+              <button type="submit">Request Demo</button>
+              <p id="demoStatus" class="demo-status"></p>
+            </form>
+          </div>
+        </section>
+
         <section id="triviaView" class="view">
           <div class="trivia-shell">
             <div class="trivia-hero">
@@ -235,6 +271,6 @@
 
     <script src="data-bundle.js?v=20260619-lunchbreak"></script>
     <script src="lead-config.js?v=20260619"></script>
-    <script src="app.js?v=20260619-morenav"></script>
+    <script src="app.js?v=20260619-demo"></script>
   </body>
 </html>

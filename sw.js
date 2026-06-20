@@ -1,9 +1,9 @@
-const CACHE_NAME = "neha-guide-v20260619-morenav";
+const CACHE_NAME = "neha-guide-v20260619-demo";
 const APP_ASSETS = [
   "./",
   "index.html",
-  "styles.css?v=20260619-morenav",
-  "app.js?v=20260619-morenav",
+  "styles.css?v=20260619-demo",
+  "app.js?v=20260619-demo",
   "data-bundle.js?v=20260619-lunchbreak",
   "lead-config.js?v=20260619",
   "manifest.webmanifest",

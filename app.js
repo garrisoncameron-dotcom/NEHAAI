@@ -64,6 +64,13 @@ const els = {
   venueMapImage: document.querySelector("#venueMapImage"),
   venueMapCaption: document.querySelector("#venueMapCaption"),
   podcastGrid: document.querySelector("#podcastGrid"),
+  demoForm: document.querySelector("#demoForm"),
+  demoName: document.querySelector("#demoName"),
+  demoAgency: document.querySelector("#demoAgency"),
+  demoEmail: document.querySelector("#demoEmail"),
+  demoPhone: document.querySelector("#demoPhone"),
+  demoNotes: document.querySelector("#demoNotes"),
+  demoStatus: document.querySelector("#demoStatus"),
   triviaScore: document.querySelector("#triviaScore"),
   triviaProgressBar: document.querySelector("#triviaProgressBar"),
   triviaStage: document.querySelector("#triviaStage"),
@@ -83,6 +90,7 @@ const viewTitles = {
   kc: "Things To Do In Kansas City",
   venue: "Venue Navigator",
   podcast: "Beyond Data Management",
+  demo: "Book an HSCloud Demo",
   trivia: "EH Trivia Game",
   drink: "FREE DRINK"
 };
@@ -339,6 +347,41 @@ els.placeFilter.addEventListener("change", (event) => {
   renderPlaces();
 });
 
+els.demoForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const submitButton = els.demoForm.querySelector('button[type="submit"]');
+  const request = {
+    type: "demoRequest",
+    name: els.demoName.value.trim(),
+    agency: els.demoAgency.value.trim(),
+    email: els.demoEmail.value.trim(),
+    phone: els.demoPhone.value.trim(),
+    notes: els.demoNotes.value.trim(),
+    requestedAt: new Date().toISOString(),
+    source: "NEHA AEC 2026 Guide",
+    page: location.href
+  };
+  if (!request.name || !request.agency || !request.email || !els.demoEmail.checkValidity()) {
+    els.demoForm.reportValidity();
+    return;
+  }
+  submitButton.disabled = true;
+  submitButton.textContent = "Sending...";
+  els.demoStatus.textContent = "";
+  try {
+    await submitAppPayload(request);
+    els.demoStatus.textContent = "Demo request sent. Someone from HS GovTech will reach out.";
+    els.demoForm.reset();
+    prefillDemoForm();
+  } catch (error) {
+    els.demoStatus.textContent = "Could not send yet. Please check your connection and try again.";
+    console.error(error);
+  } finally {
+    submitButton.disabled = false;
+    submitButton.textContent = "Request Demo";
+  }
+});
+
 els.freeDrinkButton.addEventListener("click", () => {
   if (state.drinkRedeemed) return;
   state.drinkRedeemed = true;
@@ -440,12 +483,13 @@ async function submitAppPayload(payload) {
 function setView(view) {
   document.querySelectorAll(".nav-item[data-view]").forEach((item) => item.classList.toggle("active", item.dataset.view === view));
   document.querySelectorAll(".more-menu-item[data-view]").forEach((item) => item.classList.toggle("active", item.dataset.view === view));
-  els.moreMenuButton.classList.toggle("active", ["kc", "venue", "podcast", "drink"].includes(view));
+  els.moreMenuButton.classList.toggle("active", ["kc", "venue", "podcast", "demo", "drink"].includes(view));
   document.querySelectorAll(".view").forEach((panel) => panel.classList.toggle("active", panel.id === `${view}View`));
   els.title.textContent = viewTitles[view];
   els.search.style.display = view === "schedule" ? "block" : "none";
   if (view === "my") renderMySchedule();
   if (view === "podcast") renderPodcast();
+  if (view === "demo") prefillDemoForm();
   if (view === "trivia") renderTrivia();
   if (view === "drink") renderFreeDrink();
 }
@@ -457,6 +501,12 @@ function toggleMoreMenu(open) {
 
 function closeMoreMenu() {
   toggleMoreMenu(false);
+}
+
+function prefillDemoForm() {
+  if (!els.demoName.value) els.demoName.value = state.lead?.name || "";
+  if (!els.demoAgency.value) els.demoAgency.value = state.lead?.agency || "";
+  if (!els.demoEmail.value) els.demoEmail.value = state.lead?.email || "";
 }
 
 function hydrateControls() {
