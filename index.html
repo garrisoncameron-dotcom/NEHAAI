@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-title" content="NEHA Guide">
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="apple-touch-icon" href="assets/icon-192.png">
-    <link rel="stylesheet" href="styles.css?v=20260619-prizetease">
+    <link rel="stylesheet" href="styles.css?v=20260619-morenav">
   </head>
   <body>
     <div id="leadGate" class="lead-gate" hidden>
@@ -38,22 +38,32 @@
     <div class="app-shell">
       <aside class="rail" aria-label="Primary navigation">
         <div class="brand-lockup">
-          <img class="brand-logo" src="assets/hs-govtech-logo.png" alt="HS GovTech logo">
-          <div>
-            <strong>HS GovTech</strong>
-            <small>NEHA Navigator</small>
+          <div class="brand-main">
+            <img class="brand-logo" src="assets/hs-govtech-logo.png" alt="HS GovTech logo">
+            <div>
+              <strong>HS GovTech</strong>
+              <small>NEHA Navigator</small>
+            </div>
           </div>
+          <button id="installAppButton" class="install-button" type="button">Save</button>
         </div>
         <nav class="nav-list">
           <button class="nav-item active" data-view="schedule" type="button">Schedule</button>
           <button class="nav-item" data-view="my" type="button">MyNEHA</button>
           <button class="nav-item" data-view="ai" type="button">AI Guide</button>
-          <button class="nav-item" data-view="kc" type="button">KC</button>
-          <button class="nav-item" data-view="venue" type="button">Venue</button>
-          <button class="nav-item podcast-nav" data-view="podcast" type="button">Podcast</button>
           <button class="nav-item trivia-nav" data-view="trivia" type="button">EH Trivia</button>
-          <button class="nav-item drink-nav" data-view="drink" type="button">FREE DRINK</button>
+          <button id="moreMenuButton" class="nav-item more-nav mobile-only" type="button" aria-expanded="false" aria-controls="moreMenu">More</button>
+          <button class="nav-item more-item" data-view="kc" type="button">KC</button>
+          <button class="nav-item more-item" data-view="venue" type="button">Venue</button>
+          <button class="nav-item podcast-nav more-item" data-view="podcast" type="button">Podcast</button>
+          <button class="nav-item drink-nav more-item" data-view="drink" type="button">FREE DRINK</button>
         </nav>
+        <div id="moreMenu" class="more-menu" hidden>
+          <button class="more-menu-item" data-view="kc" type="button">Kansas City</button>
+          <button class="more-menu-item" data-view="venue" type="button">Venue</button>
+          <button class="more-menu-item" data-view="podcast" type="button">Podcast</button>
+          <button class="more-menu-item drink-nav" data-view="drink" type="button">FREE DRINK</button>
+        </div>
         <div class="rail-summary">
           <span id="attendCount">0 attending</span>
           <span id="watchCount">0 watching</span>
@@ -66,7 +76,6 @@
             <p class="eyebrow">NEHA AEC 2026 - Kansas City</p>
             <h1 id="viewTitle">Conference Schedule</h1>
           </div>
-          <button id="installAppButton" class="install-button" type="button">Download App</button>
           <div class="search-wrap">
             <input id="searchInput" type="search" placeholder="Search sessions, rooms, tags">
           </div>
@@ -226,6 +235,6 @@
 
     <script src="data-bundle.js?v=20260619-lunchbreak"></script>
     <script src="lead-config.js?v=20260619"></script>
-    <script src="app.js?v=20260619-prizetease"></script>
+    <script src="app.js?v=20260619-morenav"></script>
   </body>
 </html>

@@ -68,6 +68,8 @@ const els = {
   triviaProgressBar: document.querySelector("#triviaProgressBar"),
   triviaStage: document.querySelector("#triviaStage"),
   installAppButton: document.querySelector("#installAppButton"),
+  moreMenuButton: document.querySelector("#moreMenuButton"),
+  moreMenu: document.querySelector("#moreMenu"),
   freeDrinkButton: document.querySelector("#freeDrinkButton"),
   freeDrinkStatus: document.querySelector("#freeDrinkStatus"),
   watchCount: document.querySelector("#watchCount"),
@@ -90,7 +92,7 @@ const podcastEpisodes = [
     id: "ZVCYECYqdss",
     title: "A First Look at Wiley: AFDO's New AI - Ep38 Jason Brill",
     url: "https://www.youtube.com/watch?v=ZVCYECYqdss",
-    embed: "https://www.youtube.com/embed/ZVCYECYqdss",
+    thumbnail: "https://i3.ytimg.com/vi/ZVCYECYqdss/hqdefault.jpg",
     published: "Jun 15, 2026",
     description: "AFDO's Jason Brill joins Beyond Data Management for a look at Wiley, a new AI tool for food safety and health regulators."
   },
@@ -98,7 +100,7 @@ const podcastEpisodes = [
     id: "aK-9_umXkFk",
     title: "Steve Mandernach previews AFDO 26 and discusses AI, FDA Collaboration, and the Future of Food Safety",
     url: "https://www.youtube.com/watch?v=aK-9_umXkFk",
-    embed: "https://www.youtube.com/embed/aK-9_umXkFk",
+    thumbnail: "https://i2.ytimg.com/vi/aK-9_umXkFk/hqdefault.jpg",
     published: "Jun 1, 2026",
     description: "Cameron Garrison and AFDO Executive Director Steve Mandernach discuss inspections, training, AI, FSMA, and the future of food safety."
   },
@@ -106,7 +108,7 @@ const podcastEpisodes = [
     id: "cHmadBE2If0",
     title: "Traumatic Insemination: Bed Bugs Are Even Grosser Than You Imagined",
     url: "https://www.youtube.com/watch?v=cHmadBE2If0",
-    embed: "https://www.youtube.com/embed/cHmadBE2If0",
+    thumbnail: "https://i4.ytimg.com/vi/cHmadBE2If0/hqdefault.jpg",
     published: "Apr 21, 2026",
     description: "Dr. Aaron Ashbrook breaks down bed bug science and what environmental health professionals should know."
   },
@@ -114,7 +116,7 @@ const podcastEpisodes = [
     id: "Y-_L57-e98g",
     title: "\"I Just Remembered I Have to Take This Call\" - Smart De-Escalation Tricks for Regulators",
     url: "https://www.youtube.com/watch?v=Y-_L57-e98g",
-    embed: "https://www.youtube.com/embed/Y-_L57-e98g",
+    thumbnail: "https://i2.ytimg.com/vi/Y-_L57-e98g/hqdefault.jpg",
     published: "Apr 14, 2026",
     description: "Alicia Love shares practical de-escalation approaches for regulators in tense field situations."
   }
@@ -261,8 +263,16 @@ loadData().then(([sessions, guide]) => {
   console.error(error);
 });
 
-document.querySelectorAll(".nav-item").forEach((button) => {
-  button.addEventListener("click", () => setView(button.dataset.view));
+document.querySelectorAll(".nav-item[data-view], .more-menu-item[data-view]").forEach((button) => {
+  button.addEventListener("click", () => {
+    closeMoreMenu();
+    setView(button.dataset.view);
+  });
+});
+
+els.moreMenuButton.addEventListener("click", () => {
+  const expanded = els.moreMenuButton.getAttribute("aria-expanded") === "true";
+  toggleMoreMenu(!expanded);
 });
 
 els.leadForm.addEventListener("submit", async (event) => {
@@ -381,7 +391,7 @@ window.addEventListener("beforeinstallprompt", (event) => {
 
 window.addEventListener("appinstalled", () => {
   state.installPrompt = null;
-  els.installAppButton.textContent = "App Saved";
+  els.installAppButton.textContent = "Saved";
   els.installAppButton.disabled = true;
 });
 
@@ -428,7 +438,9 @@ async function submitAppPayload(payload) {
 }
 
 function setView(view) {
-  document.querySelectorAll(".nav-item").forEach((item) => item.classList.toggle("active", item.dataset.view === view));
+  document.querySelectorAll(".nav-item[data-view]").forEach((item) => item.classList.toggle("active", item.dataset.view === view));
+  document.querySelectorAll(".more-menu-item[data-view]").forEach((item) => item.classList.toggle("active", item.dataset.view === view));
+  els.moreMenuButton.classList.toggle("active", ["kc", "venue", "podcast", "drink"].includes(view));
   document.querySelectorAll(".view").forEach((panel) => panel.classList.toggle("active", panel.id === `${view}View`));
   els.title.textContent = viewTitles[view];
   els.search.style.display = view === "schedule" ? "block" : "none";
@@ -436,6 +448,15 @@ function setView(view) {
   if (view === "podcast") renderPodcast();
   if (view === "trivia") renderTrivia();
   if (view === "drink") renderFreeDrink();
+}
+
+function toggleMoreMenu(open) {
+  els.moreMenu.hidden = !open;
+  els.moreMenuButton.setAttribute("aria-expanded", String(open));
+}
+
+function closeMoreMenu() {
+  toggleMoreMenu(false);
 }
 
 function hydrateControls() {
@@ -496,11 +517,11 @@ function renderFreeDrink() {
 
 function renderInstallButton() {
   if (window.matchMedia("(display-mode: standalone)").matches || navigator.standalone) {
-    els.installAppButton.textContent = "App Saved";
+    els.installAppButton.textContent = "Saved";
     els.installAppButton.disabled = true;
     return;
   }
-  els.installAppButton.textContent = state.installPrompt ? "Download App" : "Save App";
+  els.installAppButton.textContent = state.installPrompt ? "Download" : "Save";
   els.installAppButton.disabled = false;
 }
 
@@ -716,9 +737,10 @@ function renderVenue() {
 function renderPodcast() {
   els.podcastGrid.innerHTML = podcastEpisodes.map((episode) => `
     <article class="podcast-card">
-      <div class="video-frame">
-        <iframe src="${escapeAttr(episode.embed)}" title="${escapeAttr(episode.title)}" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
-      </div>
+      <a class="video-frame" href="${escapeAttr(episode.url)}" target="_blank" rel="noreferrer" aria-label="Play ${escapeAttr(episode.title)} on YouTube">
+        <img src="${escapeAttr(episode.thumbnail)}" alt="">
+        <span>Play</span>
+      </a>
       <div class="podcast-card-body">
         <p class="session-kicker">${escapeHtml(episode.published)}</p>
         <h3>${escapeHtml(episode.title)}</h3>
