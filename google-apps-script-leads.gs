@@ -2,6 +2,7 @@ const SHEET_ID = "1ya26Sqt2GlpUDspUcreXEhDySgYGIlUGcsApV6zDf5s";
 const SHEET_NAME = "NEHA Leads";
 const TRIVIA_SHEET_NAME = "Trivia Scores";
 const DEMO_SHEET_NAME = "Demo Requests";
+const ALERTS_SHEET_NAME = "App Alerts";
 
 function doPost(e) {
   const payload = JSON.parse(e.postData.contents || "{}");
@@ -12,19 +13,24 @@ function doPost(e) {
 
 function doGet(e) {
   const params = e.parameter || {};
+  if (params.action === "alerts") {
+    return jsonOutput_({ ok: true, alerts: getActiveAlerts_() }, params.callback);
+  }
   if (params.action === "leaderboard") {
-    const output = JSON.stringify({ ok: true, leaders: getTriviaLeaderboard_() });
-    if (params.callback) {
-      return ContentService
-        .createTextOutput(`${params.callback}(${output});`)
-        .setMimeType(ContentService.MimeType.JAVASCRIPT);
-    }
+    return jsonOutput_({ ok: true, leaders: getTriviaLeaderboard_() }, params.callback);
+  }
+  return jsonOutput_({ ok: true }, params.callback);
+}
+
+function jsonOutput_(payload, callback) {
+  const output = JSON.stringify(payload);
+  if (callback) {
     return ContentService
-      .createTextOutput(output)
-      .setMimeType(ContentService.MimeType.JSON);
+      .createTextOutput(`${callback}(${output});`)
+      .setMimeType(ContentService.MimeType.JAVASCRIPT);
   }
   return ContentService
-    .createTextOutput(JSON.stringify({ ok: true }))
+    .createTextOutput(output)
     .setMimeType(ContentService.MimeType.JSON);
 }
 
@@ -157,6 +163,111 @@ function getTriviaSheet_() {
   }
 
   return sheet;
+}
+
+function getAlertsSheet_() {
+  const spreadsheet = SpreadsheetApp.openById(SHEET_ID);
+  let sheet = spreadsheet.getSheetByName(ALERTS_SHEET_NAME);
+  if (!sheet) sheet = spreadsheet.insertSheet(ALERTS_SHEET_NAME);
+
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow([
+      "Active",
+      "Label",
+      "Title",
+      "Message",
+      "Button Text",
+      "Destination",
+      "Starts At",
+      "Ends At",
+      "Sort Order"
+    ]);
+    sheet.appendRow([
+      "Yes",
+      "Trivia Prize",
+      "Perfect scores win prizes",
+      "Finish 12 for 12 in EH Trivia, then visit the HS GovTech booth for a special prize.",
+      "Play Trivia",
+      "trivia",
+      "",
+      "",
+      1
+    ]);
+    sheet.appendRow([
+      "Yes",
+      "HSCloud Suite",
+      "Want a closer look?",
+      "Book a quick HSCloud Suite demo and someone will reach out after NEHA.",
+      "Book Demo",
+      "demo",
+      "",
+      "",
+      2
+    ]);
+    sheet.setFrozenRows(1);
+    sheet.autoResizeColumns(1, 9);
+  }
+
+  return sheet;
+}
+
+function getActiveAlerts_() {
+  const sheet = getAlertsSheet_();
+  const lastRow = sheet.getLastRow();
+  if (lastRow <= 1) return [];
+  const rows = sheet.getRange(2, 1, lastRow - 1, 9).getValues();
+  const now = new Date();
+  const allowedDestinations = {
+    schedule: true,
+    my: true,
+    ai: true,
+    kc: true,
+    venue: true,
+    podcast: true,
+    trivia: true,
+    demo: true,
+    drink: true
+  };
+  return rows
+    .map((row) => ({
+      active: String(row[0] || "").trim().toLowerCase(),
+      label: String(row[1] || "").trim(),
+      title: String(row[2] || "").trim(),
+      message: String(row[3] || "").trim(),
+      action: String(row[4] || "").trim(),
+      view: String(row[5] || "").trim().toLowerCase(),
+      startsAt: row[6],
+      endsAt: row[7],
+      sortOrder: Number(row[8] || 999)
+    }))
+    .filter((alert) => ["yes", "true", "1", "active"].includes(alert.active))
+    .filter((alert) => alert.title && alert.message)
+    .filter((alert) => !alert.view || allowedDestinations[alert.view])
+    .filter((alert) => isInAlertWindow_(alert.startsAt, alert.endsAt, now))
+    .sort((a, b) => a.sortOrder - b.sortOrder || a.title.localeCompare(b.title))
+    .slice(0, 4)
+    .map((alert) => ({
+      label: alert.label || "Alert",
+      title: alert.title,
+      message: alert.message,
+      action: alert.action || "Open",
+      view: alert.view || "schedule"
+    }));
+}
+
+function isInAlertWindow_(startsAt, endsAt, now) {
+  const start = parseSheetDate_(startsAt);
+  const end = parseSheetDate_(endsAt);
+  if (start && now < start) return false;
+  if (end && now > end) return false;
+  return true;
+}
+
+function parseSheetDate_(value) {
+  if (!value) return null;
+  if (Object.prototype.toString.call(value) === "[object Date]" && !isNaN(value)) return value;
+  const parsed = new Date(value);
+  return isNaN(parsed) ? null : parsed;
 }
 
 function getTriviaLeaderboard_() {

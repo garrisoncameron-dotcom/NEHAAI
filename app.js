@@ -5,6 +5,7 @@ const state = {
   category: "all",
   status: "all",
   query: "",
+  alerts: [],
   myDay: "",
   placeFilter: "all",
   venueMap: "exhibit",
@@ -96,7 +97,7 @@ const viewTitles = {
   drink: "FREE DRINK"
 };
 
-const appAlerts = [
+const fallbackAppAlerts = [
   {
     label: "Trivia Prize",
     title: "Perfect scores win prizes",
@@ -283,6 +284,7 @@ loadData().then(([sessions, guide]) => {
   pruneSaved();
   hydrateControls();
   renderAll();
+  loadAppAlerts();
   runAi();
 }).catch((error) => {
   document.querySelector("#sessionList").innerHTML = `<div class="empty-state">The schedule data could not be loaded. Open this folder through a local web server or refresh the bundled app files.</div>`;
@@ -572,7 +574,8 @@ function renderAll() {
 }
 
 function renderAppAlerts() {
-  els.appAlerts.innerHTML = appAlerts.map((alert) => `
+  const alerts = state.alerts.length ? state.alerts : fallbackAppAlerts;
+  els.appAlerts.innerHTML = alerts.map((alert) => `
     <article class="app-alert">
       <span>${escapeHtml(alert.label)}</span>
       <div>
@@ -582,6 +585,43 @@ function renderAppAlerts() {
       <button type="button" data-alert-view="${escapeAttr(alert.view)}">${escapeHtml(alert.action)}</button>
     </article>
   `).join("");
+}
+
+function loadAppAlerts() {
+  const endpoint = window.NEHA_LEAD_ENDPOINT || "";
+  if (!endpoint) return Promise.resolve();
+  return new Promise((resolve) => {
+    const callbackName = `nehaAlerts${Date.now()}${Math.floor(Math.random() * 1000)}`;
+    const script = document.createElement("script");
+    const timeout = window.setTimeout(() => {
+      cleanup();
+      resolve();
+    }, 8000);
+    function cleanup() {
+      window.clearTimeout(timeout);
+      delete window[callbackName];
+      script.remove();
+    }
+    window[callbackName] = (data) => {
+      cleanup();
+      const alerts = Array.isArray(data?.alerts) ? data.alerts.filter(isUsableAlert) : [];
+      if (alerts.length) {
+        state.alerts = alerts;
+        renderAppAlerts();
+      }
+      resolve();
+    };
+    script.src = `${endpoint}?action=alerts&callback=${callbackName}&t=${Date.now()}`;
+    script.onerror = () => {
+      cleanup();
+      resolve();
+    };
+    document.body.appendChild(script);
+  });
+}
+
+function isUsableAlert(alert) {
+  return Boolean(alert?.label && alert?.title && alert?.message && alert?.action && alert?.view && viewTitles[alert.view]);
 }
 
 function renderLeadGate() {
