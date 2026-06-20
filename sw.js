@@ -2,8 +2,8 @@ const CACHE_NAME = "neha-guide-v20260619-podcast";
 const APP_ASSETS = [
   "./",
   "index.html",
-  "styles.css",
-  "app.js",
+  "styles.css?v=20260619-podcast",
+  "app.js?v=20260619-podcast",
   "data-bundle.js?v=20260619-lunchbreak",
   "lead-config.js?v=20260619",
   "manifest.webmanifest",
