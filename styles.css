@@ -1069,11 +1069,38 @@ select {
   line-height: 1.45;
 }
 
+.perfect-prize {
+  width: min(620px, 100%);
+  display: grid;
+  gap: 4px;
+  border: 2px solid #e0aa26;
+  border-radius: 8px;
+  padding: 16px;
+  color: #4b3406;
+  background: linear-gradient(135deg, #fff7df, #ffe7a8);
+  box-shadow: 0 14px 30px rgba(216, 156, 24, 0.18);
+}
+
+.perfect-prize strong {
+  color: var(--navy);
+  font-size: clamp(1.45rem, 4vw, 2.15rem);
+}
+
+.perfect-prize span {
+  font-weight: 900;
+}
+
 .score-actions {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
+  align-items: center;
   gap: 10px;
+}
+
+.score-actions span {
+  color: #43586b;
+  font-weight: 900;
 }
 
 .score-actions button:disabled {

@@ -341,7 +341,6 @@ els.triviaStage.addEventListener("click", (event) => {
   const hintButton = event.target.closest("[data-trivia-hint]");
   const nextButton = event.target.closest("[data-trivia-next]");
   const restartButton = event.target.closest("[data-trivia-restart]");
-  const submitScoreButton = event.target.closest("[data-trivia-submit]");
   const refreshLeaderboardButton = event.target.closest("[data-trivia-refresh]");
 
   if (answerButton && !state.trivia.answered) {
@@ -354,10 +353,6 @@ els.triviaStage.addEventListener("click", (event) => {
   }
   if (nextButton) {
     nextTriviaQuestion();
-    return;
-  }
-  if (submitScoreButton) {
-    postTriviaScore();
     return;
   }
   if (refreshLeaderboardButton) {
@@ -840,6 +835,7 @@ function nextTriviaQuestion() {
     state.trivia.complete = true;
     state.trivia.best = Math.max(state.trivia.best, state.trivia.score);
     localStorage.setItem("nehaTriviaBest", String(state.trivia.best));
+    postTriviaScore();
   } else {
     state.trivia.index += 1;
     state.trivia.selected = null;
@@ -867,6 +863,8 @@ function restartTrivia() {
 function renderTriviaResults() {
   const total = triviaQuestions.length;
   const achievement = triviaAchievements.find((item) => state.trivia.score >= item.min);
+  const perfect = state.trivia.score === total;
+  const postStatus = state.trivia.submitted ? "Score posted to the leaderboard." : state.trivia.submitting ? "Posting score to the leaderboard..." : "Score will post automatically.";
   els.triviaProgressBar.style.width = "100%";
   els.triviaStage.innerHTML = `
     <div class="trivia-result">
@@ -874,8 +872,14 @@ function renderTriviaResults() {
       <h3>${escapeHtml(achievement.title)}</h3>
       <div class="result-score">${state.trivia.score}<span>/${total}</span></div>
       <p>${escapeHtml(achievement.note)}</p>
+      ${perfect ? `
+        <div class="perfect-prize">
+          <strong>12 for 12?</strong>
+          <span>Visit the HS GovTech booth for a special prize.</span>
+        </div>
+      ` : ""}
       <div class="score-actions">
-        <button type="button" data-trivia-submit ${state.trivia.submitted || state.trivia.submitting ? "disabled" : ""}>${state.trivia.submitted ? "Score Posted" : state.trivia.submitting ? "Posting..." : "Post My Score"}</button>
+        <span>${escapeHtml(postStatus)}</span>
         <button type="button" data-trivia-refresh>Refresh Leaderboard</button>
       </div>
       ${renderLeaderboard()}
