@@ -295,6 +295,59 @@ figcaption,
   color: var(--muted);
 }
 
+.app-alerts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.app-alert {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  min-height: 82px;
+  border: 1px solid #cfe0e9;
+  border-radius: 8px;
+  padding: 12px;
+  background: linear-gradient(135deg, #ffffff, #f0f9fb);
+  box-shadow: 0 8px 20px rgba(8, 37, 63, 0.06);
+}
+
+.app-alert > span {
+  border-radius: 999px;
+  padding: 6px 9px;
+  color: #0b4c6d;
+  background: #e6f7fb;
+  font-size: 0.76rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.app-alert strong {
+  color: var(--navy);
+}
+
+.app-alert p {
+  margin-top: 3px;
+  color: #4f6273;
+  line-height: 1.35;
+}
+
+.app-alert button {
+  min-height: 40px;
+  border: 0;
+  border-radius: 8px;
+  color: #fff;
+  background: var(--navy);
+  cursor: pointer;
+  font-weight: 900;
+  padding: 0 12px;
+  white-space: nowrap;
+}
+
 h1,
 h2,
 h3,
@@ -1564,6 +1617,7 @@ select {
   .venue-layout,
   .podcast-grid,
   .demo-panel,
+  .app-alerts,
   .trivia-hero,
   .assistant-panel {
     grid-template-columns: 1fr;
@@ -1682,6 +1736,15 @@ select {
   .conflict-banner {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .app-alert {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .app-alert button {
+    width: 100%;
   }
 
   .prompt-box,

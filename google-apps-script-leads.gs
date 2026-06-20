@@ -48,20 +48,24 @@ function recordLead_(payload) {
 
 function recordTriviaScore_(payload) {
   const sheet = getTriviaSheet_();
+  const score = Number(payload.score || 0);
+  const total = Number(payload.total || 12);
+  const hintsUsed = Number(payload.hintsUsed || 0);
   sheet.appendRow([
     new Date(),
     displayName_(payload.name || ""),
     payload.name || "",
     payload.agency || "",
     payload.email || "",
-    Number(payload.score || 0),
-    Number(payload.total || 12),
+    score,
+    total,
     payload.achievement || "",
-    Number(payload.hintsUsed || 0),
+    hintsUsed,
     payload.completedAt || "",
     payload.source || "",
     payload.page || ""
   ]);
+  sendTriviaScoreEmail_(payload, score, total, hintsUsed);
 
   return ContentService
     .createTextOutput(JSON.stringify({ ok: true }))
@@ -192,4 +196,34 @@ function displayName_(name) {
   if (!parts.length) return "Mystery Player";
   if (parts.length === 1) return parts[0];
   return `${parts[0]} ${parts[parts.length - 1].charAt(0)}.`;
+}
+
+function sendTriviaScoreEmail_(payload, score, total, hintsUsed) {
+  const email = String(payload.email || "").trim();
+  if (!email) return;
+  const achievement = payload.achievement || "EH Trivia Player";
+  const body = [
+    `Hi ${payload.name || "there"},`,
+    "",
+    `Thanks for playing the EH Trivia Game at NEHA.`,
+    "",
+    `Your final score: ${score}/${total}`,
+    `Achievement: ${achievement}`,
+    `Hints used: ${hintsUsed}`,
+    score === total ? "Perfect score! Visit the HS GovTech booth for a special prize." : "",
+    "",
+    "Open the NEHA guide anytime to play again, check the leaderboard, or book an HSCloud Suite demo.",
+    "",
+    "HS GovTech"
+  ].join("\n");
+
+  try {
+    MailApp.sendEmail({
+      to: email,
+      subject: `Your EH Trivia score: ${score}/${total}`,
+      body
+    });
+  } catch (error) {
+    console.error(`Trivia score email failed for ${email}: ${error}`);
+  }
 }

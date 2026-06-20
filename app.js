@@ -41,6 +41,7 @@ const els = {
   leadNote: document.querySelector("#leadNote"),
   title: document.querySelector("#viewTitle"),
   search: document.querySelector("#searchInput"),
+  appAlerts: document.querySelector("#appAlerts"),
   dayTabs: document.querySelector("#dayTabs"),
   category: document.querySelector("#categorySelect"),
   status: document.querySelector("#statusSelect"),
@@ -94,6 +95,23 @@ const viewTitles = {
   trivia: "EH Trivia Game",
   drink: "FREE DRINK"
 };
+
+const appAlerts = [
+  {
+    label: "Trivia Prize",
+    title: "Perfect scores win prizes",
+    message: "Finish 12 for 12 in EH Trivia, then visit the HS GovTech booth for a special prize.",
+    action: "Play Trivia",
+    view: "trivia"
+  },
+  {
+    label: "HSCloud Suite",
+    title: "Want a closer look?",
+    message: "Book a quick HSCloud Suite demo and someone will reach out after NEHA.",
+    action: "Book Demo",
+    view: "demo"
+  }
+];
 
 const podcastEpisodes = [
   {
@@ -281,6 +299,11 @@ document.querySelectorAll(".nav-item[data-view], .more-menu-item[data-view]").fo
 els.moreMenuButton.addEventListener("click", () => {
   const expanded = els.moreMenuButton.getAttribute("aria-expanded") === "true";
   toggleMoreMenu(!expanded);
+});
+
+els.appAlerts.addEventListener("click", (event) => {
+  const action = event.target.closest("[data-alert-view]");
+  if (action) setView(action.dataset.alertView);
 });
 
 els.leadForm.addEventListener("submit", async (event) => {
@@ -541,10 +564,24 @@ function renderAll() {
   renderPlaces();
   renderVenue();
   renderPodcast();
+  renderAppAlerts();
   renderTrivia();
   renderFreeDrink();
   renderLeadGate();
   updateSavedCounts();
+}
+
+function renderAppAlerts() {
+  els.appAlerts.innerHTML = appAlerts.map((alert) => `
+    <article class="app-alert">
+      <span>${escapeHtml(alert.label)}</span>
+      <div>
+        <strong>${escapeHtml(alert.title)}</strong>
+        <p>${escapeHtml(alert.message)}</p>
+      </div>
+      <button type="button" data-alert-view="${escapeAttr(alert.view)}">${escapeHtml(alert.action)}</button>
+    </article>
+  `).join("");
 }
 
 function renderLeadGate() {
