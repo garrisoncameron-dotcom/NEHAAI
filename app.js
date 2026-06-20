@@ -874,8 +874,8 @@ function renderTriviaResults() {
       <p>${escapeHtml(achievement.note)}</p>
       ${perfect ? `
         <div class="perfect-prize">
-          <strong>12 for 12?</strong>
-          <span>Visit the HS GovTech booth for a special prize.</span>
+          <strong>Congrats, 12 for 12!</strong>
+          <span>Go to the HS GovTech booth for a special prize.</span>
         </div>
       ` : ""}
       <div class="score-actions">
