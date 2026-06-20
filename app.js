@@ -10,6 +10,15 @@ const state = {
   venueMap: "exhibit",
   pendingConflict: null,
   installPrompt: null,
+  trivia: {
+    index: 0,
+    score: 0,
+    selected: null,
+    answered: false,
+    complete: false,
+    streak: 0,
+    best: Number(localStorage.getItem("nehaTriviaBest") || 0)
+  },
   drinkRedeemed: localStorage.getItem("nehaFreeDrinkRedeemed") === "true",
   lead: JSON.parse(localStorage.getItem("nehaLead") || "null"),
   saved: JSON.parse(localStorage.getItem("nehaSaved") || '{"watch":{},"attend":{}}')
@@ -47,6 +56,9 @@ const els = {
   venueMapImage: document.querySelector("#venueMapImage"),
   venueMapCaption: document.querySelector("#venueMapCaption"),
   podcastGrid: document.querySelector("#podcastGrid"),
+  triviaScore: document.querySelector("#triviaScore"),
+  triviaProgressBar: document.querySelector("#triviaProgressBar"),
+  triviaStage: document.querySelector("#triviaStage"),
   installAppButton: document.querySelector("#installAppButton"),
   freeDrinkButton: document.querySelector("#freeDrinkButton"),
   freeDrinkStatus: document.querySelector("#freeDrinkStatus"),
@@ -61,6 +73,7 @@ const viewTitles = {
   kc: "Things To Do In Kansas City",
   venue: "Venue Navigator",
   podcast: "Beyond Data Management",
+  trivia: "EH Trivia Game",
   drink: "FREE DRINK"
 };
 
@@ -97,6 +110,113 @@ const podcastEpisodes = [
     published: "Apr 14, 2026",
     description: "Alicia Love shares practical de-escalation approaches for regulators in tense field situations."
   }
+];
+
+const triviaQuestions = [
+  {
+    section: "2-301.12",
+    category: "Hands",
+    question: "Food employees must clean their hands and exposed portions of arms for at least how long?",
+    options: ["20 seconds", "10 seconds", "45 seconds", "Only until visibly clean"],
+    answer: 0,
+    explanation: "Section 2-301.12 sets a minimum 20-second handwashing procedure."
+  },
+  {
+    section: "3-501.16",
+    category: "Cold Holding",
+    question: "Cold-held TCS food should generally be maintained at what temperature?",
+    options: ["41°F or less", "45°F or less", "50°F or less", "32°F exactly"],
+    answer: 0,
+    explanation: "Cold holding for TCS food is generally 41°F or less."
+  },
+  {
+    section: "3-501.16",
+    category: "Hot Holding",
+    question: "Hot-held TCS food should generally be maintained at what temperature?",
+    options: ["135°F or above", "120°F or above", "145°F or above", "165°F or above"],
+    answer: 0,
+    explanation: "Hot holding for TCS food is generally 135°F or above."
+  },
+  {
+    section: "3-401.11",
+    category: "Cooking",
+    question: "Poultry, baluts, stuffed fish, stuffed meat, and stuffed pasta must be cooked to what minimum temperature?",
+    options: ["165°F", "155°F", "145°F", "135°F"],
+    answer: 0,
+    explanation: "The Food Code places poultry and stuffed foods in the 165°F minimum cooking group."
+  },
+  {
+    section: "3-401.11",
+    category: "Cooking",
+    question: "Comminuted meat, such as ground beef, is commonly associated with which minimum cooking temperature?",
+    options: ["155°F", "145°F", "165°F", "135°F"],
+    answer: 0,
+    explanation: "Comminuted meat is in the 155°F minimum cooking group."
+  },
+  {
+    section: "3-501.14",
+    category: "Cooling",
+    question: "Cooked TCS food must cool from 135°F to 70°F within 2 hours, and then to 41°F or less within what total time?",
+    options: ["6 hours total", "4 hours total", "8 hours total", "24 hours total"],
+    answer: 0,
+    explanation: "Cooling is 135°F to 70°F within 2 hours and 135°F to 41°F or less within a total of 6 hours."
+  },
+  {
+    section: "3-501.17",
+    category: "Date Marking",
+    question: "Refrigerated, ready-to-eat TCS food held at 41°F or less is generally date marked for no more than how many days?",
+    options: ["7 days", "3 days", "10 days", "14 days"],
+    answer: 0,
+    explanation: "The maximum is generally 7 days, counting the preparation or opening day as day 1."
+  },
+  {
+    section: "3-301.11",
+    category: "Contamination",
+    question: "Which practice is generally prohibited with ready-to-eat food?",
+    options: ["Bare-hand contact", "Using deli tissue", "Using single-use gloves", "Using dispensing utensils"],
+    answer: 0,
+    explanation: "Food employees may not contact exposed ready-to-eat food with bare hands except as allowed by the Code."
+  },
+  {
+    section: "2-201.11",
+    category: "Employee Health",
+    question: "Which symptom should a food employee report to the person in charge?",
+    options: ["Vomiting", "A mild headache only", "Seasonal allergies only", "Tired feet after a long shift"],
+    answer: 0,
+    explanation: "Vomiting, diarrhea, jaundice, sore throat with fever, and infected lesions are among key reportable items."
+  },
+  {
+    section: "3-603.11",
+    category: "Consumer Advisory",
+    question: "A consumer advisory is tied to which menu situation?",
+    options: ["Raw or undercooked animal foods offered for consumption", "Any food served cold", "All packaged bottled drinks", "Only foods with added sugar"],
+    answer: 0,
+    explanation: "Consumer advisories apply when raw or undercooked animal foods are offered in ready-to-eat form."
+  },
+  {
+    section: "1-201.10",
+    category: "Allergens",
+    question: "Which food was added as a major food allergen in the 2022 Food Code era?",
+    options: ["Sesame", "Rice", "Chicken", "Tomato"],
+    answer: 0,
+    explanation: "Sesame joins the major food allergen list reflected in the 2022 Food Code materials."
+  },
+  {
+    section: "3-203.12",
+    category: "Shellfish",
+    question: "Shellstock tags or labels must generally be kept for how long after the container is emptied?",
+    options: ["90 days", "7 days", "30 days", "1 year"],
+    answer: 0,
+    explanation: "Shellstock tags are retained for 90 calendar days after the container is emptied."
+  }
+];
+
+const triviaAchievements = [
+  { min: 11, title: "Food Code Champion", note: "You are dangerous with a thermometer and a code book." },
+  { min: 9, title: "Risk Factor Ranger", note: "Strong command of the stuff that prevents bad days." },
+  { min: 6, title: "Inspection Ready", note: "Solid field instincts. Worthy of the clipboard." },
+  { min: 3, title: "Code Cadet", note: "You are warming up. Keep the sanitizer test strips close." },
+  { min: 0, title: "Fresh Permittee", note: "Everybody starts somewhere. The Food Code is waiting." }
 ];
 
 const dayFormatter = new Intl.DateTimeFormat("en-US", { weekday: "short", month: "short", day: "numeric" });
@@ -208,6 +328,22 @@ els.freeDrinkButton.addEventListener("click", () => {
   renderFreeDrink();
 });
 
+els.triviaStage.addEventListener("click", (event) => {
+  const answerButton = event.target.closest("[data-answer]");
+  const nextButton = event.target.closest("[data-trivia-next]");
+  const restartButton = event.target.closest("[data-trivia-restart]");
+
+  if (answerButton && !state.trivia.answered) {
+    answerTrivia(Number(answerButton.dataset.answer));
+    return;
+  }
+  if (nextButton) {
+    nextTriviaQuestion();
+    return;
+  }
+  if (restartButton) restartTrivia();
+});
+
 els.installAppButton.addEventListener("click", async () => {
   if (state.installPrompt) {
     state.installPrompt.prompt();
@@ -275,6 +411,7 @@ function setView(view) {
   els.search.style.display = view === "schedule" ? "block" : "none";
   if (view === "my") renderMySchedule();
   if (view === "podcast") renderPodcast();
+  if (view === "trivia") renderTrivia();
   if (view === "drink") renderFreeDrink();
 }
 
@@ -310,6 +447,7 @@ function renderAll() {
   renderPlaces();
   renderVenue();
   renderPodcast();
+  renderTrivia();
   renderFreeDrink();
   renderLeadGate();
   updateSavedCounts();
@@ -566,6 +704,117 @@ function renderPodcast() {
       </div>
     </article>
   `).join("");
+}
+
+function renderTrivia() {
+  const trivia = state.trivia;
+  const total = triviaQuestions.length;
+  els.triviaScore.textContent = `${trivia.score}/${total}`;
+  els.triviaProgressBar.style.width = `${Math.round((trivia.index / total) * 100)}%`;
+
+  if (trivia.complete) {
+    renderTriviaResults();
+    return;
+  }
+
+  const question = triviaQuestions[trivia.index];
+  const status = trivia.answered ? (trivia.selected === question.answer ? "Correct" : "Not quite") : "Choose one";
+  els.triviaStage.innerHTML = `
+    <div class="trivia-card">
+      <div class="trivia-meta">
+        <span>Question ${trivia.index + 1} of ${total}</span>
+        <span>${escapeHtml(question.category)}</span>
+        <span>${escapeHtml(question.section)}</span>
+      </div>
+      <h3>${escapeHtml(question.question)}</h3>
+      <div class="answer-grid">
+        ${question.options.map((option, index) => triviaAnswerButton(question, option, index)).join("")}
+      </div>
+      <div class="trivia-feedback ${trivia.answered ? "show" : ""}">
+        <strong>${escapeHtml(status)}</strong>
+        <p>${trivia.answered ? escapeHtml(question.explanation) : "Lock in an answer to reveal the Food Code note."}</p>
+      </div>
+      <div class="trivia-footer">
+        <div>
+          <span>Streak</span>
+          <strong>${trivia.streak}</strong>
+        </div>
+        <div>
+          <span>Best</span>
+          <strong>${trivia.best}/${total}</strong>
+        </div>
+        <button type="button" data-trivia-next ${trivia.answered ? "" : "disabled"}>${trivia.index === total - 1 ? "Finish" : "Next"}</button>
+      </div>
+    </div>
+  `;
+}
+
+function triviaAnswerButton(question, option, index) {
+  const trivia = state.trivia;
+  let stateClass = "";
+  if (trivia.answered && index === question.answer) stateClass = "correct";
+  if (trivia.answered && trivia.selected === index && index !== question.answer) stateClass = "wrong";
+  return `<button class="${stateClass}" type="button" data-answer="${index}">${escapeHtml(option)}</button>`;
+}
+
+function answerTrivia(index) {
+  const question = triviaQuestions[state.trivia.index];
+  state.trivia.selected = index;
+  state.trivia.answered = true;
+  if (index === question.answer) {
+    state.trivia.score += 1;
+    state.trivia.streak += 1;
+  } else {
+    state.trivia.streak = 0;
+  }
+  renderTrivia();
+}
+
+function nextTriviaQuestion() {
+  if (!state.trivia.answered) return;
+  if (state.trivia.index >= triviaQuestions.length - 1) {
+    state.trivia.complete = true;
+    state.trivia.best = Math.max(state.trivia.best, state.trivia.score);
+    localStorage.setItem("nehaTriviaBest", String(state.trivia.best));
+  } else {
+    state.trivia.index += 1;
+    state.trivia.selected = null;
+    state.trivia.answered = false;
+  }
+  renderTrivia();
+}
+
+function restartTrivia() {
+  state.trivia.index = 0;
+  state.trivia.score = 0;
+  state.trivia.selected = null;
+  state.trivia.answered = false;
+  state.trivia.complete = false;
+  state.trivia.streak = 0;
+  renderTrivia();
+}
+
+function renderTriviaResults() {
+  const total = triviaQuestions.length;
+  const achievement = triviaAchievements.find((item) => state.trivia.score >= item.min);
+  els.triviaProgressBar.style.width = "100%";
+  els.triviaStage.innerHTML = `
+    <div class="trivia-result">
+      <p class="eyebrow">Round complete</p>
+      <h3>${escapeHtml(achievement.title)}</h3>
+      <div class="result-score">${state.trivia.score}<span>/${total}</span></div>
+      <p>${escapeHtml(achievement.note)}</p>
+      <div class="achievement-list">
+        ${triviaAchievements.map((item) => `
+          <div class="${state.trivia.score >= item.min ? "earned" : ""}">
+            <strong>${escapeHtml(item.title)}</strong>
+            <span>${item.min}+ correct</span>
+          </div>
+        `).join("")}
+      </div>
+      <button type="button" data-trivia-restart>Play Again</button>
+    </div>
+  `;
 }
 
 function toggleSaved(kind, id) {
