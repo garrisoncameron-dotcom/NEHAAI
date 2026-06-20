@@ -17,6 +17,8 @@ Cloudflare Pages:
 
 No backend or build step is required.
 
+The app includes `manifest.webmanifest` and `sw.js` so mobile browsers can save it to the home screen. The Podcast tab uses curated recent YouTube episode links from the Beyond Data Management channel.
+
 ## Lead Capture
 
 The lead gate posts to a Google Apps Script Web App endpoint.

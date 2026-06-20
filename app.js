@@ -9,6 +9,7 @@ const state = {
   placeFilter: "all",
   venueMap: "exhibit",
   pendingConflict: null,
+  installPrompt: null,
   drinkRedeemed: localStorage.getItem("nehaFreeDrinkRedeemed") === "true",
   lead: JSON.parse(localStorage.getItem("nehaLead") || "null"),
   saved: JSON.parse(localStorage.getItem("nehaSaved") || '{"watch":{},"attend":{}}')
@@ -45,6 +46,8 @@ const els = {
   venueMapTabs: document.querySelector("#venueMapTabs"),
   venueMapImage: document.querySelector("#venueMapImage"),
   venueMapCaption: document.querySelector("#venueMapCaption"),
+  podcastGrid: document.querySelector("#podcastGrid"),
+  installAppButton: document.querySelector("#installAppButton"),
   freeDrinkButton: document.querySelector("#freeDrinkButton"),
   freeDrinkStatus: document.querySelector("#freeDrinkStatus"),
   watchCount: document.querySelector("#watchCount"),
@@ -57,8 +60,44 @@ const viewTitles = {
   ai: "AI Session Guide",
   kc: "Things To Do In Kansas City",
   venue: "Venue Navigator",
+  podcast: "Beyond Data Management",
   drink: "FREE DRINK"
 };
+
+const podcastEpisodes = [
+  {
+    id: "ZVCYECYqdss",
+    title: "A First Look at Wiley: AFDO's New AI - Ep38 Jason Brill",
+    url: "https://www.youtube.com/watch?v=ZVCYECYqdss",
+    embed: "https://www.youtube.com/embed/ZVCYECYqdss",
+    published: "Jun 15, 2026",
+    description: "AFDO's Jason Brill joins Beyond Data Management for a look at Wiley, a new AI tool for food safety and health regulators."
+  },
+  {
+    id: "aK-9_umXkFk",
+    title: "Steve Mandernach previews AFDO 26 and discusses AI, FDA Collaboration, and the Future of Food Safety",
+    url: "https://www.youtube.com/watch?v=aK-9_umXkFk",
+    embed: "https://www.youtube.com/embed/aK-9_umXkFk",
+    published: "Jun 1, 2026",
+    description: "Cameron Garrison and AFDO Executive Director Steve Mandernach discuss inspections, training, AI, FSMA, and the future of food safety."
+  },
+  {
+    id: "cHmadBE2If0",
+    title: "Traumatic Insemination: Bed Bugs Are Even Grosser Than You Imagined",
+    url: "https://www.youtube.com/watch?v=cHmadBE2If0",
+    embed: "https://www.youtube.com/embed/cHmadBE2If0",
+    published: "Apr 21, 2026",
+    description: "Dr. Aaron Ashbrook breaks down bed bug science and what environmental health professionals should know."
+  },
+  {
+    id: "Y-_L57-e98g",
+    title: "\"I Just Remembered I Have to Take This Call\" - Smart De-Escalation Tricks for Regulators",
+    url: "https://www.youtube.com/watch?v=Y-_L57-e98g",
+    embed: "https://www.youtube.com/embed/Y-_L57-e98g",
+    published: "Apr 14, 2026",
+    description: "Alicia Love shares practical de-escalation approaches for regulators in tense field situations."
+  }
+];
 
 const dayFormatter = new Intl.DateTimeFormat("en-US", { weekday: "short", month: "short", day: "numeric" });
 const venueMaps = {
@@ -169,7 +208,35 @@ els.freeDrinkButton.addEventListener("click", () => {
   renderFreeDrink();
 });
 
+els.installAppButton.addEventListener("click", async () => {
+  if (state.installPrompt) {
+    state.installPrompt.prompt();
+    await state.installPrompt.userChoice;
+    state.installPrompt = null;
+    renderInstallButton();
+    return;
+  }
+  alert("To save this guide on iPhone: tap Share, then Add to Home Screen. On Android: open the browser menu and choose Install app or Add to Home screen.");
+});
+
+window.addEventListener("beforeinstallprompt", (event) => {
+  event.preventDefault();
+  state.installPrompt = event;
+  renderInstallButton();
+});
+
+window.addEventListener("appinstalled", () => {
+  state.installPrompt = null;
+  els.installAppButton.textContent = "App Saved";
+  els.installAppButton.disabled = true;
+});
+
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js").catch((error) => console.warn("Service worker registration failed", error));
+}
+
 renderLeadGate();
+renderInstallButton();
 
 async function loadData() {
   if (window.NEHA_DATA?.sessions?.length && window.NEHA_DATA?.guide) {
@@ -207,6 +274,7 @@ function setView(view) {
   els.title.textContent = viewTitles[view];
   els.search.style.display = view === "schedule" ? "block" : "none";
   if (view === "my") renderMySchedule();
+  if (view === "podcast") renderPodcast();
   if (view === "drink") renderFreeDrink();
 }
 
@@ -241,6 +309,7 @@ function renderAll() {
   renderMySchedule();
   renderPlaces();
   renderVenue();
+  renderPodcast();
   renderFreeDrink();
   renderLeadGate();
   updateSavedCounts();
@@ -262,6 +331,16 @@ function renderFreeDrink() {
     els.freeDrinkButton.textContent = "FREE DRINK";
     els.freeDrinkStatus.textContent = "One redemption per phone/browser.";
   }
+}
+
+function renderInstallButton() {
+  if (window.matchMedia("(display-mode: standalone)").matches || navigator.standalone) {
+    els.installAppButton.textContent = "App Saved";
+    els.installAppButton.disabled = true;
+    return;
+  }
+  els.installAppButton.textContent = state.installPrompt ? "Download App" : "Save App";
+  els.installAppButton.disabled = false;
 }
 
 function renderSchedule() {
@@ -471,6 +550,22 @@ function renderVenue() {
     "Room hints: Atlanta, New York, San Francisco, Chicago, Chouteau, Empire, The Terrace, and Exhibit Hall spaces are mapped from the uploaded Sheraton floor-plan packet."
   ];
   els.hotelTips.innerHTML = tips.map((tip) => `<div class="info-note">${escapeHtml(tip)}</div>`).join("");
+}
+
+function renderPodcast() {
+  els.podcastGrid.innerHTML = podcastEpisodes.map((episode) => `
+    <article class="podcast-card">
+      <div class="video-frame">
+        <iframe src="${escapeAttr(episode.embed)}" title="${escapeAttr(episode.title)}" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+      </div>
+      <div class="podcast-card-body">
+        <p class="session-kicker">${escapeHtml(episode.published)}</p>
+        <h3>${escapeHtml(episode.title)}</h3>
+        <p>${escapeHtml(episode.description)}</p>
+        <a href="${escapeAttr(episode.url)}" target="_blank" rel="noreferrer">Watch on YouTube</a>
+      </div>
+    </article>
+  `).join("");
 }
 
 function toggleSaved(kind, id) {

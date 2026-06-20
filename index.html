@@ -4,6 +4,11 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>HS GovTech NEHA Guide</title>
+    <meta name="theme-color" content="#102d4a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="NEHA Guide">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="apple-touch-icon" href="assets/icon-192.png">
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
@@ -45,6 +50,7 @@
           <button class="nav-item" data-view="ai" type="button">AI Guide</button>
           <button class="nav-item" data-view="kc" type="button">KC</button>
           <button class="nav-item" data-view="venue" type="button">Venue</button>
+          <button class="nav-item podcast-nav" data-view="podcast" type="button">Podcast</button>
           <button class="nav-item drink-nav" data-view="drink" type="button">FREE DRINK</button>
         </nav>
         <div class="rail-summary">
@@ -59,6 +65,7 @@
             <p class="eyebrow">NEHA AEC 2026 - Kansas City</p>
             <h1 id="viewTitle">Conference Schedule</h1>
           </div>
+          <button id="installAppButton" class="install-button" type="button">Download App</button>
           <div class="search-wrap">
             <input id="searchInput" type="search" placeholder="Search sessions, rooms, tags">
           </div>
@@ -143,6 +150,21 @@
               <div id="hotelTips" class="info-stack"></div>
             </div>
           </div>
+        </section>
+
+        <section id="podcastView" class="view">
+          <div class="podcast-hero">
+            <img src="assets/bdmp-icon-color.png" alt="Beyond Data Management podcast logo">
+            <div>
+              <p class="eyebrow">HS GovTech Podcast</p>
+              <h2>Beyond Data Management</h2>
+              <p>Recent conversations on food safety, environmental health, regulation, inspections, technology, and the future of public health work.</p>
+              <div class="podcast-actions">
+                <a class="secondary-action" href="https://youtube.com/@beyonddatamanagement" target="_blank" rel="noreferrer">Open Channel</a>
+              </div>
+            </div>
+          </div>
+          <div id="podcastGrid" class="podcast-grid"></div>
         </section>
 
         <section id="drinkView" class="view">
