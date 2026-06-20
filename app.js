@@ -17,6 +17,14 @@ const state = {
     answered: false,
     complete: false,
     streak: 0,
+    hintsRemaining: 3,
+    hidden: {},
+    submitted: false,
+    submitting: false,
+    leaderboard: [],
+    leaderboardLoading: false,
+    leaderboardError: "",
+    order: [],
     best: Number(localStorage.getItem("nehaTriviaBest") || 0)
   },
   drinkRedeemed: localStorage.getItem("nehaFreeDrinkRedeemed") === "true",
@@ -330,15 +338,30 @@ els.freeDrinkButton.addEventListener("click", () => {
 
 els.triviaStage.addEventListener("click", (event) => {
   const answerButton = event.target.closest("[data-answer]");
+  const hintButton = event.target.closest("[data-trivia-hint]");
   const nextButton = event.target.closest("[data-trivia-next]");
   const restartButton = event.target.closest("[data-trivia-restart]");
+  const submitScoreButton = event.target.closest("[data-trivia-submit]");
+  const refreshLeaderboardButton = event.target.closest("[data-trivia-refresh]");
 
   if (answerButton && !state.trivia.answered) {
     answerTrivia(Number(answerButton.dataset.answer));
     return;
   }
+  if (hintButton) {
+    useTriviaHint();
+    return;
+  }
   if (nextButton) {
     nextTriviaQuestion();
+    return;
+  }
+  if (submitScoreButton) {
+    postTriviaScore();
+    return;
+  }
+  if (refreshLeaderboardButton) {
+    loadTriviaLeaderboard();
     return;
   }
   if (restartButton) restartTrivia();
@@ -373,6 +396,7 @@ if ("serviceWorker" in navigator) {
 
 renderLeadGate();
 renderInstallButton();
+resetTriviaOrder();
 
 async function loadData() {
   if (window.NEHA_DATA?.sessions?.length && window.NEHA_DATA?.guide) {
@@ -392,15 +416,19 @@ async function loadData() {
 }
 
 async function submitLead(lead) {
+  return submitAppPayload({ type: "lead", ...lead });
+}
+
+async function submitAppPayload(payload) {
   const endpoint = window.NEHA_LEAD_ENDPOINT || "";
   if (!endpoint) {
-    console.warn("Lead endpoint is not configured. Saving locally only.");
+    console.warn("App endpoint is not configured. Saving locally only.");
     return;
   }
   await fetch(endpoint, {
     method: "POST",
     mode: "no-cors",
-    body: JSON.stringify(lead)
+    body: JSON.stringify(payload)
   });
 }
 
@@ -728,13 +756,14 @@ function renderTrivia() {
       </div>
       <h3>${escapeHtml(question.question)}</h3>
       <div class="answer-grid">
-        ${question.options.map((option, index) => triviaAnswerButton(question, option, index)).join("")}
+        ${triviaOptionOrder(question).map((index) => triviaAnswerButton(question, question.options[index], index)).join("")}
       </div>
       <div class="trivia-feedback ${trivia.answered ? "show" : ""}">
         <strong>${escapeHtml(status)}</strong>
         <p>${trivia.answered ? escapeHtml(question.explanation) : "Lock in an answer to reveal the Food Code note."}</p>
       </div>
       <div class="trivia-footer">
+        <button class="hint-button" type="button" data-trivia-hint ${trivia.answered || trivia.hintsRemaining <= 0 || hiddenTriviaOptions().length >= question.options.length - 2 ? "disabled" : ""}>Use Hint (${trivia.hintsRemaining})</button>
         <div>
           <span>Streak</span>
           <strong>${trivia.streak}</strong>
@@ -754,7 +783,42 @@ function triviaAnswerButton(question, option, index) {
   let stateClass = "";
   if (trivia.answered && index === question.answer) stateClass = "correct";
   if (trivia.answered && trivia.selected === index && index !== question.answer) stateClass = "wrong";
-  return `<button class="${stateClass}" type="button" data-answer="${index}">${escapeHtml(option)}</button>`;
+  if (!trivia.answered && hiddenTriviaOptions().includes(index)) stateClass = "hidden";
+  return `<button class="${stateClass}" type="button" data-answer="${index}" ${stateClass === "hidden" ? "disabled" : ""}>${escapeHtml(option)}</button>`;
+}
+
+function triviaOptionOrder(question) {
+  if (!state.trivia.order.length) resetTriviaOrder();
+  return state.trivia.order[state.trivia.index] || question.options.map((_, index) => index);
+}
+
+function hiddenTriviaOptions() {
+  return state.trivia.hidden[state.trivia.index] || [];
+}
+
+function resetTriviaOrder() {
+  state.trivia.order = triviaQuestions.map((question) => shuffleArray(question.options.map((_, index) => index)));
+}
+
+function shuffleArray(items) {
+  const copy = [...items];
+  for (let index = copy.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(Math.random() * (index + 1));
+    [copy[index], copy[swapIndex]] = [copy[swapIndex], copy[index]];
+  }
+  return copy;
+}
+
+function useTriviaHint() {
+  const question = triviaQuestions[state.trivia.index];
+  if (state.trivia.answered || state.trivia.hintsRemaining <= 0) return;
+  const hidden = hiddenTriviaOptions();
+  const candidates = triviaOptionOrder(question).filter((index) => index !== question.answer && !hidden.includes(index));
+  if (!candidates.length) return;
+  const removed = candidates[Math.floor(Math.random() * candidates.length)];
+  state.trivia.hidden[state.trivia.index] = [...hidden, removed];
+  state.trivia.hintsRemaining -= 1;
+  renderTrivia();
 }
 
 function answerTrivia(index) {
@@ -791,6 +855,12 @@ function restartTrivia() {
   state.trivia.answered = false;
   state.trivia.complete = false;
   state.trivia.streak = 0;
+  state.trivia.hintsRemaining = 3;
+  state.trivia.hidden = {};
+  state.trivia.submitted = false;
+  state.trivia.submitting = false;
+  state.trivia.leaderboardError = "";
+  resetTriviaOrder();
   renderTrivia();
 }
 
@@ -804,6 +874,11 @@ function renderTriviaResults() {
       <h3>${escapeHtml(achievement.title)}</h3>
       <div class="result-score">${state.trivia.score}<span>/${total}</span></div>
       <p>${escapeHtml(achievement.note)}</p>
+      <div class="score-actions">
+        <button type="button" data-trivia-submit ${state.trivia.submitted || state.trivia.submitting ? "disabled" : ""}>${state.trivia.submitted ? "Score Posted" : state.trivia.submitting ? "Posting..." : "Post My Score"}</button>
+        <button type="button" data-trivia-refresh>Refresh Leaderboard</button>
+      </div>
+      ${renderLeaderboard()}
       <div class="achievement-list">
         ${triviaAchievements.map((item) => `
           <div class="${state.trivia.score >= item.min ? "earned" : ""}">
@@ -815,6 +890,103 @@ function renderTriviaResults() {
       <button type="button" data-trivia-restart>Play Again</button>
     </div>
   `;
+}
+
+function renderLeaderboard() {
+  if (state.trivia.leaderboardLoading) return `<div class="leaderboard-card">Loading leaderboard...</div>`;
+  if (state.trivia.leaderboardError) return `<div class="leaderboard-card">${escapeHtml(state.trivia.leaderboardError)}</div>`;
+  if (!state.trivia.leaderboard.length) return `<div class="leaderboard-card">Post a score to start the leaderboard.</div>`;
+  return `
+    <div class="leaderboard-card">
+      <div class="leaderboard-head">
+        <strong>Leaderboard</strong>
+        <span>Top ${state.trivia.leaderboard.length}</span>
+      </div>
+      ${state.trivia.leaderboard.map((entry) => `
+        <div class="leaderboard-row">
+          <span>${escapeHtml(String(entry.rank))}</span>
+          <strong>${escapeHtml(entry.name)}</strong>
+          <small>${escapeHtml(entry.agency || "Agency not listed")}</small>
+          <b>${escapeHtml(String(entry.score))}/12</b>
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+
+async function postTriviaScore() {
+  if (state.trivia.submitted || state.trivia.submitting) return;
+  state.trivia.submitting = true;
+  renderTrivia();
+  const achievement = triviaAchievements.find((item) => state.trivia.score >= item.min);
+  const payload = {
+    type: "triviaScore",
+    name: state.lead?.name || "",
+    agency: state.lead?.agency || "",
+    email: state.lead?.email || "",
+    score: state.trivia.score,
+    total: triviaQuestions.length,
+    achievement: achievement.title,
+    hintsUsed: 3 - state.trivia.hintsRemaining,
+    completedAt: new Date().toISOString(),
+    source: "NEHA AEC 2026 Guide",
+    page: location.href
+  };
+  try {
+    await submitAppPayload(payload);
+    state.trivia.submitted = true;
+    await loadTriviaLeaderboard();
+  } catch (error) {
+    state.trivia.leaderboardError = "Could not post score yet. Check connection and try again.";
+    console.error(error);
+  } finally {
+    state.trivia.submitting = false;
+    renderTrivia();
+  }
+}
+
+function loadTriviaLeaderboard() {
+  const endpoint = window.NEHA_LEAD_ENDPOINT || "";
+  if (!endpoint) {
+    state.trivia.leaderboardError = "Leaderboard is not configured yet.";
+    renderTrivia();
+    return Promise.resolve();
+  }
+  state.trivia.leaderboardLoading = true;
+  state.trivia.leaderboardError = "";
+  renderTrivia();
+  return new Promise((resolve) => {
+    const callbackName = `nehaLeaderboard${Date.now()}${Math.floor(Math.random() * 1000)}`;
+    const script = document.createElement("script");
+    const timeout = window.setTimeout(() => {
+      cleanup();
+      state.trivia.leaderboardLoading = false;
+      state.trivia.leaderboardError = "Leaderboard is taking a breather. Try refresh in a moment.";
+      renderTrivia();
+      resolve();
+    }, 8000);
+    function cleanup() {
+      window.clearTimeout(timeout);
+      delete window[callbackName];
+      script.remove();
+    }
+    window[callbackName] = (data) => {
+      cleanup();
+      state.trivia.leaderboard = Array.isArray(data?.leaders) ? data.leaders : [];
+      state.trivia.leaderboardLoading = false;
+      renderTrivia();
+      resolve();
+    };
+    script.src = `${endpoint}?action=leaderboard&callback=${callbackName}&t=${Date.now()}`;
+    script.onerror = () => {
+      cleanup();
+      state.trivia.leaderboardLoading = false;
+      state.trivia.leaderboardError = "Leaderboard could not load yet.";
+      renderTrivia();
+      resolve();
+    };
+    document.body.appendChild(script);
+  });
 }
 
 function toggleSaved(kind, id) {

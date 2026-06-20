@@ -958,6 +958,12 @@ select {
   background: #fdebf0;
 }
 
+.answer-grid button.hidden {
+  opacity: 0.28;
+  text-decoration: line-through;
+  cursor: not-allowed;
+}
+
 .trivia-feedback {
   display: none;
   border-left: 4px solid var(--cyan);
@@ -981,7 +987,7 @@ select {
 
 .trivia-footer {
   display: grid;
-  grid-template-columns: repeat(2, minmax(90px, 1fr)) auto;
+  grid-template-columns: auto repeat(2, minmax(90px, 1fr)) auto;
   gap: 10px;
   align-items: center;
 }
@@ -1020,6 +1026,11 @@ select {
   font-weight: 900;
 }
 
+.trivia-footer .hint-button {
+  color: #12391d;
+  background: var(--green);
+}
+
 .trivia-footer button:disabled {
   color: #657485;
   background: #d8e1e9;
@@ -1056,6 +1067,76 @@ select {
   max-width: 620px;
   color: #43586b;
   line-height: 1.45;
+}
+
+.score-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.score-actions button:disabled {
+  color: #657485;
+  background: #d8e1e9;
+  cursor: default;
+}
+
+.leaderboard-card {
+  width: min(760px, 100%);
+  display: grid;
+  gap: 8px;
+  border: 1px solid #cfe0e9;
+  border-radius: 8px;
+  padding: 14px;
+  color: #43586b;
+  background: #f8fbfd;
+  text-align: left;
+}
+
+.leaderboard-head,
+.leaderboard-row {
+  display: grid;
+  grid-template-columns: 42px minmax(120px, 1fr) minmax(100px, 0.8fr) auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.leaderboard-head {
+  grid-template-columns: 1fr auto;
+  color: var(--navy);
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--line);
+}
+
+.leaderboard-row {
+  min-height: 42px;
+  border-radius: 7px;
+  padding: 7px 8px;
+  background: #fff;
+}
+
+.leaderboard-row span {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  color: #fff;
+  background: var(--navy);
+  font-weight: 900;
+}
+
+.leaderboard-row strong {
+  color: var(--navy);
+}
+
+.leaderboard-row small {
+  color: var(--muted);
+}
+
+.leaderboard-row b {
+  color: #136622;
 }
 
 .achievement-list {
@@ -1414,6 +1495,14 @@ select {
   .achievement-list div {
     display: grid;
     text-align: left;
+  }
+
+  .leaderboard-row {
+    grid-template-columns: 36px minmax(0, 1fr) auto;
+  }
+
+  .leaderboard-row small {
+    grid-column: 2 / 4;
   }
 
   .place-card {

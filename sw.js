@@ -1,9 +1,9 @@
-const CACHE_NAME = "neha-guide-v20260619-trivia";
+const CACHE_NAME = "neha-guide-v20260619-leaderboard";
 const APP_ASSETS = [
   "./",
   "index.html",
-  "styles.css?v=20260619-trivia",
-  "app.js?v=20260619-trivia",
+  "styles.css?v=20260619-leaderboard",
+  "app.js?v=20260619-leaderboard",
   "data-bundle.js?v=20260619-lunchbreak",
   "lead-config.js?v=20260619",
   "manifest.webmanifest",
