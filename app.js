@@ -1678,7 +1678,7 @@ function buildProfile(prompt) {
 function detectIntent(prompt) {
   if (/\b(kansas city|restaurant|coffee|bar|bbq|barbecue|attraction|things to do|nearby|eat|drink)\b/.test(prompt)) return "kc";
   if (/\b(ce|credit|credits|continuing education|certificate)\b/.test(prompt)) return "ce";
-  if (/\b(hs govtech|hscloud|hs cloud|demo|software|citizen portal|govcall|hs pay)\b/.test(prompt)) return "brand";
+  if (/\b(hs govtech|hsgovtech|hscloud|hs cloud|hs cloudsuite|cloudsuite|demo|software|citizen portal|inspection portal|govcall|hs pay|hs analytics|regulatory platform|environmental health software|permitting software)\b/.test(prompt)) return "brand";
   if (/\b(where|room|floor|map|venue|located|location)\b/.test(prompt)) return "venue";
   return "sessions";
 }
@@ -1751,7 +1751,9 @@ function answerSummary(profile, docs, places) {
     return "For CE planning, favor sessions with listed CE credit and keep your attended sessions organized in MyNEHASchedule. The uploaded CE guide notes that NEHA credentials rely on continuing education contact hours during each credential cycle.";
   }
   if (profile.intent === "brand") {
-    return "HS GovTech is positioned around modernizing environmental health work through configurable cloud tools, mobile workflows, citizen-facing services, payments, and call handling. For a deeper product conversation, use Book Demo in the More menu.";
+    const lead = docs.find((doc) => doc.view === "brand") || docs[0];
+    const base = lead ? firstSentence(lead.text) : "HS GovTech helps environmental health agencies modernize inspections, permitting, licensing, payments, reporting, and public-facing services in one configurable cloud platform.";
+    return `${base} The simple pitch: HS CloudSuite gives EH teams a purpose-built digital headquarters that reduces workarounds, improves field productivity, gives leaders better visibility, and makes service easier for businesses and residents. Use Book Demo in the More menu for a follow-up conversation.`;
   }
   if (docs.length) {
     return `I found useful matches in the uploaded conference material. Based on your question, I would focus on ${docs[0].title.toLowerCase()} and the sessions below.`;
@@ -1762,6 +1764,15 @@ function answerSummary(profile, docs, places) {
 function answerBullets(intent, docs, places) {
   if (intent === "kc" && places.length) {
     return places.map((place) => `${place.name}: ${place.meta}. ${place.description}`);
+  }
+  if (intent === "brand") {
+    const brandDocs = docs.filter((doc) => doc.view === "brand").slice(0, 4);
+    if (brandDocs.length) return brandDocs.map((doc) => `${doc.title}: ${firstSentence(doc.text)}`);
+    return [
+      "Purpose-built for EH: inspections, permitting, licensing, complaints, reporting, payments, and citizen services in one suite.",
+      "Field-ready: HS Cloud Mobile supports offline inspections, photo capture, violation documentation, and secure sync.",
+      "Leadership visibility: HS Analytics turns operational, workload, inspection, permit, and financial data into dashboards."
+    ];
   }
   return docs.slice(0, 3).map((doc) => `${doc.title}: ${firstSentence(doc.text)}`);
 }
@@ -1870,7 +1881,12 @@ function expandTerms(terms) {
     pool: ["aquatic", "recreational", "water"],
     ai: ["artificial", "intelligence", "technology"],
     ce: ["credit", "credits", "continuing", "education"],
-    demo: ["hscloud", "software", "govtech"],
+    demo: ["hscloud", "cloudsuite", "software", "govtech"],
+    govtech: ["hsgovtech", "cloudsuite", "environmental", "health"],
+    hscloud: ["cloudsuite", "govtech", "software"],
+    cloudsuite: ["hscloud", "govtech", "software", "inspection", "permitting"],
+    permitting: ["licensing", "portal", "payments"],
+    inspections: ["mobile", "offline", "violations"],
     bbq: ["barbecue"],
     kc: ["kansas", "city"]
   };
