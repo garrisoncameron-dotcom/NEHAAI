@@ -789,6 +789,43 @@ select {
   line-height: 1.45;
 }
 
+.place-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.place-actions a,
+.place-actions button {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #b9dfea;
+  border-radius: 8px;
+  padding: 0 10px;
+  color: var(--navy);
+  background: #f6fcfe;
+  font: inherit;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.place-actions button {
+  color: #fff;
+  border-color: var(--cyan);
+  background: var(--teal);
+  cursor: pointer;
+}
+
+.place-actions button:disabled {
+  color: #617282;
+  border-color: #d1dde5;
+  background: #e7eef3;
+  cursor: wait;
+}
+
 .place-category {
   width: fit-content;
   border-radius: 999px;

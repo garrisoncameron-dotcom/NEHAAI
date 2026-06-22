@@ -375,6 +375,13 @@ els.placeFilter.addEventListener("change", (event) => {
   renderPlaces();
 });
 
+els.placeGrid.addEventListener("click", (event) => {
+  const directions = event.target.closest("[data-place-directions]");
+  if (directions) {
+    openWalkingDirections(Number(directions.dataset.placeDirections), directions);
+  }
+});
+
 els.demoForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const submitButton = els.demoForm.querySelector('button[type="submit"]');
@@ -1054,6 +1061,10 @@ function renderPlaces() {
       <a class="place-title" href="${escapeAttr(placeUrl(place))}" target="_blank" rel="noreferrer">${escapeHtml(place.name)}</a>
       <small>${escapeHtml(place.meta)}</small>
       <p>${escapeHtml(place.description)}</p>
+      <div class="place-actions">
+        <a href="${escapeAttr(placeUrl(place))}" target="_blank" rel="noreferrer">View map</a>
+        <button type="button" data-place-directions="${state.guide.nearby.indexOf(place)}">Walk there</button>
+      </div>
     </article>
   `).join("");
 }
@@ -1417,6 +1428,51 @@ function sessionById(id) {
 function placeUrl(place) {
   const address = place.meta.split("—")[0].trim();
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${place.name} ${address} Kansas City MO`)}`;
+}
+
+function walkingDirectionsUrl(place, origin) {
+  const address = place.meta.split("—")[0].trim();
+  const destination = encodeURIComponent(`${place.name} ${address} Kansas City MO`);
+  const originQuery = origin ? `&origin=${encodeURIComponent(origin)}` : `&origin=${encodeURIComponent("Sheraton Kansas City Hotel at Crown Center Kansas City MO")}`;
+  return `https://www.google.com/maps/dir/?api=1${originQuery}&destination=${destination}&travelmode=walking`;
+}
+
+function openWalkingDirections(index, button) {
+  const place = state.guide.nearby[index];
+  if (!place) return;
+  const mapWindow = window.open("about:blank", "_blank");
+  if (mapWindow) mapWindow.opener = null;
+  const sendToMaps = (origin) => {
+    const url = walkingDirectionsUrl(place, origin);
+    if (mapWindow) {
+      mapWindow.location = url;
+    } else {
+      window.location.href = url;
+    }
+  };
+
+  button.textContent = "Getting location...";
+  button.disabled = true;
+  if (!navigator.geolocation) {
+    sendToMaps("");
+    button.textContent = "Walk there";
+    button.disabled = false;
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      sendToMaps(`${position.coords.latitude},${position.coords.longitude}`);
+      button.textContent = "Walk there";
+      button.disabled = false;
+    },
+    () => {
+      sendToMaps("");
+      button.textContent = "Walk there";
+      button.disabled = false;
+    },
+    { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
+  );
 }
 
 function persistSaved() {
