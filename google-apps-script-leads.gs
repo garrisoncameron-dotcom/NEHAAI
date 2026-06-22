@@ -10,6 +10,8 @@ const SESSION_QUESTIONS_SHEET_NAME = "Session Questions";
 const SESSION_REPLIES_SHEET_NAME = "Session Question Replies";
 const SESSION_PRESENTATIONS_SHEET_NAME = "Session Presentations";
 const SCHEDULE_EMAIL_SHEET_NAME = "Schedule Email Requests";
+const SCHEDULE_SYNC_SHEET_NAME = "Synced Schedules";
+const DAILY_SCHEDULE_EMAIL_LOG_SHEET_NAME = "Daily Schedule Email Log";
 
 function doPost(e) {
   if (!e || !e.postData) return jsonOutput_({ ok: true, authorization: authorizeScriptAccess() });
@@ -23,6 +25,7 @@ function doPost(e) {
   if (payload.type === "sessionQuestion") return recordSessionQuestion_(payload);
   if (payload.type === "sessionQuestionReply") return recordSessionQuestionReply_(payload);
   if (payload.type === "emailSchedule") return recordScheduleEmail_(payload);
+  if (payload.type === "scheduleSync") return recordScheduleSync_(payload);
   return recordLead_(payload);
 }
 
@@ -303,6 +306,27 @@ function recordScheduleEmail_(payload) {
   return jsonOutput_({ ok: true, mailStatus });
 }
 
+function recordScheduleSync_(payload) {
+  const sheet = getScheduleSyncSheet_();
+  const attending = Array.isArray(payload.attending) ? payload.attending : [];
+  const watching = Array.isArray(payload.watching) ? payload.watching : [];
+  sheet.appendRow([
+    new Date(),
+    payload.name || "",
+    payload.agency || "",
+    payload.email || "",
+    attending.length,
+    watching.length,
+    JSON.stringify(attending),
+    JSON.stringify(watching),
+    payload.syncedAt || "",
+    payload.source || "",
+    payload.page || ""
+  ]);
+  sheet.autoResizeColumns(1, 11);
+  return jsonOutput_({ ok: true });
+}
+
 function getLeadSheet_() {
   const spreadsheet = SpreadsheetApp.openById(SHEET_ID);
   let sheet = spreadsheet.getSheetByName(SHEET_NAME);
@@ -561,6 +585,54 @@ function getScheduleEmailSheet_() {
   } else if (sheet.getLastColumn() < 10) {
     sheet.getRange(1, 10).setValue("Mail Status");
     sheet.autoResizeColumns(1, 10);
+  }
+
+  return sheet;
+}
+
+function getScheduleSyncSheet_() {
+  const spreadsheet = SpreadsheetApp.openById(SHEET_ID);
+  let sheet = spreadsheet.getSheetByName(SCHEDULE_SYNC_SHEET_NAME);
+  if (!sheet) sheet = spreadsheet.insertSheet(SCHEDULE_SYNC_SHEET_NAME);
+
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow([
+      "Received At",
+      "Name",
+      "Agency",
+      "Email",
+      "Attending Count",
+      "Watching Count",
+      "Attending JSON",
+      "Watching JSON",
+      "Synced At",
+      "Source",
+      "Page"
+    ]);
+    sheet.setFrozenRows(1);
+    sheet.autoResizeColumns(1, 11);
+  }
+
+  return sheet;
+}
+
+function getDailyScheduleEmailLogSheet_() {
+  const spreadsheet = SpreadsheetApp.openById(SHEET_ID);
+  let sheet = spreadsheet.getSheetByName(DAILY_SCHEDULE_EMAIL_LOG_SHEET_NAME);
+  if (!sheet) sheet = spreadsheet.insertSheet(DAILY_SCHEDULE_EMAIL_LOG_SHEET_NAME);
+
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow([
+      "Sent At",
+      "Schedule Date",
+      "Name",
+      "Agency",
+      "Email",
+      "Session Count",
+      "Mail Status"
+    ]);
+    sheet.setFrozenRows(1);
+    sheet.autoResizeColumns(1, 7);
   }
 
   return sheet;
@@ -1034,4 +1106,164 @@ function sendScheduleEmail_(payload, sessions) {
     console.error(`Schedule email failed for ${email}: ${error}`);
     return `Failed: ${String(error).slice(0, 220)}`;
   }
+}
+
+function installDailyScheduleEmailTrigger() {
+  ScriptApp.getProjectTriggers()
+    .filter((trigger) => trigger.getHandlerFunction() === "sendDailyScheduleEmails")
+    .forEach((trigger) => ScriptApp.deleteTrigger(trigger));
+
+  ScriptApp.newTrigger("sendDailyScheduleEmails")
+    .timeBased()
+    .inTimezone("America/Chicago")
+    .everyDays(1)
+    .atHour(6)
+    .create();
+
+  return "Daily schedule email trigger installed for 6 AM Central.";
+}
+
+function sendDailyScheduleEmails() {
+  const scheduleDate = Utilities.formatDate(new Date(), "America/Chicago", "yyyy-MM-dd");
+  return sendDailyScheduleEmailsForDate_(scheduleDate);
+}
+
+function sendDailyScheduleEmailsForDate_(scheduleDate) {
+  const latestSchedules = getLatestSyncedSchedules_();
+  const sentKeys = getDailyScheduleEmailSentKeys_();
+  const logSheet = getDailyScheduleEmailLogSheet_();
+  let sent = 0;
+  let skipped = 0;
+
+  latestSchedules.forEach((schedule) => {
+    const todaySessions = schedule.attending
+      .filter((session) => sessionDateKey_(session) === scheduleDate)
+      .sort(compareSyncedSessions_);
+    if (!schedule.email || !todaySessions.length) {
+      skipped += 1;
+      return;
+    }
+
+    const key = `${scheduleDate}|${schedule.email.toLowerCase()}`;
+    if (sentKeys[key]) {
+      skipped += 1;
+      return;
+    }
+
+    const mailStatus = sendDailyScheduleEmail_(schedule, todaySessions, scheduleDate);
+    logSheet.appendRow([
+      new Date(),
+      scheduleDate,
+      schedule.name,
+      schedule.agency,
+      schedule.email,
+      todaySessions.length,
+      mailStatus
+    ]);
+    sentKeys[key] = true;
+    sent += mailStatus.indexOf("Sent to ") === 0 ? 1 : 0;
+  });
+
+  logSheet.autoResizeColumns(1, 7);
+  return `Daily schedule email run complete for ${scheduleDate}. Sent: ${sent}. Skipped: ${skipped}.`;
+}
+
+function getLatestSyncedSchedules_() {
+  const sheet = getScheduleSyncSheet_();
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) return [];
+
+  const rows = sheet.getRange(2, 1, lastRow - 1, 11).getValues();
+  const latestByEmail = {};
+  rows.forEach((row) => {
+    const email = String(row[3] || "").trim();
+    if (!email) return;
+    latestByEmail[email.toLowerCase()] = {
+      name: row[1] || "",
+      agency: row[2] || "",
+      email,
+      attending: parseJsonArray_(row[6]),
+      watching: parseJsonArray_(row[7]),
+      syncedAt: row[8] || ""
+    };
+  });
+
+  return Object.keys(latestByEmail).map((key) => latestByEmail[key]);
+}
+
+function getDailyScheduleEmailSentKeys_() {
+  const sheet = getDailyScheduleEmailLogSheet_();
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) return {};
+
+  const rows = sheet.getRange(2, 2, lastRow - 1, 4).getValues();
+  return rows.reduce((keys, row) => {
+    const scheduleDate = String(row[0] || "").trim();
+    const email = String(row[3] || "").trim().toLowerCase();
+    if (scheduleDate && email) keys[`${scheduleDate}|${email}`] = true;
+    return keys;
+  }, {});
+}
+
+function sendDailyScheduleEmail_(schedule, sessions, scheduleDate) {
+  const email = String(schedule.email || "").trim();
+  if (!email) return "No email address";
+
+  const formattedDate = formatScheduleDate_(scheduleDate);
+  const lines = sessions.map((session, index) => [
+    `${index + 1}. ${session.title || "Untitled session"}`,
+    `   ${session.time || ""}`,
+    `   ${session.location || ""}${session.ce ? ` | CE: ${session.ce}` : ""}`
+  ].join("\n"));
+  const body = [
+    `Good morning ${schedule.name || "there"},`,
+    "",
+    `Here is your MyNEHA agenda for ${formattedDate}:`,
+    "",
+    ...lines,
+    "",
+    "Open the NEHA guide to adjust your schedule, view presentations, add notes, or ask session questions.",
+    "",
+    "HS GovTech"
+  ].join("\n");
+
+  try {
+    MailApp.sendEmail({
+      to: email,
+      subject: `Your NEHA agenda for ${formattedDate}`,
+      body
+    });
+    return `Sent to ${email}`;
+  } catch (error) {
+    console.error(`Daily schedule email failed for ${email}: ${error}`);
+    return `Failed: ${String(error).slice(0, 220)}`;
+  }
+}
+
+function parseJsonArray_(value) {
+  try {
+    const parsed = JSON.parse(String(value || "[]"));
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    return [];
+  }
+}
+
+function sessionDateKey_(session) {
+  return String(session.rawDate || "").trim() || displayDateToKey_(session.date || "");
+}
+
+function displayDateToKey_(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return Utilities.formatDate(date, "America/Chicago", "yyyy-MM-dd");
+}
+
+function compareSyncedSessions_(a, b) {
+  return String(a.start || a.time || "").localeCompare(String(b.start || b.time || ""));
+}
+
+function formatScheduleDate_(scheduleDate) {
+  const date = new Date(`${scheduleDate}T12:00:00-05:00`);
+  return Utilities.formatDate(date, "America/Chicago", "EEEE, MMMM d");
 }

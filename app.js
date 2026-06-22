@@ -8,6 +8,9 @@ const state = {
   alerts: [],
   alertIndex: Number(localStorage.getItem("nehaAlertIndex") || 0),
   reminders: JSON.parse(localStorage.getItem("nehaSessionReminders") || "{}"),
+  scheduleSyncTimer: null,
+  scheduleSyncInFlight: false,
+  scheduleSyncPending: false,
   reminderAlert: null,
   myDay: "",
   myMode: "day",
@@ -413,6 +416,7 @@ els.leadForm.addEventListener("submit", async (event) => {
     state.lead = lead;
     localStorage.setItem("nehaLead", JSON.stringify(lead));
     localStorage.setItem("nehaLeadSubmittedAt", new Date().toISOString());
+    queueScheduleSync();
     renderLeadGate();
   } catch (error) {
     if (els.leadNote) els.leadNote.textContent = "Could not save your pass yet. Please check your connection and try again.";
@@ -872,6 +876,40 @@ async function submitAppPayload(payload) {
     mode: "no-cors",
     body: JSON.stringify(payload)
   });
+}
+
+function queueScheduleSync() {
+  if (!state.lead?.email) return;
+  window.clearTimeout(state.scheduleSyncTimer);
+  state.scheduleSyncTimer = window.setTimeout(syncSavedSchedule, 900);
+}
+
+async function syncSavedSchedule() {
+  if (!state.lead?.email) return;
+  if (state.scheduleSyncInFlight) {
+    state.scheduleSyncPending = true;
+    return;
+  }
+  state.scheduleSyncInFlight = true;
+  state.scheduleSyncPending = false;
+  try {
+    await submitAppPayload({
+      type: "scheduleSync",
+      name: state.lead.name || "",
+      agency: state.lead.agency || "",
+      email: state.lead.email || "",
+      attending: getAttending().sort(sortSessions).map(sessionEmailPayload),
+      watching: getWatching().sort(sortSessions).map(sessionEmailPayload),
+      syncedAt: new Date().toISOString(),
+      source: "NEHA AEC 2026 Guide",
+      page: location.href
+    });
+  } catch (error) {
+    console.warn("Schedule sync did not complete yet.", error);
+  } finally {
+    state.scheduleSyncInFlight = false;
+    if (state.scheduleSyncPending) queueScheduleSync();
+  }
 }
 
 function setView(view) {
@@ -2342,8 +2380,11 @@ function sessionEmailPayload(session) {
   return {
     id: session.id,
     title: session.title,
+    rawDate: session.date,
     date: formatDate(session.date),
     time: session.time,
+    start: session.start,
+    end: session.end,
     location: session.location,
     category: session.category,
     ce: session.ceDisplay || ""
@@ -2412,6 +2453,7 @@ function openWalkingDirections(index) {
 
 function persistSaved() {
   localStorage.setItem("nehaSaved", JSON.stringify(state.saved));
+  queueScheduleSync();
 }
 
 function pruneSaved() {
