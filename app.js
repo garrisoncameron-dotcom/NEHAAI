@@ -13,6 +13,7 @@ const state = {
   communityPosts: [],
   communityLoading: false,
   communityLoaded: false,
+  communityImage: null,
   pendingConflict: null,
   installPrompt: null,
   trivia: {
@@ -82,7 +83,10 @@ const els = {
   communityCategoryInput: document.querySelector("#communityCategoryInput"),
   communityTitle: document.querySelector("#communityTitle"),
   communityMessage: document.querySelector("#communityMessage"),
-  communityImageUrl: document.querySelector("#communityImageUrl"),
+  communityImageField: document.querySelector("#communityImageField"),
+  communityImageLabel: document.querySelector("#communityImageLabel"),
+  communityImageFile: document.querySelector("#communityImageFile"),
+  communityImagePreview: document.querySelector("#communityImagePreview"),
   communityShareEmail: document.querySelector("#communityShareEmail"),
   communityStatus: document.querySelector("#communityStatus"),
   communityPosts: document.querySelector("#communityPosts"),
@@ -142,6 +146,7 @@ const communityCategories = [
   { id: "unique-problems", label: "Unique Problems" },
   { id: "eh-friends", label: "Meet New EH Friends" },
   { id: "kc-images", label: "Images of Kansas City" },
+  { id: "find-violation", label: "Find the Violation" },
   { id: "ask-community", label: "Ask the Community" }
 ];
 
@@ -428,6 +433,34 @@ els.communityCategories.addEventListener("click", (event) => {
   renderCommunity();
 });
 
+els.communityCategoryInput.addEventListener("change", () => {
+  state.communityCategory = els.communityCategoryInput.value;
+  renderCommunity();
+  renderCommunityImageField();
+});
+
+els.communityImageFile.addEventListener("change", async () => {
+  const file = els.communityImageFile.files?.[0];
+  state.communityImage = null;
+  renderCommunityImagePreview();
+  if (!file) return;
+  if (!file.type.startsWith("image/")) {
+    els.communityStatus.textContent = "Please choose an image file.";
+    els.communityImageFile.value = "";
+    return;
+  }
+  els.communityStatus.textContent = "Preparing photo...";
+  try {
+    state.communityImage = await compressCommunityImage(file);
+    els.communityStatus.textContent = "";
+    renderCommunityImagePreview();
+  } catch (error) {
+    console.error(error);
+    els.communityStatus.textContent = "Could not prepare that photo. Please choose another image.";
+    els.communityImageFile.value = "";
+  }
+});
+
 els.communityForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const submitButton = els.communityForm.querySelector('button[type="submit"]');
@@ -436,7 +469,9 @@ els.communityForm.addEventListener("submit", async (event) => {
     category: els.communityCategoryInput.value,
     title: els.communityTitle.value.trim(),
     message: els.communityMessage.value.trim(),
-    imageUrl: els.communityImageUrl.value.trim(),
+    imageData: state.communityImage?.dataUrl || "",
+    imageName: state.communityImage?.name || "",
+    imageMime: state.communityImage?.mimeType || "",
     shareEmail: els.communityShareEmail.checked ? "Yes" : "No",
     name: state.lead?.name || "",
     agency: state.lead?.agency || "",
@@ -445,7 +480,7 @@ els.communityForm.addEventListener("submit", async (event) => {
     source: "NEHA AEC 2026 Guide",
     page: location.href
   };
-  if (!post.category || !post.title || !post.message || (post.imageUrl && !els.communityImageUrl.checkValidity())) {
+  if (!post.category || !post.title || !post.message) {
     els.communityForm.reportValidity();
     return;
   }
@@ -456,8 +491,11 @@ els.communityForm.addEventListener("submit", async (event) => {
     await submitAppPayload(post);
     els.communityStatus.textContent = "Posted. Refreshing Community Connect...";
     els.communityForm.reset();
+    state.communityImage = null;
+    renderCommunityImagePreview();
     els.communityCategoryInput.value = post.category;
     state.communityCategory = post.category;
+    renderCommunityImageField();
     window.setTimeout(loadCommunityPosts, 1200);
   } catch (error) {
     els.communityStatus.textContent = "Could not post yet. Please check connection and try again.";
@@ -697,6 +735,7 @@ function hydrateControls() {
     .filter((category) => category.id !== "all")
     .map((category) => `<option value="${category.id}">${category.label}</option>`)
     .join("");
+  renderCommunityImageField();
 
   els.venueMapTabs.innerHTML = Object.entries(venueMaps).map(([key, map]) => `<button type="button" class="${key === state.venueMap ? "active" : ""}" data-map="${key}">${map.label}</button>`).join("");
   els.venueMapTabs.querySelectorAll("button").forEach((button) => {
@@ -1448,6 +1487,10 @@ function renderCommunity() {
     button.classList.toggle("active", button.dataset.communityCategory === state.communityCategory);
   });
   if (!els.communityCategoryInput.value) els.communityCategoryInput.value = "unique-problems";
+  if (state.communityCategory !== "all" && els.communityCategoryInput.value !== state.communityCategory) {
+    els.communityCategoryInput.value = state.communityCategory;
+  }
+  renderCommunityImageField();
 
   const posts = state.communityPosts
     .filter((post) => state.communityCategory === "all" || post.category === state.communityCategory)
@@ -1532,6 +1575,63 @@ function loadCommunityPosts() {
       state.communityLoading = false;
       renderCommunity();
     });
+}
+
+function renderCommunityImageField() {
+  const category = els.communityCategoryInput.value || "unique-problems";
+  const pictureFirst = category === "kc-images" || category === "find-violation";
+  els.communityImageField.classList.toggle("picture-first", pictureFirst);
+  els.communityImageLabel.textContent = pictureFirst ? "Attach photo" : "Attach image";
+  const button = els.communityImageField.querySelector(".community-file-button");
+  if (button) {
+    const labelText = pictureFirst ? "Choose Photo" : "Choose Image";
+    button.childNodes[button.childNodes.length - 1].textContent = labelText;
+  }
+}
+
+function renderCommunityImagePreview() {
+  if (!state.communityImage) {
+    els.communityImagePreview.hidden = true;
+    els.communityImagePreview.innerHTML = "";
+    return;
+  }
+  const sizeKb = Math.round(state.communityImage.size / 1024);
+  els.communityImagePreview.hidden = false;
+  els.communityImagePreview.innerHTML = `
+    <img src="${escapeAttr(state.communityImage.dataUrl)}" alt="Selected community upload preview">
+    <span>${escapeHtml(state.communityImage.name)} &middot; ${sizeKb} KB</span>
+  `;
+}
+
+function compressCommunityImage(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("Could not read image"));
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error("Could not load image"));
+      img.onload = () => {
+        const maxSide = 1200;
+        const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
+        const width = Math.max(1, Math.round(img.width * scale));
+        const height = Math.max(1, Math.round(img.height * scale));
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const context = canvas.getContext("2d");
+        context.drawImage(img, 0, 0, width, height);
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.72);
+        resolve({
+          dataUrl,
+          name: file.name.replace(/\.[^.]+$/, "") + ".jpg",
+          mimeType: "image/jpeg",
+          size: Math.round((dataUrl.length - dataUrl.indexOf(",") - 1) * 0.75)
+        });
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
 }
 
 function renderTrivia() {

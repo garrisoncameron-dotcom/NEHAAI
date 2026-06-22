@@ -162,13 +162,14 @@ function recordCommunityPost_(payload) {
   const message = trimText_(payload.message, 700);
   if (!title || !message) return jsonOutput_({ ok: false, error: "Missing title or message" });
   const postId = communityPostId_();
+  const imageUrl = saveCommunityImage_(payload, postId) || safeHttpsUrl_(payload.imageUrl || "");
 
   sheet.appendRow([
     new Date(),
     normalizeCommunityCategory_(payload.category),
     title,
     message,
-    safeHttpsUrl_(payload.imageUrl || ""),
+    imageUrl,
     displayName_(payload.name || ""),
     payload.name || "",
     payload.agency || "",
@@ -627,9 +628,28 @@ function normalizeCommunityCategory_(category) {
     "unique-problems": true,
     "eh-friends": true,
     "kc-images": true,
+    "find-violation": true,
     "ask-community": true
   };
   return allowed[value] ? value : "ask-community";
+}
+
+function saveCommunityImage_(payload, postId) {
+  const dataUrl = String(payload.imageData || "");
+  const match = dataUrl.match(/^data:(image\/(?:jpeg|jpg|png|webp));base64,([A-Za-z0-9+/=]+)$/);
+  if (!match) return "";
+
+  const mimeType = match[1] === "image/jpg" ? "image/jpeg" : match[1];
+  const extension = mimeType === "image/png" ? "png" : mimeType === "image/webp" ? "webp" : "jpg";
+  const bytes = Utilities.base64Decode(match[2]);
+  const safeName = String(payload.imageName || postId || "community-image")
+    .replace(/[^a-z0-9._-]+/gi, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80) || "community-image";
+  const blob = Utilities.newBlob(bytes, mimeType, `${postId}-${safeName}.${extension}`);
+  const file = DriveApp.createFile(blob);
+  file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  return `https://drive.google.com/uc?export=view&id=${file.getId()}`;
 }
 
 function trimText_(value, maxLength) {

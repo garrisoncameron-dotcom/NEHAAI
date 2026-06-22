@@ -8,13 +8,13 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="NEHA Guide">
     <link rel="manifest" href="manifest.webmanifest">
-    <link rel="apple-touch-icon" href="assets/icon-192.png?v=20260622-community-threads">
-    <link rel="stylesheet" href="styles.css?v=20260622-community-threads">
+    <link rel="apple-touch-icon" href="assets/icon-192.png?v=20260622-community-photos">
+    <link rel="stylesheet" href="styles.css?v=20260622-community-photos">
   </head>
   <body>
     <div id="leadGate" class="lead-gate" hidden>
       <form id="leadForm" class="lead-card">
-        <img class="lead-logo" src="assets/hs-govtech-logo.png?v=20260622-community-threads" alt="HS GovTech logo">
+        <img class="lead-logo" src="assets/hs-govtech-logo.png?v=20260622-community-photos" alt="HS GovTech logo">
         <p class="eyebrow">NEHA AEC 2026 Guide</p>
         <h2>Welcome</h2>
         <p class="lead-copy">Tell us who is using the guide, then you are in for the rest of the conference on this phone.</p>
@@ -39,7 +39,7 @@
       <aside class="rail" aria-label="Primary navigation">
         <div class="brand-lockup">
           <div class="brand-main">
-            <img class="brand-logo" src="assets/hs-govtech-logo.png?v=20260622-community-threads" alt="HS GovTech logo">
+            <img class="brand-logo" src="assets/hs-govtech-logo.png?v=20260622-community-photos" alt="HS GovTech logo">
             <div>
               <strong>HS GovTech</strong>
               <small>NEHA Navigator</small>
@@ -204,10 +204,14 @@
                 Message
                 <textarea id="communityMessage" name="message" rows="4" maxlength="700" placeholder="Keep it useful, kind, and conference-friendly." required></textarea>
               </label>
-              <label class="wide-field">
-                Image URL
-                <input id="communityImageUrl" name="imageUrl" type="url" placeholder="Optional for Kansas City photos">
-              </label>
+              <div id="communityImageField" class="community-image-field wide-field">
+                <span id="communityImageLabel">Attach image</span>
+                <label class="community-file-button">
+                  <input id="communityImageFile" name="imageFile" type="file" accept="image/*">
+                  Choose Photo
+                </label>
+                <div id="communityImagePreview" class="community-image-preview" hidden></div>
+              </div>
               <label class="community-check wide-field">
                 <input id="communityShareEmail" name="shareEmail" type="checkbox">
                 Allow attendees to email me about this post
@@ -311,8 +315,8 @@
       </article>
     </template>
 
-    <script src="data-bundle.js?v=20260622-community-threads"></script>
+    <script src="data-bundle.js?v=20260622-community-photos"></script>
     <script src="lead-config.js?v=20260619"></script>
-    <script src="app.js?v=20260622-community-threads"></script>
+    <script src="app.js?v=20260622-community-photos"></script>
   </body>
 </html>
