@@ -1,16 +1,16 @@
-const CACHE_NAME = "neha-guide-v20260622-daily-schedule-sync";
+const CACHE_NAME = "neha-guide-v20260622-branded-email-backend";
 const APP_ASSETS = [
   "./",
   "index.html",
-  "styles.css?v=20260622-daily-schedule-sync",
-  "app.js?v=20260622-daily-schedule-sync",
-  "data-bundle.js?v=20260622-daily-schedule-sync",
-  "lead-config.js?v=20260619",
+  "styles.css?v=20260622-branded-email-backend",
+  "app.js?v=20260622-branded-email-backend",
+  "data-bundle.js?v=20260622-branded-email-backend",
+  "lead-config.js?v=20260622-branded-email-backend",
   "manifest.webmanifest",
-  "assets/hs-govtech-logo.png?v=20260622-daily-schedule-sync",
+  "assets/hs-govtech-logo.png?v=20260622-branded-email-backend",
   "assets/bdmp-icon-color.png",
-  "assets/icon-192.png?v=20260622-daily-schedule-sync",
-  "assets/icon-512.png?v=20260622-daily-schedule-sync",
+  "assets/icon-192.png?v=20260622-branded-email-backend",
+  "assets/icon-512.png?v=20260622-branded-email-backend",
   "assets/sheraton-exhibit-hall-map.png",
   "assets/sheraton-meeting-overview.png",
   "assets/sheraton-floor-overview.png"
