@@ -8,13 +8,13 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="NEHA Guide">
     <link rel="manifest" href="manifest.webmanifest">
-    <link rel="apple-touch-icon" href="assets/icon-192.png?v=20260622-login-copy">
-    <link rel="stylesheet" href="styles.css?v=20260622-login-copy">
+    <link rel="apple-touch-icon" href="assets/icon-192.png?v=20260622-myneha-dashboard">
+    <link rel="stylesheet" href="styles.css?v=20260622-myneha-dashboard">
   </head>
   <body>
     <div id="leadGate" class="lead-gate" hidden>
       <form id="leadForm" class="lead-card">
-        <img class="lead-logo" src="assets/hs-govtech-logo.png?v=20260622-login-copy" alt="HS GovTech logo">
+        <img class="lead-logo" src="assets/hs-govtech-logo.png?v=20260622-myneha-dashboard" alt="HS GovTech logo">
         <p class="eyebrow">NEHA AEC 2026 Guide</p>
         <h2>Welcome</h2>
         <p class="lead-copy">Your companion for the NEHA conference. I’m here to help you navigate the schedule and venue, find the city's best BBQ, play some EH trivia between sessions and connect with other conference attendees.</p>
@@ -38,7 +38,7 @@
       <aside class="rail" aria-label="Primary navigation">
         <div class="brand-lockup">
           <div class="brand-main">
-            <img class="brand-logo" src="assets/hs-govtech-logo.png?v=20260622-login-copy" alt="HS GovTech logo">
+            <img class="brand-logo" src="assets/hs-govtech-logo.png?v=20260622-myneha-dashboard" alt="HS GovTech logo">
             <div>
               <strong>HS GovTech</strong>
               <small>NEHA Navigator</small>
@@ -47,8 +47,7 @@
           <button id="installAppButton" class="install-button" type="button">Save</button>
         </div>
         <nav class="nav-list">
-          <button class="nav-item active" data-view="schedule" type="button">Schedule</button>
-          <button class="nav-item" data-view="my" type="button">MyNEHA</button>
+          <button class="nav-item active" data-view="my" type="button">MyNEHA</button>
           <button class="nav-item" data-view="ai" type="button">AI Guide</button>
           <button class="nav-item trivia-nav" data-view="trivia" type="button">EH Trivia</button>
           <button id="moreMenuButton" class="nav-item more-nav mobile-only" type="button" aria-expanded="false" aria-controls="moreMenu">More</button>
@@ -77,7 +76,7 @@
         <header class="topbar">
           <div>
             <p class="eyebrow">NEHA AEC 2026 - Kansas City</p>
-            <h1 id="viewTitle">Conference Schedule</h1>
+            <h1 id="viewTitle">MyNEHA Dashboard</h1>
           </div>
           <div class="search-wrap">
             <input id="searchInput" type="search" placeholder="Search sessions, rooms, tags">
@@ -85,36 +84,41 @@
         </header>
         <div id="appAlerts" class="app-alerts" aria-label="Conference alerts"></div>
 
-        <section id="scheduleView" class="view active" aria-labelledby="viewTitle">
-          <div class="now-next" id="nowNext"></div>
-          <div class="control-strip">
-            <div id="dayTabs" class="segmented" aria-label="Conference days"></div>
-            <select id="categorySelect" aria-label="Category filter">
-              <option value="all">All categories</option>
-            </select>
-            <select id="statusSelect" aria-label="Saved filter">
-              <option value="all">All sessions</option>
-              <option value="attending">Attending</option>
-              <option value="watching">Watch list</option>
-              <option value="ce">CE eligible</option>
-            </select>
-          </div>
-          <div class="metrics-row" id="metricsRow"></div>
-          <div class="timeline" id="sessionList"></div>
-        </section>
-
-        <section id="myView" class="view">
+        <section id="myView" class="view active">
           <div class="section-intro">
             <div>
-              <h2>MyNEHASchedule</h2>
-              <p>Your selected sessions stay in this browser for fast conference planning.</p>
+              <h2>MyNEHA Dashboard</h2>
+              <p>Build your agenda, browse every session, and keep your conference day moving from one place.</p>
             </div>
             <button id="clearSaved" class="secondary-action" type="button">Clear saved</button>
           </div>
-          <div id="mySummary" class="metrics-row"></div>
-          <div id="conflictBanner" class="conflict-banner" hidden></div>
-          <div id="myDayTabs" class="segmented my-day-tabs" aria-label="My schedule days"></div>
-          <div id="myDailyGrid" class="daily-grid"></div>
+          <div id="myModeTabs" class="segmented dashboard-tabs" aria-label="MyNEHA dashboard views">
+            <button type="button" class="active" data-my-mode="day">My Day</button>
+            <button type="button" data-my-mode="all">All Sessions</button>
+          </div>
+          <div id="mySavedPanel" class="dashboard-panel">
+            <div id="mySummary" class="metrics-row"></div>
+            <div id="conflictBanner" class="conflict-banner" hidden></div>
+            <div id="myDayTabs" class="segmented my-day-tabs" aria-label="My schedule days"></div>
+            <div id="myDailyGrid" class="daily-grid"></div>
+          </div>
+          <div id="myBrowsePanel" class="dashboard-panel" hidden>
+            <div class="now-next" id="nowNext"></div>
+            <div class="control-strip">
+              <div id="dayTabs" class="segmented" aria-label="Conference days"></div>
+              <select id="categorySelect" aria-label="Category filter">
+                <option value="all">All categories</option>
+              </select>
+              <select id="statusSelect" aria-label="Saved filter">
+                <option value="all">All sessions</option>
+                <option value="attending">Attending</option>
+                <option value="watching">Watch list</option>
+                <option value="ce">CE eligible</option>
+              </select>
+            </div>
+            <div class="metrics-row" id="metricsRow"></div>
+            <div class="timeline" id="sessionList"></div>
+          </div>
         </section>
 
         <section id="aiView" class="view">
@@ -314,8 +318,8 @@
       </article>
     </template>
 
-    <script src="data-bundle.js?v=20260622-login-copy"></script>
+    <script src="data-bundle.js?v=20260622-myneha-dashboard"></script>
     <script src="lead-config.js?v=20260619"></script>
-    <script src="app.js?v=20260622-login-copy"></script>
+    <script src="app.js?v=20260622-myneha-dashboard"></script>
   </body>
 </html>

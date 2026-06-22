@@ -7,6 +7,7 @@ const state = {
   query: "",
   alerts: [],
   myDay: "",
+  myMode: "day",
   placeFilter: "all",
   venueMap: "exhibit",
   communityCategory: "all",
@@ -62,6 +63,9 @@ const els = {
   sessionList: document.querySelector("#sessionList"),
   myList: document.querySelector("#myList"),
   mySummary: document.querySelector("#mySummary"),
+  myModeTabs: document.querySelector("#myModeTabs"),
+  mySavedPanel: document.querySelector("#mySavedPanel"),
+  myBrowsePanel: document.querySelector("#myBrowsePanel"),
   myDayTabs: document.querySelector("#myDayTabs"),
   myDailyGrid: document.querySelector("#myDailyGrid"),
   conflictBanner: document.querySelector("#conflictBanner"),
@@ -112,8 +116,8 @@ const els = {
 };
 
 const viewTitles = {
-  schedule: "Conference Schedule",
-  my: "MyNEHASchedule",
+  schedule: "MyNEHA Dashboard",
+  my: "MyNEHA Dashboard",
   ai: "AI Session Guide",
   kc: "Things To Do In Kansas City",
   venue: "Venue Navigator",
@@ -390,23 +394,36 @@ els.leadForm.addEventListener("submit", async (event) => {
 
 els.search.addEventListener("input", (event) => {
   state.query = event.target.value.trim().toLowerCase();
+  state.myMode = state.query ? "all" : state.myMode;
   renderSchedule();
+  renderMySchedule();
 });
 
 els.category.addEventListener("change", (event) => {
   state.category = event.target.value;
+  state.myMode = "all";
   renderSchedule();
+  renderMySchedule();
 });
 
 els.status.addEventListener("change", (event) => {
   state.status = event.target.value;
+  state.myMode = "all";
   renderSchedule();
+  renderMySchedule();
 });
 
 document.querySelector("#clearSaved").addEventListener("click", () => {
   state.saved = { watch: {}, attend: {} };
   persistSaved();
   renderAll();
+});
+
+els.myModeTabs.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-my-mode]");
+  if (!button) return;
+  state.myMode = button.dataset.myMode;
+  renderMySchedule();
 });
 
 els.aiForm.addEventListener("submit", (event) => {
@@ -684,12 +701,13 @@ async function submitAppPayload(payload) {
 }
 
 function setView(view) {
+  if (view === "schedule") view = "my";
   document.querySelectorAll(".nav-item[data-view]").forEach((item) => item.classList.toggle("active", item.dataset.view === view));
   document.querySelectorAll(".more-menu-item[data-view]").forEach((item) => item.classList.toggle("active", item.dataset.view === view));
   els.moreMenuButton.classList.toggle("active", ["kc", "venue", "podcast", "community", "demo", "drink"].includes(view));
   document.querySelectorAll(".view").forEach((panel) => panel.classList.toggle("active", panel.id === `${view}View`));
   els.title.textContent = viewTitles[view];
-  els.search.style.display = view === "schedule" ? "block" : "none";
+  els.search.style.display = view === "my" ? "block" : "none";
   if (view === "my") renderMySchedule();
   if (view === "podcast") renderPodcast();
   if (view === "community") renderCommunity();
@@ -720,7 +738,9 @@ function hydrateControls() {
     button.addEventListener("click", () => {
       state.day = button.dataset.day;
       els.dayTabs.querySelectorAll("button").forEach((b) => b.classList.toggle("active", b === button));
+      state.myMode = "all";
       renderSchedule();
+      renderMySchedule();
     });
   });
 
@@ -1119,6 +1139,9 @@ function renderMySchedule() {
   if (combined.length && !combined.some((session) => session.date === state.myDay)) {
     state.myDay = combined[0].date;
   }
+  renderMyModeTabs(attending, watching);
+  els.mySavedPanel.hidden = state.myMode !== "day";
+  els.myBrowsePanel.hidden = state.myMode !== "all";
   renderMyDayTabs(days, combined);
   renderDailyGrid(combined);
   renderConflictBanner();
@@ -1128,6 +1151,16 @@ function renderMySchedule() {
     [sumCe(attending), "planned CE credits"],
     [conflictCount(attending), "time conflicts"]
   ]);
+  renderSchedule();
+}
+
+function renderMyModeTabs(attending, watching) {
+  els.myModeTabs.querySelectorAll("[data-my-mode]").forEach((button) => {
+    const mode = button.dataset.myMode;
+    button.classList.toggle("active", mode === state.myMode);
+    if (mode === "day") button.textContent = `My Day (${attending.length + watching.length})`;
+    if (mode === "all") button.textContent = "All Sessions";
+  });
 }
 
 function renderMyDayTabs(days, savedSessions) {
@@ -1147,7 +1180,12 @@ function renderMyDayTabs(days, savedSessions) {
 function renderDailyGrid(savedSessions) {
   const dayItems = savedSessions.filter((session) => session.date === state.myDay).sort(sortSessions);
   if (!dayItems.length) {
-    els.myDailyGrid.innerHTML = `<div class="empty-state">No saved sessions for ${dayLabel(state.myDay)} yet.</div>`;
+    els.myDailyGrid.innerHTML = `
+      <div class="empty-state">
+        No saved sessions for ${dayLabel(state.myDay)} yet.
+        <button type="button" class="inline-empty-action" data-open-all-sessions>Browse all sessions</button>
+      </div>
+    `;
     return;
   }
   els.myDailyGrid.innerHTML = dayItems.map((session) => {
@@ -1164,6 +1202,12 @@ function renderDailyGrid(savedSessions) {
     `;
   }).join("");
 }
+
+els.myDailyGrid.addEventListener("click", (event) => {
+  if (!event.target.closest("[data-open-all-sessions]")) return;
+  state.myMode = "all";
+  renderMySchedule();
+});
 
 function runAi() {
   const prompt = els.aiPrompt.value.trim();
