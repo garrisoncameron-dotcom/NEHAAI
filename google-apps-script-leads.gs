@@ -5,6 +5,7 @@ const DEMO_SHEET_NAME = "Demo Requests";
 const ALERTS_SHEET_NAME = "App Alerts";
 const DRINK_SHEET_NAME = "Drink Redemptions";
 const COMMUNITY_SHEET_NAME = "Community Posts";
+const COMMUNITY_REPLIES_SHEET_NAME = "Community Replies";
 
 function doPost(e) {
   const payload = JSON.parse(e.postData.contents || "{}");
@@ -13,6 +14,7 @@ function doPost(e) {
   if (payload.type === "drinkRedemption") return recordDrinkRedemption_(payload);
   if (payload.type === "drinkServed") return markDrinkServed_(payload);
   if (payload.type === "communityPost") return recordCommunityPost_(payload);
+  if (payload.type === "communityReply") return recordCommunityReply_(payload);
   return recordLead_(payload);
 }
 
@@ -159,6 +161,7 @@ function recordCommunityPost_(payload) {
   const title = trimText_(payload.title, 90);
   const message = trimText_(payload.message, 700);
   if (!title || !message) return jsonOutput_({ ok: false, error: "Missing title or message" });
+  const postId = communityPostId_();
 
   sheet.appendRow([
     new Date(),
@@ -174,9 +177,34 @@ function recordCommunityPost_(payload) {
     payload.postedAt || "",
     payload.source || "",
     payload.page || "",
+    "Visible",
+    postId
+  ]);
+  sheet.autoResizeColumns(1, 15);
+
+  return jsonOutput_({ ok: true, postId });
+}
+
+function recordCommunityReply_(payload) {
+  const sheet = getCommunityReplySheet_();
+  const postId = trimText_(payload.postId, 80);
+  const message = trimText_(payload.message, 500);
+  if (!postId || !message) return jsonOutput_({ ok: false, error: "Missing post or message" });
+
+  sheet.appendRow([
+    new Date(),
+    postId,
+    message,
+    displayName_(payload.name || ""),
+    payload.name || "",
+    payload.agency || "",
+    payload.email || "",
+    payload.postedAt || "",
+    payload.source || "",
+    payload.page || "",
     "Visible"
   ]);
-  sheet.autoResizeColumns(1, 14);
+  sheet.autoResizeColumns(1, 11);
 
   return jsonOutput_({ ok: true });
 }
@@ -297,10 +325,40 @@ function getCommunitySheet_() {
       "Posted At",
       "Source",
       "Page",
+      "Status",
+      "Post ID"
+    ]);
+    sheet.setFrozenRows(1);
+    sheet.autoResizeColumns(1, 15);
+  } else if (sheet.getLastColumn() < 15) {
+    sheet.getRange(1, 15).setValue("Post ID");
+    sheet.autoResizeColumns(1, 15);
+  }
+
+  return sheet;
+}
+
+function getCommunityReplySheet_() {
+  const spreadsheet = SpreadsheetApp.openById(SHEET_ID);
+  let sheet = spreadsheet.getSheetByName(COMMUNITY_REPLIES_SHEET_NAME);
+  if (!sheet) sheet = spreadsheet.insertSheet(COMMUNITY_REPLIES_SHEET_NAME);
+
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow([
+      "Received At",
+      "Post ID",
+      "Message",
+      "Display Name",
+      "Full Name",
+      "Agency",
+      "Email",
+      "Posted At",
+      "Source",
+      "Page",
       "Status"
     ]);
     sheet.setFrozenRows(1);
-    sheet.autoResizeColumns(1, 14);
+    sheet.autoResizeColumns(1, 11);
   }
 
   return sheet;
@@ -447,25 +505,37 @@ function getCommunityPosts_() {
   const sheet = getCommunitySheet_();
   const lastRow = sheet.getLastRow();
   if (lastRow <= 1) return [];
-  const rows = sheet.getRange(2, 1, lastRow - 1, 14).getValues();
+  const repliesByPost = getCommunityRepliesByPost_();
+  const rows = sheet.getRange(2, 1, lastRow - 1, 15).getValues();
   return rows
-    .map((row) => ({
-      receivedAt: row[0],
-      category: normalizeCommunityCategory_(row[1]),
-      title: String(row[2] || "").trim(),
-      message: String(row[3] || "").trim(),
-      imageUrl: safeHttpsUrl_(row[4] || ""),
-      displayName: row[5] || "NEHA attendee",
-      agency: row[7] || "",
-      email: String(row[9] || "").toLowerCase() === "yes" ? String(row[8] || "").trim() : "",
-      shareEmail: String(row[9] || "").toLowerCase() === "yes",
-      postedAt: row[10] || row[0],
-      status: String(row[13] || "Visible").trim().toLowerCase()
-    }))
+    .map((row, index) => {
+      const rowNumber = index + 2;
+      let postId = String(row[14] || "").trim();
+      if (!postId) {
+        postId = `post-${rowNumber}`;
+        sheet.getRange(rowNumber, 15).setValue(postId);
+      }
+      return {
+        id: postId,
+        receivedAt: row[0],
+        category: normalizeCommunityCategory_(row[1]),
+        title: String(row[2] || "").trim(),
+        message: String(row[3] || "").trim(),
+        imageUrl: safeHttpsUrl_(row[4] || ""),
+        displayName: row[5] || "NEHA attendee",
+        agency: row[7] || "",
+        email: String(row[9] || "").toLowerCase() === "yes" ? String(row[8] || "").trim() : "",
+        shareEmail: String(row[9] || "").toLowerCase() === "yes",
+        postedAt: row[10] || row[0],
+        status: String(row[13] || "Visible").trim().toLowerCase(),
+        replies: repliesByPost[postId] || []
+      };
+    })
     .filter((post) => post.status !== "hidden" && post.title && post.message)
     .sort((a, b) => new Date(b.receivedAt) - new Date(a.receivedAt))
     .slice(0, 60)
     .map((post) => ({
+      id: post.id,
       category: post.category,
       title: post.title,
       message: post.message,
@@ -474,8 +544,38 @@ function getCommunityPosts_() {
       agency: post.agency,
       email: post.email,
       shareEmail: post.shareEmail,
-      postedAt: post.postedAt
+      postedAt: post.postedAt,
+      replies: post.replies
     }));
+}
+
+function getCommunityRepliesByPost_() {
+  const sheet = getCommunityReplySheet_();
+  const lastRow = sheet.getLastRow();
+  if (lastRow <= 1) return {};
+  const rows = sheet.getRange(2, 1, lastRow - 1, 11).getValues();
+  return rows
+    .map((row) => ({
+      receivedAt: row[0],
+      postId: String(row[1] || "").trim(),
+      message: String(row[2] || "").trim(),
+      displayName: row[3] || "NEHA attendee",
+      agency: row[5] || "",
+      postedAt: row[7] || row[0],
+      status: String(row[10] || "Visible").trim().toLowerCase()
+    }))
+    .filter((reply) => reply.status !== "hidden" && reply.postId && reply.message)
+    .sort((a, b) => new Date(a.receivedAt) - new Date(b.receivedAt))
+    .reduce((grouped, reply) => {
+      if (!grouped[reply.postId]) grouped[reply.postId] = [];
+      grouped[reply.postId].push({
+        message: reply.message,
+        displayName: reply.displayName,
+        agency: reply.agency,
+        postedAt: reply.postedAt
+      });
+      return grouped;
+    }, {});
 }
 
 function getDrinkTicket_(code) {
@@ -515,6 +615,10 @@ function displayName_(name) {
   if (!parts.length) return "Mystery Player";
   if (parts.length === 1) return parts[0];
   return `${parts[0]} ${parts[parts.length - 1].charAt(0)}.`;
+}
+
+function communityPostId_() {
+  return `post-${Utilities.getUuid()}`;
 }
 
 function normalizeCommunityCategory_(category) {

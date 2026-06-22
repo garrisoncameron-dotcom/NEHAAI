@@ -1179,6 +1179,117 @@ select {
   text-decoration: none;
 }
 
+.community-thread {
+  display: grid;
+  gap: 10px;
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+
+.community-thread-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--navy);
+  font-size: 0.9rem;
+}
+
+.community-replies {
+  display: grid;
+  gap: 8px;
+}
+
+.community-reply,
+.community-reply-empty {
+  border: 1px solid rgba(199, 210, 216, 0.78);
+  border-radius: 8px;
+  background: #f7fafc;
+  padding: 10px;
+}
+
+.community-reply {
+  display: grid;
+  gap: 7px;
+}
+
+.community-reply p {
+  margin: 0;
+  color: var(--grey-dark);
+  font-size: 0.94rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+.community-reply div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.community-reply strong {
+  color: var(--navy);
+}
+
+.community-reply-empty {
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.community-reply-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: end;
+}
+
+.community-reply-form label {
+  display: grid;
+  gap: 6px;
+  color: var(--navy);
+  font-size: 0.86rem;
+  font-weight: 900;
+}
+
+.community-reply-form textarea {
+  width: 100%;
+  min-height: 66px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink);
+  background: #fff;
+  padding: 10px 11px;
+  font: inherit;
+  resize: vertical;
+}
+
+.community-reply-form button {
+  min-height: 44px;
+  border: 0;
+  border-radius: 8px;
+  color: #fff;
+  background: var(--navy);
+  cursor: pointer;
+  font-weight: 900;
+  padding: 0 16px;
+}
+
+.community-reply-form button:disabled {
+  color: var(--grey-dark);
+  background: var(--grey-light);
+  cursor: wait;
+}
+
+.community-reply-status {
+  grid-column: 1 / -1;
+  min-height: 18px;
+  color: #236344;
+  font-size: 0.84rem;
+  font-weight: 900;
+}
+
 .demo-panel {
   display: grid;
   grid-template-columns: minmax(260px, 0.8fr) minmax(320px, 1.2fr);
@@ -2095,6 +2206,7 @@ select {
 
   .prompt-box,
   .community-form,
+  .community-reply-form,
   .demo-form,
   .session-card,
   .session-head,

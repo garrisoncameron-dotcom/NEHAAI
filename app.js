@@ -468,6 +468,47 @@ els.communityForm.addEventListener("submit", async (event) => {
   }
 });
 
+els.communityPosts.addEventListener("submit", async (event) => {
+  const form = event.target.closest(".community-reply-form");
+  if (!form) return;
+  event.preventDefault();
+  const postId = form.dataset.postId || "";
+  const textarea = form.querySelector("textarea");
+  const submitButton = form.querySelector('button[type="submit"]');
+  const status = form.querySelector(".community-reply-status");
+  const message = textarea.value.trim();
+  if (!postId || !message) {
+    form.reportValidity();
+    return;
+  }
+  const reply = {
+    type: "communityReply",
+    postId,
+    message,
+    name: state.lead?.name || "",
+    agency: state.lead?.agency || "",
+    email: state.lead?.email || "",
+    postedAt: new Date().toISOString(),
+    source: "NEHA AEC 2026 Guide",
+    page: location.href
+  };
+  submitButton.disabled = true;
+  submitButton.textContent = "Replying...";
+  status.textContent = "";
+  try {
+    await submitAppPayload(reply);
+    textarea.value = "";
+    status.textContent = "Reply posted.";
+    window.setTimeout(loadCommunityPosts, 900);
+  } catch (error) {
+    status.textContent = "Could not post reply yet. Please try again.";
+    console.error(error);
+  } finally {
+    submitButton.disabled = false;
+    submitButton.textContent = "Reply";
+  }
+});
+
 els.demoForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const submitButton = els.demoForm.querySelector('button[type="submit"]');
@@ -1425,6 +1466,8 @@ function renderCommunity() {
     const category = communityCategoryLabel(post.category);
     const email = post.shareEmail && post.email ? `<a href="mailto:${escapeAttr(post.email)}?subject=${encodeURIComponent(`NEHA Community Connect: ${post.title}`)}">Email ${escapeHtml(post.displayName || "attendee")}</a>` : "";
     const image = safeImageUrl(post.imageUrl) ? `<img src="${escapeAttr(post.imageUrl)}" alt="${escapeAttr(post.title)}">` : "";
+    const replies = Array.isArray(post.replies) ? post.replies.slice(0, 20) : [];
+    const replyLabel = `${replies.length} ${replies.length === 1 ? "reply" : "replies"}`;
     return `
       <article class="community-post">
         <div class="community-post-head">
@@ -1439,6 +1482,31 @@ function renderCommunity() {
           <span>${escapeHtml(post.agency || "Environmental health community")}</span>
           ${email}
         </div>
+        <section class="community-thread" aria-label="${escapeAttr(post.title)} replies">
+          <div class="community-thread-head">
+            <strong>${replyLabel}</strong>
+          </div>
+          <div class="community-replies">
+            ${replies.length ? replies.map((reply) => `
+              <div class="community-reply">
+                <p>${escapeHtml(reply.message || "")}</p>
+                <div>
+                  <strong>${escapeHtml(reply.displayName || "NEHA attendee")}</strong>
+                  <span>${escapeHtml(reply.agency || "Environmental health community")}</span>
+                  <small>${escapeHtml(relativePostTime(reply.postedAt))}</small>
+                </div>
+              </div>
+            `).join("") : `<div class="community-reply-empty">Start the thread with a helpful reply.</div>`}
+          </div>
+          <form class="community-reply-form" data-post-id="${escapeAttr(post.id || "")}">
+            <label>
+              Reply to this thread
+              <textarea name="reply" rows="2" maxlength="500" placeholder="Add a helpful reply..." required></textarea>
+            </label>
+            <button type="submit">Reply</button>
+            <span class="community-reply-status" aria-live="polite"></span>
+          </form>
+        </section>
       </article>
     `;
   }).join("");

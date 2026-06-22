@@ -1,16 +1,16 @@
-const CACHE_NAME = "neha-guide-v20260622-community-connect";
+const CACHE_NAME = "neha-guide-v20260622-community-threads";
 const APP_ASSETS = [
   "./",
   "index.html",
-  "styles.css?v=20260622-community-connect",
-  "app.js?v=20260622-community-connect",
-  "data-bundle.js?v=20260622-community-connect",
+  "styles.css?v=20260622-community-threads",
+  "app.js?v=20260622-community-threads",
+  "data-bundle.js?v=20260622-community-threads",
   "lead-config.js?v=20260619",
   "manifest.webmanifest",
-  "assets/hs-govtech-logo.png?v=20260622-community-connect",
+  "assets/hs-govtech-logo.png?v=20260622-community-threads",
   "assets/bdmp-icon-color.png",
-  "assets/icon-192.png?v=20260622-community-connect",
-  "assets/icon-512.png?v=20260622-community-connect",
+  "assets/icon-192.png?v=20260622-community-threads",
+  "assets/icon-512.png?v=20260622-community-threads",
   "assets/sheraton-exhibit-hall-map.png",
   "assets/sheraton-meeting-overview.png",
   "assets/sheraton-floor-overview.png"
