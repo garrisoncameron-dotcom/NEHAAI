@@ -289,6 +289,10 @@ const venueMaps = {
 const stopWords = new Set("a an and are as at be but by can for from give has have how i if in into is it me my of on or our should the their them there they this to what when where who why with you your about after all also any best do does need recommend tell".split(" "));
 let knowledgeDocs = null;
 
+if (new URLSearchParams(location.search).has("refreshApp")) {
+  refreshInstalledApp();
+}
+
 loadData().then(([sessions, guide]) => {
   state.sessions = sessions;
   state.guide = guide;
@@ -726,6 +730,24 @@ function renderInstallButton() {
   }
   els.installAppButton.textContent = state.installPrompt ? "Download" : "Save";
   els.installAppButton.disabled = false;
+}
+
+async function refreshInstalledApp() {
+  try {
+    if ("serviceWorker" in navigator) {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(registrations.map((registration) => registration.unregister()));
+    }
+    if ("caches" in window) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map((key) => caches.delete(key)));
+    }
+  } catch (error) {
+    console.warn("App refresh cleanup failed", error);
+  } finally {
+    const cleanUrl = `${location.origin}${location.pathname}`;
+    window.setTimeout(() => location.replace(cleanUrl), 250);
+  }
 }
 
 async function createDrinkTicket() {
