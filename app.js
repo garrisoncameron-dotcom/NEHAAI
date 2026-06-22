@@ -1,3 +1,5 @@
+const TRIVIA_ROUND_STORAGE_KEY = "nehaTriviaRound";
+
 const state = {
   sessions: [],
   guide: null,
@@ -46,7 +48,11 @@ const state = {
     leaderboardLoading: false,
     leaderboardError: "",
     order: [],
-    best: Number(localStorage.getItem("nehaTriviaBest") || 0)
+    best: Number(localStorage.getItem("nehaTriviaBest") || 0),
+    roundId: "",
+    startedAt: "",
+    completedAt: "",
+    ...loadStoredTriviaRound()
   },
   drinkTicket: JSON.parse(localStorage.getItem("nehaDrinkTicket") || "null"),
   drinkValidation: {
@@ -358,6 +364,7 @@ if (new URLSearchParams(location.search).has("refreshApp")) {
 loadData().then(([sessions, guide]) => {
   state.sessions = sessions;
   state.guide = guide;
+  normalizeTriviaRound();
   pruneSaved();
   hydrateControls();
   renderAll();
@@ -986,7 +993,6 @@ function renderAll() {
   renderPodcast();
   renderCommunity();
   renderAppAlerts();
-  renderTrivia();
   renderFreeDrink();
   renderLeadGate();
   updateSavedCounts();
@@ -2105,12 +2111,14 @@ function compressCommunityImage(file) {
 }
 
 function renderTrivia() {
+  ensureTriviaRound();
   const trivia = state.trivia;
   const total = triviaQuestions.length;
   els.triviaScore.textContent = `${trivia.score}/${total}`;
   els.triviaProgressBar.style.width = `${Math.round((trivia.index / total) * 100)}%`;
 
   if (trivia.complete) {
+    if (!trivia.submitted && !trivia.submitting && !trivia.leaderboardError) window.setTimeout(postTriviaScore, 0);
     renderTriviaResults();
     return;
   }
@@ -2170,6 +2178,70 @@ function resetTriviaOrder() {
   state.trivia.order = triviaQuestions.map((question) => shuffleArray(question.options.map((_, index) => index)));
 }
 
+function loadStoredTriviaRound() {
+  try {
+    const stored = JSON.parse(localStorage.getItem(TRIVIA_ROUND_STORAGE_KEY) || "null");
+    if (!stored || typeof stored !== "object") return {};
+    return {
+      index: Number(stored.index) || 0,
+      score: Number(stored.score) || 0,
+      selected: Number.isInteger(stored.selected) ? stored.selected : null,
+      answered: Boolean(stored.answered),
+      complete: Boolean(stored.complete),
+      streak: Number(stored.streak) || 0,
+      hintsRemaining: Number.isFinite(Number(stored.hintsRemaining)) ? Number(stored.hintsRemaining) : 3,
+      hidden: stored.hidden && typeof stored.hidden === "object" ? stored.hidden : {},
+      submitted: Boolean(stored.submitted),
+      submitting: false,
+      order: Array.isArray(stored.order) ? stored.order : [],
+      roundId: stored.roundId || "",
+      startedAt: stored.startedAt || "",
+      completedAt: stored.completedAt || ""
+    };
+  } catch (error) {
+    console.warn("Stored trivia round could not be restored", error);
+    return {};
+  }
+}
+
+function ensureTriviaRound() {
+  if (!state.trivia.roundId) {
+    state.trivia.roundId = `round-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
+    state.trivia.startedAt = new Date().toISOString();
+  }
+  if (!state.trivia.order.length) resetTriviaOrder();
+  persistTriviaRound();
+}
+
+function normalizeTriviaRound() {
+  const total = triviaQuestions.length;
+  state.trivia.index = Math.min(Math.max(Number(state.trivia.index) || 0, 0), total - 1);
+  state.trivia.score = Math.min(Math.max(Number(state.trivia.score) || 0, 0), total);
+  state.trivia.streak = Math.min(Math.max(Number(state.trivia.streak) || 0, 0), total);
+  state.trivia.hintsRemaining = Math.min(Math.max(Number(state.trivia.hintsRemaining) || 0, 0), 3);
+  if (!state.trivia.order.length || state.trivia.order.length !== total) resetTriviaOrder();
+  if (state.trivia.roundId) persistTriviaRound();
+}
+
+function persistTriviaRound() {
+  const round = {
+    roundId: state.trivia.roundId,
+    startedAt: state.trivia.startedAt,
+    completedAt: state.trivia.completedAt,
+    index: state.trivia.index,
+    score: state.trivia.score,
+    selected: state.trivia.selected,
+    answered: state.trivia.answered,
+    complete: state.trivia.complete,
+    streak: state.trivia.streak,
+    hintsRemaining: state.trivia.hintsRemaining,
+    hidden: state.trivia.hidden,
+    submitted: state.trivia.submitted,
+    order: state.trivia.order
+  };
+  localStorage.setItem(TRIVIA_ROUND_STORAGE_KEY, JSON.stringify(round));
+}
+
 function shuffleArray(items) {
   const copy = [...items];
   for (let index = copy.length - 1; index > 0; index -= 1) {
@@ -2188,6 +2260,7 @@ function useTriviaHint() {
   const removed = candidates[Math.floor(Math.random() * candidates.length)];
   state.trivia.hidden[state.trivia.index] = [...hidden, removed];
   state.trivia.hintsRemaining -= 1;
+  persistTriviaRound();
   renderTrivia();
 }
 
@@ -2201,6 +2274,7 @@ function answerTrivia(index) {
   } else {
     state.trivia.streak = 0;
   }
+  persistTriviaRound();
   renderTrivia();
 }
 
@@ -2208,13 +2282,16 @@ function nextTriviaQuestion() {
   if (!state.trivia.answered) return;
   if (state.trivia.index >= triviaQuestions.length - 1) {
     state.trivia.complete = true;
+    state.trivia.completedAt = new Date().toISOString();
     state.trivia.best = Math.max(state.trivia.best, state.trivia.score);
     localStorage.setItem("nehaTriviaBest", String(state.trivia.best));
+    persistTriviaRound();
     postTriviaScore();
   } else {
     state.trivia.index += 1;
     state.trivia.selected = null;
     state.trivia.answered = false;
+    persistTriviaRound();
   }
   renderTrivia();
 }
@@ -2231,7 +2308,11 @@ function restartTrivia() {
   state.trivia.submitted = false;
   state.trivia.submitting = false;
   state.trivia.leaderboardError = "";
+  state.trivia.roundId = `round-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
+  state.trivia.startedAt = new Date().toISOString();
+  state.trivia.completedAt = "";
   resetTriviaOrder();
+  persistTriviaRound();
   renderTrivia();
 }
 
@@ -2307,19 +2388,23 @@ async function postTriviaScore() {
     total: triviaQuestions.length,
     achievement: achievement.title,
     hintsUsed: 3 - state.trivia.hintsRemaining,
-    completedAt: new Date().toISOString(),
+    roundId: state.trivia.roundId,
+    startedAt: state.trivia.startedAt,
+    completedAt: state.trivia.completedAt || new Date().toISOString(),
     source: "NEHA AEC 2026 Guide",
     page: location.href
   };
   try {
     await submitAppPayload(payload);
     state.trivia.submitted = true;
+    persistTriviaRound();
     await loadTriviaLeaderboard();
   } catch (error) {
     state.trivia.leaderboardError = "Could not post score yet. Check connection and try again.";
     console.error(error);
   } finally {
     state.trivia.submitting = false;
+    persistTriviaRound();
     renderTrivia();
   }
 }

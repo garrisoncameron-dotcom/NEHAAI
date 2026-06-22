@@ -1,16 +1,16 @@
-const CACHE_NAME = "neha-guide-v20260622-dashboard-copy";
+const CACHE_NAME = "neha-guide-v20260622-trivia-round-save";
 const APP_ASSETS = [
   "./",
   "index.html",
-  "styles.css?v=20260622-dashboard-copy",
-  "app.js?v=20260622-dashboard-copy",
-  "data-bundle.js?v=20260622-dashboard-copy",
-  "lead-config.js?v=20260622-dashboard-copy",
+  "styles.css?v=20260622-trivia-round-save",
+  "app.js?v=20260622-trivia-round-save",
+  "data-bundle.js?v=20260622-trivia-round-save",
+  "lead-config.js?v=20260622-trivia-round-save",
   "manifest.webmanifest",
-  "assets/hs-govtech-logo.png?v=20260622-dashboard-copy",
+  "assets/hs-govtech-logo.png?v=20260622-trivia-round-save",
   "assets/bdmp-icon-color.png",
-  "assets/icon-192.png?v=20260622-dashboard-copy",
-  "assets/icon-512.png?v=20260622-dashboard-copy",
+  "assets/icon-192.png?v=20260622-trivia-round-save",
+  "assets/icon-512.png?v=20260622-trivia-round-save",
   "assets/sheraton-exhibit-hall-map.png",
   "assets/sheraton-meeting-overview.png",
   "assets/sheraton-floor-overview.png"
