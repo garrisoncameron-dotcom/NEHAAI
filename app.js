@@ -6,6 +6,9 @@ const state = {
   status: "all",
   query: "",
   alerts: [],
+  alertIndex: Number(localStorage.getItem("nehaAlertIndex") || 0),
+  reminders: JSON.parse(localStorage.getItem("nehaSessionReminders") || "{}"),
+  reminderAlert: null,
   myDay: "",
   myMode: "day",
   placeFilter: "all",
@@ -76,6 +79,7 @@ const els = {
   myBrowsePanel: document.querySelector("#myBrowsePanel"),
   myDayTabs: document.querySelector("#myDayTabs"),
   myDailyGrid: document.querySelector("#myDailyGrid"),
+  emailSchedule: document.querySelector("#emailSchedule"),
   conflictBanner: document.querySelector("#conflictBanner"),
   aiForm: document.querySelector("#aiForm"),
   aiPrompt: document.querySelector("#aiPrompt"),
@@ -355,6 +359,8 @@ loadData().then(([sessions, guide]) => {
   hydrateControls();
   renderAll();
   loadAppAlerts();
+  startAlertRotation();
+  startLocalSessionReminders();
   loadSessionPresentations().then(renderAll);
   loadCommunityPosts();
   runAi();
@@ -442,6 +448,40 @@ document.querySelector("#clearSaved").addEventListener("click", () => {
   state.saved = { watch: {}, attend: {} };
   persistSaved();
   renderAll();
+});
+
+els.emailSchedule.addEventListener("click", async () => {
+  const sessions = getAttending().sort(sortSessions);
+  if (!sessions.length) {
+    els.emailSchedule.textContent = "No attending sessions";
+    window.setTimeout(() => {
+      els.emailSchedule.textContent = "Email my schedule";
+    }, 1800);
+    return;
+  }
+  els.emailSchedule.disabled = true;
+  els.emailSchedule.textContent = "Sending...";
+  try {
+    await submitAppPayload({
+      type: "emailSchedule",
+      name: state.lead?.name || "",
+      agency: state.lead?.agency || "",
+      email: state.lead?.email || "",
+      sessions: sessions.map(sessionEmailPayload),
+      requestedAt: new Date().toISOString(),
+      source: "NEHA AEC 2026 Guide",
+      page: location.href
+    });
+    els.emailSchedule.textContent = "Schedule sent";
+  } catch (error) {
+    els.emailSchedule.textContent = "Could not send";
+    console.error(error);
+  } finally {
+    window.setTimeout(() => {
+      els.emailSchedule.disabled = false;
+      els.emailSchedule.textContent = "Email my schedule";
+    }, 1800);
+  }
 });
 
 els.myModeTabs.addEventListener("click", (event) => {
@@ -915,8 +955,11 @@ function renderAll() {
 }
 
 function renderAppAlerts() {
+  const reminders = state.reminderAlert ? [state.reminderAlert] : [];
   const alerts = state.alerts.length ? state.alerts : fallbackAppAlerts;
-  els.appAlerts.innerHTML = alerts.map((alert) => `
+  const rotating = alerts.length ? [alerts[state.alertIndex % alerts.length]] : [];
+  const visibleAlerts = [...reminders, ...rotating];
+  els.appAlerts.innerHTML = visibleAlerts.map((alert) => `
     <article class="app-alert">
       <span>${escapeHtml(brandCopy(alert.label))}</span>
       <div>
@@ -926,6 +969,47 @@ function renderAppAlerts() {
       <button type="button" data-alert-view="${escapeAttr(alert.view)}">${escapeHtml(brandCopy(alert.action))}</button>
     </article>
   `).join("");
+}
+
+function startAlertRotation() {
+  window.setInterval(() => {
+    const alerts = state.alerts.length ? state.alerts : fallbackAppAlerts;
+    if (alerts.length < 2) return;
+    state.alertIndex = (state.alertIndex + 1) % alerts.length;
+    localStorage.setItem("nehaAlertIndex", String(state.alertIndex));
+    renderAppAlerts();
+  }, 12000);
+}
+
+function startLocalSessionReminders() {
+  checkLocalSessionReminders();
+  window.setInterval(checkLocalSessionReminders, 60000);
+}
+
+function checkLocalSessionReminders() {
+  const candidates = [...getAttending(), ...getWatching()]
+    .filter((session, index, list) => list.findIndex((item) => item.id === session.id) === index)
+    .sort(sortSessions);
+  const now = Date.now();
+  const upcoming = candidates.find((session) => {
+    const minutes = (sessionStartDate(session).getTime() - now) / 60000;
+    return minutes >= 0 && minutes <= 10 && !state.reminders[session.id];
+  });
+  if (upcoming) {
+    state.reminders[upcoming.id] = new Date().toISOString();
+    localStorage.setItem("nehaSessionReminders", JSON.stringify(state.reminders));
+    state.reminderAlert = {
+      label: "Next Up",
+      title: "Session starting soon",
+      message: `${upcoming.title} starts at ${shortTime(upcoming.start)} in ${upcoming.location}.`,
+      action: "Open MyNEHA",
+      view: "my"
+    };
+  } else if (state.reminderAlert) {
+    const activeReminder = candidates.find((session) => state.reminderAlert.message.includes(session.title) && sessionEndDate(session).getTime() >= now);
+    if (!activeReminder) state.reminderAlert = null;
+  }
+  renderAppAlerts();
 }
 
 function loadAppAlerts() {
@@ -2233,6 +2317,8 @@ function loadTriviaLeaderboard() {
 function toggleSaved(kind, id) {
   if (state.saved[kind][id]) {
     delete state.saved[kind][id];
+    delete state.reminders[id];
+    localStorage.setItem("nehaSessionReminders", JSON.stringify(state.reminders));
   } else {
     if (kind === "attend") {
       const session = sessionById(id);
@@ -2249,6 +2335,19 @@ function toggleSaved(kind, id) {
   }
   persistSaved();
   renderAll();
+  checkLocalSessionReminders();
+}
+
+function sessionEmailPayload(session) {
+  return {
+    id: session.id,
+    title: session.title,
+    date: formatDate(session.date),
+    time: session.time,
+    location: session.location,
+    category: session.category,
+    ce: session.ceDisplay || ""
+  };
 }
 
 function renderConflictBanner() {

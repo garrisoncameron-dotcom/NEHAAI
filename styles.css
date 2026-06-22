@@ -407,6 +407,13 @@ select {
   margin-bottom: 18px;
 }
 
+.section-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
 .control-strip {
   flex-wrap: wrap;
 }
@@ -2455,6 +2462,14 @@ select {
   .conflict-banner {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .section-actions {
+    justify-content: stretch;
+  }
+
+  .section-actions button {
+    width: 100%;
   }
 
   .app-alert {

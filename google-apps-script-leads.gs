@@ -9,6 +9,7 @@ const COMMUNITY_REPLIES_SHEET_NAME = "Community Replies";
 const SESSION_QUESTIONS_SHEET_NAME = "Session Questions";
 const SESSION_REPLIES_SHEET_NAME = "Session Question Replies";
 const SESSION_PRESENTATIONS_SHEET_NAME = "Session Presentations";
+const SCHEDULE_EMAIL_SHEET_NAME = "Schedule Email Requests";
 
 function doPost(e) {
   if (!e || !e.postData) return jsonOutput_({ ok: true, authorization: authorizeDriveAccess() });
@@ -21,6 +22,7 @@ function doPost(e) {
   if (payload.type === "communityReply") return recordCommunityReply_(payload);
   if (payload.type === "sessionQuestion") return recordSessionQuestion_(payload);
   if (payload.type === "sessionQuestionReply") return recordSessionQuestionReply_(payload);
+  if (payload.type === "emailSchedule") return recordScheduleEmail_(payload);
   return recordLead_(payload);
 }
 
@@ -281,6 +283,25 @@ function recordSessionQuestionReply_(payload) {
   return jsonOutput_({ ok: true });
 }
 
+function recordScheduleEmail_(payload) {
+  const sheet = getScheduleEmailSheet_();
+  const sessions = Array.isArray(payload.sessions) ? payload.sessions : [];
+  sheet.appendRow([
+    new Date(),
+    payload.name || "",
+    payload.agency || "",
+    payload.email || "",
+    sessions.length,
+    JSON.stringify(sessions),
+    payload.requestedAt || "",
+    payload.source || "",
+    payload.page || ""
+  ]);
+  sheet.autoResizeColumns(1, 9);
+  sendScheduleEmail_(payload, sessions);
+  return jsonOutput_({ ok: true });
+}
+
 function getLeadSheet_() {
   const spreadsheet = SpreadsheetApp.openById(SHEET_ID);
   let sheet = spreadsheet.getSheetByName(SHEET_NAME);
@@ -511,6 +532,30 @@ function getSessionPresentationSheet_() {
     ]);
     sheet.setFrozenRows(1);
     sheet.autoResizeColumns(1, 6);
+  }
+
+  return sheet;
+}
+
+function getScheduleEmailSheet_() {
+  const spreadsheet = SpreadsheetApp.openById(SHEET_ID);
+  let sheet = spreadsheet.getSheetByName(SCHEDULE_EMAIL_SHEET_NAME);
+  if (!sheet) sheet = spreadsheet.insertSheet(SCHEDULE_EMAIL_SHEET_NAME);
+
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow([
+      "Received At",
+      "Name",
+      "Agency",
+      "Email",
+      "Session Count",
+      "Sessions JSON",
+      "Requested At",
+      "Source",
+      "Page"
+    ]);
+    sheet.setFrozenRows(1);
+    sheet.autoResizeColumns(1, 9);
   }
 
   return sheet;
@@ -943,5 +988,36 @@ function sendTriviaScoreEmail_(payload, score, total, hintsUsed) {
     });
   } catch (error) {
     console.error(`Trivia score email failed for ${email}: ${error}`);
+  }
+}
+
+function sendScheduleEmail_(payload, sessions) {
+  const email = String(payload.email || "").trim();
+  if (!email || !sessions.length) return;
+  const lines = sessions.map((session, index) => [
+    `${index + 1}. ${session.title || "Untitled session"}`,
+    `   ${session.date || ""} ${session.time || ""}`,
+    `   ${session.location || ""}${session.ce ? ` | CE: ${session.ce}` : ""}`
+  ].join("\n"));
+  const body = [
+    `Hi ${payload.name || "there"},`,
+    "",
+    "Here is your current MyNEHA attending schedule:",
+    "",
+    ...lines,
+    "",
+    "Open the NEHA guide to update your agenda, add notes, ask session questions, or browse all sessions.",
+    "",
+    "HS GovTech"
+  ].join("\n");
+
+  try {
+    MailApp.sendEmail({
+      to: email,
+      subject: "Your MyNEHA schedule",
+      body
+    });
+  } catch (error) {
+    console.error(`Schedule email failed for ${email}: ${error}`);
   }
 }
