@@ -791,7 +791,11 @@ function runAi() {
 
   renderAiAnswer(answer);
   els.aiReasons.innerHTML = profile.reasons.map((reason) => `<span class="reason">${escapeHtml(reason)}</span>`).join("");
-  renderSessions(els.aiResults, scored, { empty: "I could not find a strong session match yet. Try adding a role, topic, room, CE need, or phrase from a session title." });
+  if (shouldRecommendSessions) {
+    renderSessions(els.aiResults, scored, { empty: "I could not find a strong session match yet. Try adding a role, topic, room, CE need, or phrase from a session title." });
+  } else {
+    els.aiResults.innerHTML = "";
+  }
 }
 
 function buildProfile(prompt) {
@@ -828,7 +832,7 @@ function buildProfile(prompt) {
 }
 
 function detectIntent(prompt) {
-  if (/\b(kansas city|restaurant|coffee|bar|bbq|attraction|things to do|nearby|eat|drink)\b/.test(prompt)) return "kc";
+  if (/\b(kansas city|restaurant|coffee|bar|bbq|barbecue|attraction|things to do|nearby|eat|drink)\b/.test(prompt)) return "kc";
   if (/\b(ce|credit|credits|continuing education|certificate)\b/.test(prompt)) return "ce";
   if (/\b(hs govtech|hscloud|hs cloud|demo|software|citizen portal|govcall|hs pay)\b/.test(prompt)) return "brand";
   if (/\b(where|room|floor|map|venue|located|location)\b/.test(prompt)) return "venue";
