@@ -8,6 +8,7 @@ const COMMUNITY_SHEET_NAME = "Community Posts";
 const COMMUNITY_REPLIES_SHEET_NAME = "Community Replies";
 
 function doPost(e) {
+  if (!e || !e.postData) return jsonOutput_({ ok: true, authorization: authorizeDriveAccess() });
   const payload = JSON.parse(e.postData.contents || "{}");
   if (payload.type === "triviaScore") return recordTriviaScore_(payload);
   if (payload.type === "demoRequest") return recordDemoRequest_(payload);
@@ -162,7 +163,9 @@ function recordCommunityPost_(payload) {
   const message = trimText_(payload.message, 700);
   if (!title || !message) return jsonOutput_({ ok: false, error: "Missing title or message" });
   const postId = communityPostId_();
-  const imageUrl = saveCommunityImage_(payload, postId) || safeHttpsUrl_(payload.imageUrl || "");
+  const imageResult = saveCommunityImage_(payload, postId);
+  const imageUrl = imageResult.url || safeHttpsUrl_(payload.imageUrl || "");
+  const imageStatus = imageResult.error ? `Image upload failed: ${imageResult.error}` : "";
 
   sheet.appendRow([
     new Date(),
@@ -179,11 +182,12 @@ function recordCommunityPost_(payload) {
     payload.source || "",
     payload.page || "",
     "Visible",
-    postId
+    postId,
+    imageStatus
   ]);
-  sheet.autoResizeColumns(1, 15);
+  sheet.autoResizeColumns(1, 16);
 
-  return jsonOutput_({ ok: true, postId });
+  return jsonOutput_({ ok: true, postId, imageUrl, imageStatus });
 }
 
 function recordCommunityReply_(payload) {
@@ -327,13 +331,15 @@ function getCommunitySheet_() {
       "Source",
       "Page",
       "Status",
-      "Post ID"
+      "Post ID",
+      "Image Status"
     ]);
     sheet.setFrozenRows(1);
-    sheet.autoResizeColumns(1, 15);
-  } else if (sheet.getLastColumn() < 15) {
-    sheet.getRange(1, 15).setValue("Post ID");
-    sheet.autoResizeColumns(1, 15);
+    sheet.autoResizeColumns(1, 16);
+  } else if (sheet.getLastColumn() < 16) {
+    if (sheet.getLastColumn() < 15) sheet.getRange(1, 15).setValue("Post ID");
+    sheet.getRange(1, 16).setValue("Image Status");
+    sheet.autoResizeColumns(1, 16);
   }
 
   return sheet;
@@ -637,19 +643,31 @@ function normalizeCommunityCategory_(category) {
 function saveCommunityImage_(payload, postId) {
   const dataUrl = String(payload.imageData || "");
   const match = dataUrl.match(/^data:(image\/(?:jpeg|jpg|png|webp));base64,([A-Za-z0-9+/=]+)$/);
-  if (!match) return "";
+  if (!match) return { url: "", error: "" };
 
-  const mimeType = match[1] === "image/jpg" ? "image/jpeg" : match[1];
-  const extension = mimeType === "image/png" ? "png" : mimeType === "image/webp" ? "webp" : "jpg";
-  const bytes = Utilities.base64Decode(match[2]);
-  const safeName = String(payload.imageName || postId || "community-image")
-    .replace(/[^a-z0-9._-]+/gi, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 80) || "community-image";
-  const blob = Utilities.newBlob(bytes, mimeType, `${postId}-${safeName}.${extension}`);
+  try {
+    const mimeType = match[1] === "image/jpg" ? "image/jpeg" : match[1];
+    const extension = mimeType === "image/png" ? "png" : mimeType === "image/webp" ? "webp" : "jpg";
+    const bytes = Utilities.base64Decode(match[2]);
+    const safeName = String(payload.imageName || postId || "community-image")
+      .replace(/[^a-z0-9._-]+/gi, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 80) || "community-image";
+    const blob = Utilities.newBlob(bytes, mimeType, `${postId}-${safeName}.${extension}`);
+    const file = DriveApp.createFile(blob);
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    return { url: `https://drive.google.com/uc?export=view&id=${file.getId()}`, error: "" };
+  } catch (error) {
+    console.error(`Community image upload failed for ${postId}: ${error}`);
+    return { url: "", error: String(error).slice(0, 220) };
+  }
+}
+
+function authorizeDriveAccess() {
+  const blob = Utilities.newBlob("authorization check", "text/plain", "neha-guide-drive-auth-check.txt");
   const file = DriveApp.createFile(blob);
-  file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-  return `https://drive.google.com/uc?export=view&id=${file.getId()}`;
+  file.setTrashed(true);
+  return `Drive write authorized: ${file.getId()}`;
 }
 
 function trimText_(value, maxLength) {

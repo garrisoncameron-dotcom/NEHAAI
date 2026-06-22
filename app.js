@@ -486,7 +486,7 @@ els.communityForm.addEventListener("submit", async (event) => {
   }
   submitButton.disabled = true;
   submitButton.textContent = "Posting...";
-  els.communityStatus.textContent = "";
+  els.communityStatus.textContent = post.imageData ? "Uploading photo and creating post..." : "";
   try {
     await submitAppPayload(post);
     els.communityStatus.textContent = "Posted. Refreshing Community Connect...";
@@ -496,7 +496,7 @@ els.communityForm.addEventListener("submit", async (event) => {
     els.communityCategoryInput.value = post.category;
     state.communityCategory = post.category;
     renderCommunityImageField();
-    window.setTimeout(loadCommunityPosts, 1200);
+    window.setTimeout(loadCommunityPosts, post.imageData ? 2800 : 1200);
   } catch (error) {
     els.communityStatus.textContent = "Could not post yet. Please check connection and try again.";
     console.error(error);
@@ -1611,7 +1611,7 @@ function compressCommunityImage(file) {
       const img = new Image();
       img.onerror = () => reject(new Error("Could not load image"));
       img.onload = () => {
-        const maxSide = 1200;
+        const maxSide = 900;
         const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
         const width = Math.max(1, Math.round(img.width * scale));
         const height = Math.max(1, Math.round(img.height * scale));
@@ -1620,7 +1620,7 @@ function compressCommunityImage(file) {
         canvas.height = height;
         const context = canvas.getContext("2d");
         context.drawImage(img, 0, 0, width, height);
-        const dataUrl = canvas.toDataURL("image/jpeg", 0.72);
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.68);
         resolve({
           dataUrl,
           name: file.name.replace(/\.[^.]+$/, "") + ".jpg",
