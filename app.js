@@ -380,7 +380,7 @@ els.leadForm.addEventListener("submit", async (event) => {
     localStorage.setItem("nehaLeadSubmittedAt", new Date().toISOString());
     renderLeadGate();
   } catch (error) {
-    els.leadNote.textContent = "Could not save your pass yet. Please check your connection and try again.";
+    if (els.leadNote) els.leadNote.textContent = "Could not save your pass yet. Please check your connection and try again.";
     console.error(error);
   } finally {
     submitButton.disabled = false;
