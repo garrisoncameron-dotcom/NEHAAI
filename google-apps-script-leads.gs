@@ -6,6 +6,9 @@ const ALERTS_SHEET_NAME = "App Alerts";
 const DRINK_SHEET_NAME = "Drink Redemptions";
 const COMMUNITY_SHEET_NAME = "Community Posts";
 const COMMUNITY_REPLIES_SHEET_NAME = "Community Replies";
+const SESSION_QUESTIONS_SHEET_NAME = "Session Questions";
+const SESSION_REPLIES_SHEET_NAME = "Session Question Replies";
+const SESSION_PRESENTATIONS_SHEET_NAME = "Session Presentations";
 
 function doPost(e) {
   if (!e || !e.postData) return jsonOutput_({ ok: true, authorization: authorizeDriveAccess() });
@@ -16,6 +19,8 @@ function doPost(e) {
   if (payload.type === "drinkServed") return markDrinkServed_(payload);
   if (payload.type === "communityPost") return recordCommunityPost_(payload);
   if (payload.type === "communityReply") return recordCommunityReply_(payload);
+  if (payload.type === "sessionQuestion") return recordSessionQuestion_(payload);
+  if (payload.type === "sessionQuestionReply") return recordSessionQuestionReply_(payload);
   return recordLead_(payload);
 }
 
@@ -32,6 +37,12 @@ function doGet(e) {
   }
   if (params.action === "communityPosts") {
     return jsonOutput_({ ok: true, posts: getCommunityPosts_() }, params.callback);
+  }
+  if (params.action === "sessionThread") {
+    return jsonOutput_({ ok: true, thread: getSessionThread_(params.sessionId || "") }, params.callback);
+  }
+  if (params.action === "sessionPresentations") {
+    return jsonOutput_({ ok: true, presentations: getSessionPresentations_() }, params.callback);
   }
   return jsonOutput_({ ok: true }, params.callback);
 }
@@ -214,6 +225,62 @@ function recordCommunityReply_(payload) {
   return jsonOutput_({ ok: true });
 }
 
+function recordSessionQuestion_(payload) {
+  const sheet = getSessionQuestionSheet_();
+  const sessionId = trimText_(payload.sessionId, 120);
+  const title = trimText_(payload.title, 100);
+  const message = trimText_(payload.message, 700);
+  if (!sessionId || !title || !message) return jsonOutput_({ ok: false, error: "Missing session question fields" });
+  const questionId = `question-${Utilities.getUuid()}`;
+
+  sheet.appendRow([
+    new Date(),
+    questionId,
+    sessionId,
+    payload.sessionTitle || "",
+    payload.sessionTime || "",
+    title,
+    message,
+    displayName_(payload.name || ""),
+    payload.name || "",
+    payload.agency || "",
+    payload.email || "",
+    payload.postedAt || "",
+    payload.source || "",
+    payload.page || "",
+    "Visible"
+  ]);
+  sheet.autoResizeColumns(1, 15);
+
+  return jsonOutput_({ ok: true, questionId });
+}
+
+function recordSessionQuestionReply_(payload) {
+  const sheet = getSessionReplySheet_();
+  const sessionId = trimText_(payload.sessionId, 120);
+  const questionId = trimText_(payload.questionId, 120);
+  const message = trimText_(payload.message, 500);
+  if (!sessionId || !questionId || !message) return jsonOutput_({ ok: false, error: "Missing session reply fields" });
+
+  sheet.appendRow([
+    new Date(),
+    questionId,
+    sessionId,
+    message,
+    displayName_(payload.name || ""),
+    payload.name || "",
+    payload.agency || "",
+    payload.email || "",
+    payload.postedAt || "",
+    payload.source || "",
+    payload.page || "",
+    "Visible"
+  ]);
+  sheet.autoResizeColumns(1, 12);
+
+  return jsonOutput_({ ok: true });
+}
+
 function getLeadSheet_() {
   const spreadsheet = SpreadsheetApp.openById(SHEET_ID);
   let sheet = spreadsheet.getSheetByName(SHEET_NAME);
@@ -366,6 +433,84 @@ function getCommunityReplySheet_() {
     ]);
     sheet.setFrozenRows(1);
     sheet.autoResizeColumns(1, 11);
+  }
+
+  return sheet;
+}
+
+function getSessionQuestionSheet_() {
+  const spreadsheet = SpreadsheetApp.openById(SHEET_ID);
+  let sheet = spreadsheet.getSheetByName(SESSION_QUESTIONS_SHEET_NAME);
+  if (!sheet) sheet = spreadsheet.insertSheet(SESSION_QUESTIONS_SHEET_NAME);
+
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow([
+      "Received At",
+      "Question ID",
+      "Session ID",
+      "Session Title",
+      "Session Time",
+      "Title",
+      "Message",
+      "Display Name",
+      "Full Name",
+      "Agency",
+      "Email",
+      "Posted At",
+      "Source",
+      "Page",
+      "Status"
+    ]);
+    sheet.setFrozenRows(1);
+    sheet.autoResizeColumns(1, 15);
+  }
+
+  return sheet;
+}
+
+function getSessionReplySheet_() {
+  const spreadsheet = SpreadsheetApp.openById(SHEET_ID);
+  let sheet = spreadsheet.getSheetByName(SESSION_REPLIES_SHEET_NAME);
+  if (!sheet) sheet = spreadsheet.insertSheet(SESSION_REPLIES_SHEET_NAME);
+
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow([
+      "Received At",
+      "Question ID",
+      "Session ID",
+      "Message",
+      "Display Name",
+      "Full Name",
+      "Agency",
+      "Email",
+      "Posted At",
+      "Source",
+      "Page",
+      "Status"
+    ]);
+    sheet.setFrozenRows(1);
+    sheet.autoResizeColumns(1, 12);
+  }
+
+  return sheet;
+}
+
+function getSessionPresentationSheet_() {
+  const spreadsheet = SpreadsheetApp.openById(SHEET_ID);
+  let sheet = spreadsheet.getSheetByName(SESSION_PRESENTATIONS_SHEET_NAME);
+  if (!sheet) sheet = spreadsheet.insertSheet(SESSION_PRESENTATIONS_SHEET_NAME);
+
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow([
+      "Session ID",
+      "Session Title",
+      "Presentation Title",
+      "Speaker",
+      "URL",
+      "Status"
+    ]);
+    sheet.setFrozenRows(1);
+    sheet.autoResizeColumns(1, 6);
   }
 
   return sheet;
@@ -580,6 +725,97 @@ function getCommunityRepliesByPost_() {
         displayName: reply.displayName,
         agency: reply.agency,
         postedAt: reply.postedAt
+      });
+      return grouped;
+    }, {});
+}
+
+function getSessionThread_(sessionId) {
+  sessionId = trimText_(sessionId, 120);
+  if (!sessionId) return { sessionId: "", questions: [] };
+  const repliesByQuestion = getSessionRepliesByQuestion_(sessionId);
+  const sheet = getSessionQuestionSheet_();
+  const lastRow = sheet.getLastRow();
+  if (lastRow <= 1) return { sessionId, questions: [] };
+  const rows = sheet.getRange(2, 1, lastRow - 1, 15).getValues();
+  const questions = rows
+    .map((row) => ({
+      receivedAt: row[0],
+      id: String(row[1] || "").trim(),
+      sessionId: String(row[2] || "").trim(),
+      title: String(row[5] || "").trim(),
+      message: String(row[6] || "").trim(),
+      displayName: row[7] || "NEHA attendee",
+      agency: row[9] || "",
+      postedAt: row[11] || row[0],
+      status: String(row[14] || "Visible").trim().toLowerCase()
+    }))
+    .filter((question) => question.status !== "hidden" && question.sessionId === sessionId && question.id && question.title && question.message)
+    .sort((a, b) => new Date(b.receivedAt) - new Date(a.receivedAt))
+    .slice(0, 30)
+    .map((question) => ({
+      id: question.id,
+      title: question.title,
+      message: question.message,
+      displayName: question.displayName,
+      agency: question.agency,
+      postedAt: question.postedAt,
+      replies: repliesByQuestion[question.id] || []
+    }));
+  return { sessionId, questions };
+}
+
+function getSessionRepliesByQuestion_(sessionId) {
+  const sheet = getSessionReplySheet_();
+  const lastRow = sheet.getLastRow();
+  if (lastRow <= 1) return {};
+  const rows = sheet.getRange(2, 1, lastRow - 1, 12).getValues();
+  return rows
+    .map((row) => ({
+      receivedAt: row[0],
+      questionId: String(row[1] || "").trim(),
+      sessionId: String(row[2] || "").trim(),
+      message: String(row[3] || "").trim(),
+      displayName: row[4] || "NEHA attendee",
+      agency: row[6] || "",
+      postedAt: row[8] || row[0],
+      status: String(row[11] || "Visible").trim().toLowerCase()
+    }))
+    .filter((reply) => reply.status !== "hidden" && reply.sessionId === sessionId && reply.questionId && reply.message)
+    .sort((a, b) => new Date(a.receivedAt) - new Date(b.receivedAt))
+    .reduce((grouped, reply) => {
+      if (!grouped[reply.questionId]) grouped[reply.questionId] = [];
+      grouped[reply.questionId].push({
+        message: reply.message,
+        displayName: reply.displayName,
+        agency: reply.agency,
+        postedAt: reply.postedAt
+      });
+      return grouped;
+    }, {});
+}
+
+function getSessionPresentations_() {
+  const sheet = getSessionPresentationSheet_();
+  const lastRow = sheet.getLastRow();
+  if (lastRow <= 1) return {};
+  const rows = sheet.getRange(2, 1, lastRow - 1, 6).getValues();
+  return rows
+    .map((row) => ({
+      sessionId: String(row[0] || "").trim(),
+      sessionTitle: String(row[1] || "").trim(),
+      title: String(row[2] || "").trim(),
+      speaker: String(row[3] || "").trim(),
+      url: safeHttpsUrl_(row[4] || ""),
+      status: String(row[5] || "Visible").trim().toLowerCase()
+    }))
+    .filter((item) => item.status !== "hidden" && item.sessionId && item.url)
+    .reduce((grouped, item) => {
+      if (!grouped[item.sessionId]) grouped[item.sessionId] = [];
+      grouped[item.sessionId].push({
+        title: item.title || item.sessionTitle || "Session presentation",
+        speaker: item.speaker,
+        url: item.url
       });
       return grouped;
     }, {});

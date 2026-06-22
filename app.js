@@ -15,6 +15,14 @@ const state = {
   communityLoading: false,
   communityLoaded: false,
   communityImage: null,
+  presentations: {},
+  sessionNotes: JSON.parse(localStorage.getItem("nehaSessionNotes") || "{}"),
+  sessionThreads: {},
+  sessionTool: {
+    sessionId: null,
+    tab: "presentations",
+    loading: false
+  },
   pendingConflict: null,
   installPrompt: null,
   trivia: {
@@ -112,7 +120,23 @@ const els = {
   drinkValidator: document.querySelector("#drinkValidator"),
   freeDrinkStatus: document.querySelector("#freeDrinkStatus"),
   watchCount: document.querySelector("#watchCount"),
-  attendCount: document.querySelector("#attendCount")
+  attendCount: document.querySelector("#attendCount"),
+  sessionToolModal: document.querySelector("#sessionToolModal"),
+  sessionToolClose: document.querySelector("#sessionToolClose"),
+  sessionToolTitle: document.querySelector("#sessionToolTitle"),
+  sessionToolMeta: document.querySelector("#sessionToolMeta"),
+  sessionToolTabs: document.querySelector("#sessionToolTabs"),
+  sessionPresentationPanel: document.querySelector("#sessionPresentationPanel"),
+  sessionNotesPanel: document.querySelector("#sessionNotesPanel"),
+  sessionNotesInput: document.querySelector("#sessionNotesInput"),
+  sessionNotesSave: document.querySelector("#sessionNotesSave"),
+  sessionNotesStatus: document.querySelector("#sessionNotesStatus"),
+  sessionQuestionsPanel: document.querySelector("#sessionQuestionsPanel"),
+  sessionQuestionForm: document.querySelector("#sessionQuestionForm"),
+  sessionQuestionTitle: document.querySelector("#sessionQuestionTitle"),
+  sessionQuestionMessage: document.querySelector("#sessionQuestionMessage"),
+  sessionQuestionStatus: document.querySelector("#sessionQuestionStatus"),
+  sessionQuestionThreads: document.querySelector("#sessionQuestionThreads")
 };
 
 const viewTitles = {
@@ -331,6 +355,7 @@ loadData().then(([sessions, guide]) => {
   hydrateControls();
   renderAll();
   loadAppAlerts();
+  loadSessionPresentations().then(renderAll);
   loadCommunityPosts();
   runAi();
   if (state.drinkValidation.code) {
@@ -440,6 +465,115 @@ els.placeGrid.addEventListener("click", (event) => {
   const directions = event.target.closest("[data-place-directions]");
   if (directions) {
     openWalkingDirections(Number(directions.dataset.placeDirections), directions);
+  }
+});
+
+els.sessionToolClose.addEventListener("click", closeSessionTool);
+els.sessionToolModal.addEventListener("click", (event) => {
+  if (event.target === els.sessionToolModal) closeSessionTool();
+});
+
+els.sessionToolTabs.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-session-tool-tab]");
+  if (!button) return;
+  state.sessionTool.tab = button.dataset.sessionToolTab;
+  renderSessionTool();
+  if (state.sessionTool.tab === "questions") loadSessionThread(state.sessionTool.sessionId);
+});
+
+els.sessionNotesSave.addEventListener("click", () => {
+  const id = state.sessionTool.sessionId;
+  if (!id) return;
+  state.sessionNotes[id] = els.sessionNotesInput.value.trim();
+  localStorage.setItem("nehaSessionNotes", JSON.stringify(state.sessionNotes));
+  els.sessionNotesStatus.textContent = "Saved on this phone.";
+  window.setTimeout(() => {
+    els.sessionNotesStatus.textContent = "";
+  }, 1800);
+  renderSessions(els.sessionList, filteredSessions());
+  renderMySchedule();
+});
+
+els.sessionQuestionForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const session = sessionById(state.sessionTool.sessionId);
+  if (!session) return;
+  const question = {
+    type: "sessionQuestion",
+    sessionId: session.id,
+    sessionTitle: session.title,
+    sessionTime: `${formatDate(session.date)} ${session.time}`,
+    title: els.sessionQuestionTitle.value.trim(),
+    message: els.sessionQuestionMessage.value.trim(),
+    name: state.lead?.name || "",
+    agency: state.lead?.agency || "",
+    email: state.lead?.email || "",
+    postedAt: new Date().toISOString(),
+    source: "NEHA AEC 2026 Guide",
+    page: location.href
+  };
+  if (!question.title || !question.message) {
+    els.sessionQuestionForm.reportValidity();
+    return;
+  }
+  const button = els.sessionQuestionForm.querySelector('button[type="submit"]');
+  button.disabled = true;
+  button.textContent = "Posting...";
+  els.sessionQuestionStatus.textContent = "";
+  try {
+    await submitAppPayload(question);
+    els.sessionQuestionTitle.value = "";
+    els.sessionQuestionMessage.value = "";
+    els.sessionQuestionStatus.textContent = "Question posted.";
+    window.setTimeout(() => loadSessionThread(session.id), 900);
+  } catch (error) {
+    els.sessionQuestionStatus.textContent = "Could not post yet. Please try again.";
+    console.error(error);
+  } finally {
+    button.disabled = false;
+    button.textContent = "Post Question";
+  }
+});
+
+els.sessionQuestionThreads.addEventListener("submit", async (event) => {
+  const form = event.target.closest(".session-reply-form");
+  if (!form) return;
+  event.preventDefault();
+  const session = sessionById(state.sessionTool.sessionId);
+  const questionId = form.dataset.questionId || "";
+  const textarea = form.querySelector("textarea");
+  const message = textarea.value.trim();
+  if (!session || !questionId || !message) {
+    form.reportValidity();
+    return;
+  }
+  const button = form.querySelector('button[type="submit"]');
+  const status = form.querySelector(".session-reply-status");
+  button.disabled = true;
+  button.textContent = "Replying...";
+  status.textContent = "";
+  try {
+    await submitAppPayload({
+      type: "sessionQuestionReply",
+      sessionId: session.id,
+      questionId,
+      message,
+      name: state.lead?.name || "",
+      agency: state.lead?.agency || "",
+      email: state.lead?.email || "",
+      postedAt: new Date().toISOString(),
+      source: "NEHA AEC 2026 Guide",
+      page: location.href
+    });
+    textarea.value = "";
+    status.textContent = "Reply posted.";
+    window.setTimeout(() => loadSessionThread(session.id), 900);
+  } catch (error) {
+    status.textContent = "Could not post reply yet.";
+    console.error(error);
+  } finally {
+    button.disabled = false;
+    button.textContent = "Reply";
   }
 });
 
@@ -1120,12 +1254,22 @@ function renderSessions(container, sessions, options = {}) {
     node.querySelector('[data-field="tags"]').innerHTML = session.tags.slice(0, 6).map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`).join("");
     const watch = node.querySelector(".watch-btn");
     const attend = node.querySelector(".attend-btn");
+    const presentation = node.querySelector(".presentation-btn");
+    const notes = node.querySelector(".notes-btn");
+    const question = node.querySelector(".question-btn");
     watch.classList.toggle("active", Boolean(state.saved.watch[session.id]));
     attend.classList.toggle("active", Boolean(state.saved.attend[session.id]));
     watch.textContent = state.saved.watch[session.id] ? "Watching" : "Watch";
     attend.textContent = state.saved.attend[session.id] ? "Attending" : "Attend";
+    presentation.classList.toggle("has-materials", Boolean(state.presentations[session.id]?.length));
+    notes.classList.toggle("has-notes", Boolean(state.sessionNotes[session.id]));
+    presentation.textContent = state.presentations[session.id]?.length ? "Presentations" : "Presentations";
+    notes.textContent = state.sessionNotes[session.id] ? "Notes saved" : "Session notes";
     watch.addEventListener("click", () => toggleSaved("watch", session.id));
     attend.addEventListener("click", () => toggleSaved("attend", session.id));
+    presentation.addEventListener("click", () => openSessionTool(session.id, "presentations"));
+    notes.addEventListener("click", () => openSessionTool(session.id, "notes"));
+    question.addEventListener("click", () => openSessionTool(session.id, "questions"));
     container.appendChild(node);
   });
 }
@@ -1161,6 +1305,139 @@ function renderMyModeTabs(attending, watching) {
     if (mode === "day") button.textContent = `My Day (${attending.length + watching.length})`;
     if (mode === "all") button.textContent = "All Sessions";
   });
+}
+
+function openSessionTool(sessionId, tab = "notes") {
+  state.sessionTool.sessionId = sessionId;
+  state.sessionTool.tab = tab;
+  els.sessionToolModal.hidden = false;
+  document.body.classList.add("modal-open");
+  renderSessionTool();
+  if (tab === "questions") loadSessionThread(sessionId);
+}
+
+function closeSessionTool() {
+  els.sessionToolModal.hidden = true;
+  document.body.classList.remove("modal-open");
+}
+
+function renderSessionTool() {
+  const session = sessionById(state.sessionTool.sessionId);
+  if (!session) return;
+  els.sessionToolTitle.textContent = session.title;
+  els.sessionToolMeta.textContent = `${formatDate(session.date)} - ${session.time} - ${session.location}`;
+  els.sessionToolTabs.querySelectorAll("[data-session-tool-tab]").forEach((button) => {
+    button.classList.toggle("active", button.dataset.sessionToolTab === state.sessionTool.tab);
+  });
+  els.sessionPresentationPanel.hidden = state.sessionTool.tab !== "presentations";
+  els.sessionNotesPanel.hidden = state.sessionTool.tab !== "notes";
+  els.sessionQuestionsPanel.hidden = state.sessionTool.tab !== "questions";
+  renderSessionPresentations(session.id);
+  renderSessionNotes(session.id);
+  renderSessionQuestions(session.id);
+}
+
+function renderSessionPresentations(sessionId) {
+  const links = state.presentations[sessionId] || [];
+  if (!links.length) {
+    els.sessionPresentationPanel.innerHTML = `<div class="empty-state">No presentation files are posted for this session yet. This area is ready for post-conference materials.</div>`;
+    return;
+  }
+  els.sessionPresentationPanel.innerHTML = `
+    <div class="presentation-list">
+      ${links.map((item) => `
+        <a href="${escapeAttr(item.url)}" target="_blank" rel="noreferrer">
+          <strong>${escapeHtml(item.title || "Session presentation")}</strong>
+          <span>${escapeHtml(item.speaker || "Presentation file")}</span>
+        </a>
+      `).join("")}
+    </div>
+  `;
+}
+
+function renderSessionNotes(sessionId) {
+  if (document.activeElement !== els.sessionNotesInput) {
+    els.sessionNotesInput.value = state.sessionNotes[sessionId] || "";
+  }
+}
+
+function renderSessionQuestions(sessionId) {
+  const thread = state.sessionThreads[sessionId];
+  if (state.sessionTool.loading && !thread) {
+    els.sessionQuestionThreads.innerHTML = `<div class="empty-state">Loading session Q&A...</div>`;
+    return;
+  }
+  if (!thread?.questions?.length) {
+    els.sessionQuestionThreads.innerHTML = `<div class="empty-state">No questions yet. Start a session-specific thread.</div>`;
+    return;
+  }
+  els.sessionQuestionThreads.innerHTML = thread.questions.map((question) => `
+    <article class="session-question-card">
+      <div class="community-post-head">
+        <span>Session Q&A</span>
+        <small>${escapeHtml(relativePostTime(question.postedAt))}</small>
+      </div>
+      <h3>${escapeHtml(question.title)}</h3>
+      <p>${escapeHtml(question.message)}</p>
+      <div class="community-byline">
+        <strong>${escapeHtml(question.displayName || "NEHA attendee")}</strong>
+        <span>${escapeHtml(question.agency || "Environmental health community")}</span>
+      </div>
+      <div class="community-replies">
+        ${question.replies?.length ? question.replies.map((reply) => `
+          <div class="community-reply">
+            <p>${escapeHtml(reply.message || "")}</p>
+            <div>
+              <strong>${escapeHtml(reply.displayName || "NEHA attendee")}</strong>
+              <span>${escapeHtml(reply.agency || "Environmental health community")}</span>
+              <small>${escapeHtml(relativePostTime(reply.postedAt))}</small>
+            </div>
+          </div>
+        `).join("") : `<div class="community-reply-empty">No replies yet.</div>`}
+      </div>
+      <form class="session-reply-form" data-question-id="${escapeAttr(question.id)}">
+        <label>
+          Reply
+          <textarea rows="2" maxlength="500" placeholder="Add a helpful reply..." required></textarea>
+        </label>
+        <button type="submit">Reply</button>
+        <span class="session-reply-status"></span>
+      </form>
+    </article>
+  `).join("");
+}
+
+function loadSessionThread(sessionId) {
+  const endpoint = window.NEHA_LEAD_ENDPOINT || "";
+  if (!endpoint || !sessionId) {
+    renderSessionQuestions(sessionId);
+    return Promise.resolve();
+  }
+  state.sessionTool.loading = true;
+  renderSessionQuestions(sessionId);
+  return loadJsonp(endpoint, { action: "sessionThread", sessionId })
+    .then((data) => {
+      state.sessionThreads[sessionId] = data?.thread || { sessionId, questions: [] };
+    })
+    .catch((error) => {
+      console.warn("Session thread could not load", error);
+    })
+    .finally(() => {
+      state.sessionTool.loading = false;
+      renderSessionQuestions(sessionId);
+    });
+}
+
+function loadSessionPresentations() {
+  const endpoint = window.NEHA_LEAD_ENDPOINT || "";
+  if (!endpoint) return Promise.resolve();
+  return loadJsonp(endpoint, { action: "sessionPresentations" })
+    .then((data) => {
+      state.presentations = data?.presentations || {};
+    })
+    .catch((error) => {
+      console.warn("Session presentations could not load", error);
+    });
 }
 
 function renderMyDayTabs(days, savedSessions) {

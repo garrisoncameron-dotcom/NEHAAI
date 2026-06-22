@@ -660,6 +660,166 @@ select {
   margin-top: 14px;
 }
 
+.session-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.session-tools button {
+  min-height: 38px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--navy);
+  background: #fff;
+  cursor: pointer;
+  padding: 0 11px;
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.session-tools button.has-materials,
+.session-tools button.has-notes {
+  border-color: var(--green);
+  background: var(--green-wash);
+}
+
+.modal-open {
+  overflow: hidden;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(4, 0, 72, 0.42);
+}
+
+.modal-backdrop[hidden] {
+  display: none;
+}
+
+.session-tool-modal {
+  width: min(760px, 100%);
+  max-height: min(760px, calc(100vh - 36px));
+  overflow: auto;
+  display: grid;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  padding: clamp(16px, 4vw, 24px);
+  box-shadow: 0 24px 80px rgba(4, 0, 72, 0.28);
+}
+
+.modal-close {
+  justify-self: end;
+  min-height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--navy);
+  background: #fff;
+  cursor: pointer;
+  padding: 0 12px;
+  font-weight: 900;
+}
+
+.session-tool-modal h2 {
+  color: var(--navy);
+  font-size: clamp(1.35rem, 4vw, 2rem);
+}
+
+.session-tool-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.session-tool-panel[hidden] {
+  display: none;
+}
+
+.session-tool-panel label,
+.session-question-form label,
+.session-reply-form label {
+  display: grid;
+  gap: 6px;
+  color: var(--navy);
+  font-weight: 900;
+}
+
+.session-tool-panel textarea,
+.session-question-form input,
+.session-question-form textarea,
+.session-reply-form textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink);
+  background: #fff;
+  padding: 11px 12px;
+  font: inherit;
+}
+
+.session-tool-actions,
+.session-reply-form {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 9px;
+  align-items: center;
+}
+
+.session-tool-actions button,
+.session-question-form button,
+.session-reply-form button {
+  min-height: 42px;
+  border: 0;
+  border-radius: 8px;
+  color: #fff;
+  background: var(--red);
+  cursor: pointer;
+  padding: 0 14px;
+  font-weight: 900;
+}
+
+.session-tool-actions span,
+.session-question-form p,
+.session-reply-status {
+  min-height: 20px;
+  color: #236344;
+  font-weight: 900;
+}
+
+.presentation-list,
+.session-question-threads {
+  display: grid;
+  gap: 10px;
+}
+
+.presentation-list a,
+.session-question-card {
+  display: grid;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  padding: 12px;
+  text-decoration: none;
+}
+
+.presentation-list strong,
+.session-question-card h3 {
+  color: var(--navy);
+}
+
+.presentation-list span,
+.session-question-card p {
+  color: var(--grey-dark);
+}
+
 .assistant-panel {
   align-items: stretch;
   padding: 18px;
@@ -2216,6 +2376,11 @@ select {
   .session-actions {
     display: grid;
     grid-template-columns: 1fr 1fr;
+  }
+
+  .session-tools {
+    display: grid;
+    grid-template-columns: 1fr;
   }
 
   .session-actions button {

@@ -8,13 +8,13 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="NEHA Guide">
     <link rel="manifest" href="manifest.webmanifest">
-    <link rel="apple-touch-icon" href="assets/icon-192.png?v=20260622-myneha-dashboard">
-    <link rel="stylesheet" href="styles.css?v=20260622-myneha-dashboard">
+    <link rel="apple-touch-icon" href="assets/icon-192.png?v=20260622-session-toolkit">
+    <link rel="stylesheet" href="styles.css?v=20260622-session-toolkit">
   </head>
   <body>
     <div id="leadGate" class="lead-gate" hidden>
       <form id="leadForm" class="lead-card">
-        <img class="lead-logo" src="assets/hs-govtech-logo.png?v=20260622-myneha-dashboard" alt="HS GovTech logo">
+        <img class="lead-logo" src="assets/hs-govtech-logo.png?v=20260622-session-toolkit" alt="HS GovTech logo">
         <p class="eyebrow">NEHA AEC 2026 Guide</p>
         <h2>Welcome</h2>
         <p class="lead-copy">Your companion for the NEHA conference. I’m here to help you navigate the schedule and venue, find the city's best BBQ, play some EH trivia between sessions and connect with other conference attendees.</p>
@@ -38,7 +38,7 @@
       <aside class="rail" aria-label="Primary navigation">
         <div class="brand-lockup">
           <div class="brand-main">
-            <img class="brand-logo" src="assets/hs-govtech-logo.png?v=20260622-myneha-dashboard" alt="HS GovTech logo">
+            <img class="brand-logo" src="assets/hs-govtech-logo.png?v=20260622-session-toolkit" alt="HS GovTech logo">
             <div>
               <strong>HS GovTech</strong>
               <small>NEHA Navigator</small>
@@ -310,6 +310,11 @@
           </div>
           <p data-field="info" class="session-info"></p>
           <div class="tag-row" data-field="tags"></div>
+          <div class="session-tools">
+            <button class="presentation-btn" type="button">Presentations</button>
+            <button class="notes-btn" type="button">Session notes</button>
+            <button class="question-btn" type="button">Ask question</button>
+          </div>
           <div class="session-actions">
             <button class="watch-btn" type="button">Watch</button>
             <button class="attend-btn" type="button">Attend</button>
@@ -318,8 +323,47 @@
       </article>
     </template>
 
-    <script src="data-bundle.js?v=20260622-myneha-dashboard"></script>
+    <div id="sessionToolModal" class="modal-backdrop" hidden>
+      <section class="session-tool-modal" role="dialog" aria-modal="true" aria-labelledby="sessionToolTitle">
+        <button id="sessionToolClose" class="modal-close" type="button" aria-label="Close">Close</button>
+        <p id="sessionToolMeta" class="session-kicker"></p>
+        <h2 id="sessionToolTitle"></h2>
+        <div id="sessionToolTabs" class="segmented session-tool-tabs" aria-label="Session tools">
+          <button type="button" data-session-tool-tab="presentations">Presentations</button>
+          <button type="button" data-session-tool-tab="notes">Notes</button>
+          <button type="button" data-session-tool-tab="questions">Q&A</button>
+        </div>
+        <div id="sessionPresentationPanel" class="session-tool-panel"></div>
+        <div id="sessionNotesPanel" class="session-tool-panel" hidden>
+          <label>
+            Private session notes
+            <textarea id="sessionNotesInput" rows="8" placeholder="Capture takeaways, follow-ups, speaker notes, booth reminders..."></textarea>
+          </label>
+          <div class="session-tool-actions">
+            <button id="sessionNotesSave" type="button">Save Notes</button>
+            <span id="sessionNotesStatus"></span>
+          </div>
+        </div>
+        <div id="sessionQuestionsPanel" class="session-tool-panel" hidden>
+          <form id="sessionQuestionForm" class="session-question-form">
+            <label>
+              Ask or start a session thread
+              <input id="sessionQuestionTitle" type="text" maxlength="100" placeholder="Question or topic" required>
+            </label>
+            <label>
+              Details
+              <textarea id="sessionQuestionMessage" rows="3" maxlength="700" placeholder="Add context for other attendees..." required></textarea>
+            </label>
+            <button type="submit">Post Question</button>
+            <p id="sessionQuestionStatus"></p>
+          </form>
+          <div id="sessionQuestionThreads" class="session-question-threads"></div>
+        </div>
+      </section>
+    </div>
+
+    <script src="data-bundle.js?v=20260622-session-toolkit"></script>
     <script src="lead-config.js?v=20260619"></script>
-    <script src="app.js?v=20260622-myneha-dashboard"></script>
+    <script src="app.js?v=20260622-session-toolkit"></script>
   </body>
 </html>
