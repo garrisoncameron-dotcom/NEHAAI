@@ -1,59 +1,16 @@
-const CACHE_NAME = "neha-guide-v20260622-schedule-tweaks";
+const CACHE_NAME = "neha-guide-v20260622-clean-logo";
 const APP_ASSETS = [
   "./",
   "index.html",
-  "styles.css?v=20260622-schedule-tweaks",
-  "app.js?v=20260622-schedule-tweaks",
-  "data-bundle.js?v=20260622-schedule-tweaks",
+  "styles.css?v=20260622-clean-logo",
+  "app.js?v=20260622-clean-logo",
+  "data-bundle.js?v=20260622-clean-logo",
   "lead-config.js?v=20260619",
   "manifest.webmanifest",
-  "assets/hs-govtech-logo.png",
+  "assets/hs-govtech-logo.png?v=20260622-clean-logo",
   "assets/bdmp-icon-color.png",
-  "assets/icon-192.png",
-  "assets/icon-512.png",
-  "assets/sheraton-exhibit-hall-map.png",
-  "assets/sheraton-meeting-overview.png",
-  "assets/sheraton-floor-overview.png"
-];
-
-self.addEventListener("install", (event) => {
-  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_ASSETS)));
-  self.skipWaiting();
-});
-
-self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches.keys()
-      .then((keys) => Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))))
-      .then(() => self.clients.matchAll({ type: "window" }))
-      .then((clients) => clients.forEach((client) => client.navigate(client.url)))
-  );
-  self.clients.claim();
-});
-
-self.addEventListener("fetch", (event) => {
-  if (event.request.method !== "GET") return;
-  if (event.request.mode === "navigate") {
-    event.respondWith(fetch(event.request).catch(() => caches.match("index.html")));
-    return;
-  }
-  event.respondWith(
-    caches.match(event.request).then((cached) => cached || fetch(event.request).catch(() => caches.match("index.html")))
-  );
-});
-const CACHE_NAME = "neha-guide-v20260622-hsgt-palette";
-const APP_ASSETS = [
-  "./",
-  "index.html",
-  "styles.css?v=20260622-hsgt-palette",
-  "app.js?v=20260622-hsgt-palette",
-  "data-bundle.js?v=20260622-hsgt-palette",
-  "lead-config.js?v=20260619",
-  "manifest.webmanifest",
-  "assets/hs-govtech-logo.png",
-  "assets/bdmp-icon-color.png",
-  "assets/icon-192.png",
-  "assets/icon-512.png",
+  "assets/icon-192.png?v=20260622-clean-logo",
+  "assets/icon-512.png?v=20260622-clean-logo",
   "assets/sheraton-exhibit-hall-map.png",
   "assets/sheraton-meeting-overview.png",
   "assets/sheraton-floor-overview.png"
