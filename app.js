@@ -472,7 +472,7 @@ els.emailSchedule.addEventListener("click", async () => {
       source: "NEHA AEC 2026 Guide",
       page: location.href
     });
-    els.emailSchedule.textContent = "Schedule sent";
+    els.emailSchedule.textContent = "Request sent";
   } catch (error) {
     els.emailSchedule.textContent = "Could not send";
     console.error(error);

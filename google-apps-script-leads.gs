@@ -12,7 +12,7 @@ const SESSION_PRESENTATIONS_SHEET_NAME = "Session Presentations";
 const SCHEDULE_EMAIL_SHEET_NAME = "Schedule Email Requests";
 
 function doPost(e) {
-  if (!e || !e.postData) return jsonOutput_({ ok: true, authorization: authorizeDriveAccess() });
+  if (!e || !e.postData) return jsonOutput_({ ok: true, authorization: authorizeScriptAccess() });
   const payload = JSON.parse(e.postData.contents || "{}");
   if (payload.type === "triviaScore") return recordTriviaScore_(payload);
   if (payload.type === "demoRequest") return recordDemoRequest_(payload);
@@ -286,6 +286,7 @@ function recordSessionQuestionReply_(payload) {
 function recordScheduleEmail_(payload) {
   const sheet = getScheduleEmailSheet_();
   const sessions = Array.isArray(payload.sessions) ? payload.sessions : [];
+  const mailStatus = sendScheduleEmail_(payload, sessions);
   sheet.appendRow([
     new Date(),
     payload.name || "",
@@ -295,11 +296,11 @@ function recordScheduleEmail_(payload) {
     JSON.stringify(sessions),
     payload.requestedAt || "",
     payload.source || "",
-    payload.page || ""
+    payload.page || "",
+    mailStatus
   ]);
-  sheet.autoResizeColumns(1, 9);
-  sendScheduleEmail_(payload, sessions);
-  return jsonOutput_({ ok: true });
+  sheet.autoResizeColumns(1, 10);
+  return jsonOutput_({ ok: true, mailStatus });
 }
 
 function getLeadSheet_() {
@@ -552,10 +553,14 @@ function getScheduleEmailSheet_() {
       "Sessions JSON",
       "Requested At",
       "Source",
-      "Page"
+      "Page",
+      "Mail Status"
     ]);
     sheet.setFrozenRows(1);
-    sheet.autoResizeColumns(1, 9);
+    sheet.autoResizeColumns(1, 10);
+  } else if (sheet.getLastColumn() < 10) {
+    sheet.getRange(1, 10).setValue("Mail Status");
+    sheet.autoResizeColumns(1, 10);
   }
 
   return sheet;
@@ -944,11 +949,17 @@ function saveCommunityImage_(payload, postId) {
   }
 }
 
-function authorizeDriveAccess() {
+function authorizeScriptAccess() {
   const blob = Utilities.newBlob("authorization check", "text/plain", "neha-guide-drive-auth-check.txt");
   const file = DriveApp.createFile(blob);
   file.setTrashed(true);
-  return `Drive write authorized: ${file.getId()}`;
+  const email = Session.getActiveUser().getEmail() || "garrison.cameron@gmail.com";
+  MailApp.sendEmail({
+    to: email,
+    subject: "NEHA Guide email authorization check",
+    body: "Email sending is authorized for the NEHA Guide Apps Script."
+  });
+  return `Drive and email authorized: ${file.getId()}`;
 }
 
 function trimText_(value, maxLength) {
@@ -993,7 +1004,8 @@ function sendTriviaScoreEmail_(payload, score, total, hintsUsed) {
 
 function sendScheduleEmail_(payload, sessions) {
   const email = String(payload.email || "").trim();
-  if (!email || !sessions.length) return;
+  if (!email) return "No email address";
+  if (!sessions.length) return "No attending sessions";
   const lines = sessions.map((session, index) => [
     `${index + 1}. ${session.title || "Untitled session"}`,
     `   ${session.date || ""} ${session.time || ""}`,
@@ -1017,7 +1029,9 @@ function sendScheduleEmail_(payload, sessions) {
       subject: "Your MyNEHA schedule",
       body
     });
+    return `Sent to ${email}`;
   } catch (error) {
     console.error(`Schedule email failed for ${email}: ${error}`);
+    return `Failed: ${String(error).slice(0, 220)}`;
   }
 }

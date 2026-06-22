@@ -1,16 +1,16 @@
-const CACHE_NAME = "neha-guide-v20260622-ghetto-alerts";
+const CACHE_NAME = "neha-guide-v20260622-email-status-fix";
 const APP_ASSETS = [
   "./",
   "index.html",
-  "styles.css?v=20260622-ghetto-alerts",
-  "app.js?v=20260622-ghetto-alerts",
-  "data-bundle.js?v=20260622-ghetto-alerts",
+  "styles.css?v=20260622-email-status-fix",
+  "app.js?v=20260622-email-status-fix",
+  "data-bundle.js?v=20260622-email-status-fix",
   "lead-config.js?v=20260619",
   "manifest.webmanifest",
-  "assets/hs-govtech-logo.png?v=20260622-ghetto-alerts",
+  "assets/hs-govtech-logo.png?v=20260622-email-status-fix",
   "assets/bdmp-icon-color.png",
-  "assets/icon-192.png?v=20260622-ghetto-alerts",
-  "assets/icon-512.png?v=20260622-ghetto-alerts",
+  "assets/icon-192.png?v=20260622-email-status-fix",
+  "assets/icon-512.png?v=20260622-email-status-fix",
   "assets/sheraton-exhibit-hall-map.png",
   "assets/sheraton-meeting-overview.png",
   "assets/sheraton-floor-overview.png"
