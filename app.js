@@ -28,7 +28,13 @@ const state = {
     order: [],
     best: Number(localStorage.getItem("nehaTriviaBest") || 0)
   },
-  drinkRedeemed: localStorage.getItem("nehaFreeDrinkRedeemed") === "true",
+  drinkTicket: JSON.parse(localStorage.getItem("nehaDrinkTicket") || "null"),
+  drinkValidation: {
+    code: new URLSearchParams(location.search).get("drinkCode") || "",
+    loading: false,
+    error: "",
+    ticket: null
+  },
   lead: JSON.parse(localStorage.getItem("nehaLead") || "null"),
   saved: JSON.parse(localStorage.getItem("nehaSaved") || '{"watch":{},"attend":{}}')
 };
@@ -81,6 +87,8 @@ const els = {
   moreMenuButton: document.querySelector("#moreMenuButton"),
   moreMenu: document.querySelector("#moreMenu"),
   freeDrinkButton: document.querySelector("#freeDrinkButton"),
+  drinkQr: document.querySelector("#drinkQr"),
+  drinkValidator: document.querySelector("#drinkValidator"),
   freeDrinkStatus: document.querySelector("#freeDrinkStatus"),
   watchCount: document.querySelector("#watchCount"),
   attendCount: document.querySelector("#attendCount")
@@ -289,6 +297,10 @@ loadData().then(([sessions, guide]) => {
   renderAll();
   loadAppAlerts();
   runAi();
+  if (state.drinkValidation.code) {
+    setView("drink");
+    loadDrinkStatus();
+  }
 }).catch((error) => {
   document.querySelector("#sessionList").innerHTML = `<div class="empty-state">The schedule data could not be loaded. Open this folder through a local web server or refresh the bundled app files.</div>`;
   console.error(error);
@@ -417,11 +429,14 @@ els.demoForm.addEventListener("submit", async (event) => {
   }
 });
 
-els.freeDrinkButton.addEventListener("click", () => {
-  if (state.drinkRedeemed) return;
-  state.drinkRedeemed = true;
-  localStorage.setItem("nehaFreeDrinkRedeemed", "true");
-  renderFreeDrink();
+els.freeDrinkButton.addEventListener("click", async () => {
+  if (state.drinkTicket || state.drinkValidation.code) return;
+  await createDrinkTicket();
+});
+
+els.drinkValidator.addEventListener("click", async (event) => {
+  const serveButton = event.target.closest("[data-drink-serve]");
+  if (serveButton) await markDrinkServed();
 });
 
 els.triviaStage.addEventListener("click", (event) => {
@@ -641,15 +656,66 @@ function renderLeadGate() {
 }
 
 function renderFreeDrink() {
-  if (state.drinkRedeemed) {
+  if (state.drinkValidation.code) {
+    renderDrinkValidator();
+    return;
+  }
+
+  els.freeDrinkButton.hidden = false;
+  els.drinkValidator.hidden = true;
+  if (state.drinkTicket) {
     els.freeDrinkButton.disabled = true;
-    els.freeDrinkButton.textContent = "REDEEMED";
-    els.freeDrinkStatus.textContent = "Already redeemed on this phone. No stolen beer today.";
+    els.freeDrinkButton.textContent = "QR READY";
+    els.drinkQr.hidden = false;
+    els.drinkQr.innerHTML = drinkQrHtml(state.drinkTicket);
+    els.freeDrinkStatus.textContent = "Present this QR code at the HS GovTech booth. One ticket per phone/browser.";
   } else {
     els.freeDrinkButton.disabled = false;
     els.freeDrinkButton.textContent = "FREE DRINK";
+    els.drinkQr.hidden = true;
+    els.drinkQr.innerHTML = "";
     els.freeDrinkStatus.textContent = "One redemption per phone/browser.";
   }
+}
+
+function renderDrinkValidator() {
+  els.freeDrinkButton.hidden = true;
+  els.drinkQr.hidden = true;
+  els.drinkQr.innerHTML = "";
+  els.drinkValidator.hidden = false;
+  els.freeDrinkStatus.textContent = "Booth validation mode";
+
+  if (state.drinkValidation.loading) {
+    els.drinkValidator.innerHTML = `<div class="validator-card"><strong>Checking ticket...</strong><p>${escapeHtml(state.drinkValidation.code)}</p></div>`;
+    return;
+  }
+
+  if (state.drinkValidation.error) {
+    els.drinkValidator.innerHTML = `<div class="validator-card invalid"><strong>Could not validate</strong><p>${escapeHtml(state.drinkValidation.error)}</p></div>`;
+    return;
+  }
+
+  const ticket = state.drinkValidation.ticket;
+  if (!ticket) {
+    els.drinkValidator.innerHTML = `<div class="validator-card"><strong>Ready to validate</strong><p>${escapeHtml(state.drinkValidation.code)}</p></div>`;
+    return;
+  }
+
+  if (!ticket.found) {
+    els.drinkValidator.innerHTML = `<div class="validator-card invalid"><strong>Invalid drink ticket</strong><p>This code was not found in the redemption sheet.</p><code>${escapeHtml(state.drinkValidation.code)}</code></div>`;
+    return;
+  }
+
+  const served = ticket.status === "Served";
+  els.drinkValidator.innerHTML = `
+    <div class="validator-card ${served ? "served" : "valid"}">
+      <strong>${served ? "Already served" : "Valid free drink"}</strong>
+      <p>${escapeHtml(ticket.name || "Unknown attendee")}</p>
+      <small>${escapeHtml(ticket.agency || "")}</small>
+      <code>${escapeHtml(ticket.code)}</code>
+      ${served ? `<p>Served ${escapeHtml(ticket.servedAt || "")}</p>` : `<button type="button" data-drink-serve>Mark served</button>`}
+    </div>
+  `;
 }
 
 function renderInstallButton() {
@@ -660,6 +726,123 @@ function renderInstallButton() {
   }
   els.installAppButton.textContent = state.installPrompt ? "Download" : "Save";
   els.installAppButton.disabled = false;
+}
+
+async function createDrinkTicket() {
+  const ticket = {
+    code: createDrinkCode(),
+    name: state.lead?.name || "",
+    agency: state.lead?.agency || "",
+    email: state.lead?.email || "",
+    issuedAt: new Date().toISOString()
+  };
+  els.freeDrinkButton.disabled = true;
+  els.freeDrinkButton.textContent = "CREATING QR...";
+  els.freeDrinkStatus.textContent = "Creating your booth QR...";
+  try {
+    await submitAppPayload({
+      type: "drinkRedemption",
+      ...ticket,
+      source: "NEHA AEC 2026 Guide",
+      page: location.href,
+      userAgent: navigator.userAgent
+    });
+    state.drinkTicket = ticket;
+    localStorage.setItem("nehaDrinkTicket", JSON.stringify(ticket));
+    localStorage.setItem("nehaFreeDrinkRedeemed", "true");
+  } catch (error) {
+    els.freeDrinkStatus.textContent = "Could not create the QR yet. Please check connection and try again.";
+    console.error(error);
+  } finally {
+    renderFreeDrink();
+  }
+}
+
+function createDrinkCode() {
+  if (crypto.randomUUID) return `NEHA-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
+  return `NEHA-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+}
+
+function drinkQrHtml(ticket) {
+  const validationUrl = `${location.origin}${location.pathname}?drinkCode=${encodeURIComponent(ticket.code)}`;
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(validationUrl)}`;
+  return `
+    <div class="qr-frame">
+      <img src="${escapeAttr(qrUrl)}" alt="Free drink redemption QR code">
+    </div>
+    <div class="ticket-details">
+      <strong>${escapeHtml(ticket.code)}</strong>
+      <span>${escapeHtml(ticket.name || "NEHA attendee")}</span>
+      <small>Scan at the HS GovTech booth to validate.</small>
+    </div>
+  `;
+}
+
+function loadDrinkStatus() {
+  const endpoint = window.NEHA_LEAD_ENDPOINT || "";
+  if (!endpoint || !state.drinkValidation.code) return Promise.resolve();
+  state.drinkValidation.loading = true;
+  state.drinkValidation.error = "";
+  renderFreeDrink();
+  return loadJsonp(endpoint, { action: "drinkStatus", code: state.drinkValidation.code })
+    .then((data) => {
+      state.drinkValidation.ticket = data?.ticket || { found: false };
+    })
+    .catch((error) => {
+      state.drinkValidation.error = "The redemption sheet could not be reached.";
+      console.error(error);
+    })
+    .finally(() => {
+      state.drinkValidation.loading = false;
+      renderFreeDrink();
+    });
+}
+
+async function markDrinkServed() {
+  if (!state.drinkValidation.code) return;
+  state.drinkValidation.loading = true;
+  renderFreeDrink();
+  try {
+    await submitAppPayload({
+      type: "drinkServed",
+      code: state.drinkValidation.code,
+      servedAt: new Date().toISOString(),
+      page: location.href
+    });
+    window.setTimeout(loadDrinkStatus, 900);
+  } catch (error) {
+    state.drinkValidation.loading = false;
+    state.drinkValidation.error = "Could not mark served yet.";
+    renderFreeDrink();
+    console.error(error);
+  }
+}
+
+function loadJsonp(endpoint, params) {
+  return new Promise((resolve, reject) => {
+    const callbackName = `nehaJsonp${Date.now()}${Math.floor(Math.random() * 1000)}`;
+    const script = document.createElement("script");
+    const timeout = window.setTimeout(() => {
+      cleanup();
+      reject(new Error("Timed out"));
+    }, 8000);
+    function cleanup() {
+      window.clearTimeout(timeout);
+      delete window[callbackName];
+      script.remove();
+    }
+    window[callbackName] = (data) => {
+      cleanup();
+      resolve(data);
+    };
+    const query = new URLSearchParams({ ...params, callback: callbackName, t: Date.now() });
+    script.src = `${endpoint}?${query.toString()}`;
+    script.onerror = () => {
+      cleanup();
+      reject(new Error("Could not load JSONP"));
+    };
+    document.body.appendChild(script);
+  });
 }
 
 function renderSchedule() {

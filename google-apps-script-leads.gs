@@ -3,11 +3,14 @@ const SHEET_NAME = "NEHA Leads";
 const TRIVIA_SHEET_NAME = "Trivia Scores";
 const DEMO_SHEET_NAME = "Demo Requests";
 const ALERTS_SHEET_NAME = "App Alerts";
+const DRINK_SHEET_NAME = "Drink Redemptions";
 
 function doPost(e) {
   const payload = JSON.parse(e.postData.contents || "{}");
   if (payload.type === "triviaScore") return recordTriviaScore_(payload);
   if (payload.type === "demoRequest") return recordDemoRequest_(payload);
+  if (payload.type === "drinkRedemption") return recordDrinkRedemption_(payload);
+  if (payload.type === "drinkServed") return markDrinkServed_(payload);
   return recordLead_(payload);
 }
 
@@ -18,6 +21,9 @@ function doGet(e) {
   }
   if (params.action === "leaderboard") {
     return jsonOutput_({ ok: true, leaders: getTriviaLeaderboard_() }, params.callback);
+  }
+  if (params.action === "drinkStatus") {
+    return jsonOutput_({ ok: true, ticket: getDrinkTicket_(params.code || "") }, params.callback);
   }
   return jsonOutput_({ ok: true }, params.callback);
 }
@@ -97,6 +103,52 @@ function recordDemoRequest_(payload) {
     .setMimeType(ContentService.MimeType.JSON);
 }
 
+function recordDrinkRedemption_(payload) {
+  const sheet = getDrinkSheet_();
+  const code = String(payload.code || "").trim();
+  if (!code) return jsonOutput_({ ok: false, error: "Missing code" });
+
+  const row = findDrinkRow_(sheet, code);
+  if (row > 1) return jsonOutput_({ ok: true, duplicate: true });
+
+  sheet.appendRow([
+    new Date(),
+    code,
+    displayName_(payload.name || ""),
+    payload.name || "",
+    payload.agency || "",
+    payload.email || "",
+    payload.issuedAt || "",
+    "Issued",
+    "",
+    "",
+    payload.source || "",
+    payload.page || "",
+    payload.userAgent || ""
+  ]);
+
+  return jsonOutput_({ ok: true, code });
+}
+
+function markDrinkServed_(payload) {
+  const sheet = getDrinkSheet_();
+  const code = String(payload.code || "").trim();
+  if (!code) return jsonOutput_({ ok: false, error: "Missing code" });
+  const row = findDrinkRow_(sheet, code);
+  if (row <= 1) return jsonOutput_({ ok: false, error: "Not found" });
+
+  const currentStatus = String(sheet.getRange(row, 8).getValue() || "");
+  if (currentStatus !== "Served") {
+    sheet.getRange(row, 8, 1, 3).setValues([[
+      "Served",
+      payload.servedAt || new Date(),
+      payload.servedBy || ""
+    ]]);
+  }
+
+  return jsonOutput_({ ok: true, ticket: getDrinkTicket_(code) });
+}
+
 function getLeadSheet_() {
   const spreadsheet = SpreadsheetApp.openById(SHEET_ID);
   let sheet = spreadsheet.getSheetByName(SHEET_NAME);
@@ -160,6 +212,34 @@ function getTriviaSheet_() {
       "Source",
       "Page"
     ]);
+  }
+
+  return sheet;
+}
+
+function getDrinkSheet_() {
+  const spreadsheet = SpreadsheetApp.openById(SHEET_ID);
+  let sheet = spreadsheet.getSheetByName(DRINK_SHEET_NAME);
+  if (!sheet) sheet = spreadsheet.insertSheet(DRINK_SHEET_NAME);
+
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow([
+      "Received At",
+      "Code",
+      "Display Name",
+      "Full Name",
+      "Agency",
+      "Email",
+      "Issued At",
+      "Status",
+      "Served At",
+      "Served By",
+      "Source",
+      "Page",
+      "User Agent"
+    ]);
+    sheet.setFrozenRows(1);
+    sheet.autoResizeColumns(1, 13);
   }
 
   return sheet;
@@ -300,6 +380,38 @@ function getTriviaLeaderboard_() {
       achievement: entry.achievement,
       hintsUsed: entry.hintsUsed
     }));
+}
+
+function getDrinkTicket_(code) {
+  code = String(code || "").trim();
+  if (!code) return { found: false };
+  const sheet = getDrinkSheet_();
+  const row = findDrinkRow_(sheet, code);
+  if (row <= 1) return { found: false, code };
+  const values = sheet.getRange(row, 1, 1, 13).getValues()[0];
+  return {
+    found: true,
+    receivedAt: values[0],
+    code: values[1],
+    displayName: values[2],
+    name: values[3],
+    agency: values[4],
+    email: values[5],
+    issuedAt: values[6],
+    status: values[7] || "Issued",
+    servedAt: values[8],
+    servedBy: values[9]
+  };
+}
+
+function findDrinkRow_(sheet, code) {
+  const lastRow = sheet.getLastRow();
+  if (lastRow <= 1) return -1;
+  const codes = sheet.getRange(2, 2, lastRow - 1, 1).getValues();
+  for (let index = 0; index < codes.length; index += 1) {
+    if (String(codes[index][0] || "").trim() === code) return index + 2;
+  }
+  return -1;
 }
 
 function displayName_(name) {
