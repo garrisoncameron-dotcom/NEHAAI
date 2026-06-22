@@ -1474,6 +1474,11 @@ function renderDailyGrid(savedSessions) {
         <div>
           <strong>${escapeHtml(session.title)}</strong>
           <span>${escapeHtml(session.location)} - ${escapeHtml(kind)}</span>
+          <div class="day-session-tools">
+            <button type="button" data-session-tool="${escapeAttr(session.id)}" data-tool-tab="presentations" aria-label="View presentations for ${escapeAttr(session.title)}">PPT</button>
+            <button type="button" class="${state.sessionNotes[session.id] ? "has-notes" : ""}" data-session-tool="${escapeAttr(session.id)}" data-tool-tab="notes" aria-label="Open notes for ${escapeAttr(session.title)}">Notes</button>
+            <button type="button" data-session-tool="${escapeAttr(session.id)}" data-tool-tab="questions" aria-label="Ask a question about ${escapeAttr(session.title)}">Ask</button>
+          </div>
         </div>
       </article>
     `;
@@ -1481,9 +1486,15 @@ function renderDailyGrid(savedSessions) {
 }
 
 els.myDailyGrid.addEventListener("click", (event) => {
-  if (!event.target.closest("[data-open-all-sessions]")) return;
-  state.myMode = "all";
-  renderMySchedule();
+  const sessionTool = event.target.closest("[data-session-tool]");
+  if (sessionTool) {
+    openSessionTool(sessionTool.dataset.sessionTool, sessionTool.dataset.toolTab || "notes");
+    return;
+  }
+  if (event.target.closest("[data-open-all-sessions]")) {
+    state.myMode = "all";
+    renderMySchedule();
+  }
 });
 
 function runAi() {

@@ -1,16 +1,16 @@
-const CACHE_NAME = "neha-guide-v20260622-session-toolkit";
+const CACHE_NAME = "neha-guide-v20260622-myday-tools";
 const APP_ASSETS = [
   "./",
   "index.html",
-  "styles.css?v=20260622-session-toolkit",
-  "app.js?v=20260622-session-toolkit",
-  "data-bundle.js?v=20260622-session-toolkit",
+  "styles.css?v=20260622-myday-tools",
+  "app.js?v=20260622-myday-tools",
+  "data-bundle.js?v=20260622-myday-tools",
   "lead-config.js?v=20260619",
   "manifest.webmanifest",
-  "assets/hs-govtech-logo.png?v=20260622-session-toolkit",
+  "assets/hs-govtech-logo.png?v=20260622-myday-tools",
   "assets/bdmp-icon-color.png",
-  "assets/icon-192.png?v=20260622-session-toolkit",
-  "assets/icon-512.png?v=20260622-session-toolkit",
+  "assets/icon-192.png?v=20260622-myday-tools",
+  "assets/icon-512.png?v=20260622-myday-tools",
   "assets/sheraton-exhibit-hall-map.png",
   "assets/sheraton-meeting-overview.png",
   "assets/sheraton-floor-overview.png"

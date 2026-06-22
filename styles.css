@@ -538,6 +538,30 @@ select {
   color: var(--muted);
 }
 
+.day-session-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 10px;
+}
+
+.day-session-tools button {
+  min-height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--navy);
+  background: #fff;
+  cursor: pointer;
+  padding: 0 10px;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.day-session-tools button.has-notes {
+  border-color: var(--green);
+  background: var(--green-wash);
+}
+
 .conflict-banner {
   display: flex;
   gap: 14px;
