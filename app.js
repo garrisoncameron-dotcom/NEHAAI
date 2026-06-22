@@ -780,13 +780,14 @@ function runAi() {
   const profile = buildProfile(prompt);
   const terms = expandTerms(tokenize(prompt));
   const answer = buildAiAnswer(prompt, profile, terms);
-  const scored = state.sessions
+  const shouldRecommendSessions = profile.intent === "sessions" || profile.intent === "ce";
+  const scored = shouldRecommendSessions ? state.sessions
     .filter((session) => session.category !== "Registration")
     .map((session) => ({ session, score: scoreSession(session, profile, terms) }))
     .filter((item) => item.score > 0)
     .sort((a, b) => b.score - a.score || sortSessions(a.session, b.session))
     .slice(0, 12)
-    .map((item) => item.session);
+    .map((item) => item.session) : [];
 
   renderAiAnswer(answer);
   els.aiReasons.innerHTML = profile.reasons.map((reason) => `<span class="reason">${escapeHtml(reason)}</span>`).join("");
@@ -827,10 +828,10 @@ function buildProfile(prompt) {
 }
 
 function detectIntent(prompt) {
-  if (/\b(where|room|floor|map|venue|located|location)\b/.test(prompt)) return "venue";
-  if (/\b(ce|credit|credits|continuing education|certificate)\b/.test(prompt)) return "ce";
   if (/\b(kansas city|restaurant|coffee|bar|bbq|attraction|things to do|nearby|eat|drink)\b/.test(prompt)) return "kc";
+  if (/\b(ce|credit|credits|continuing education|certificate)\b/.test(prompt)) return "ce";
   if (/\b(hs govtech|hscloud|hs cloud|demo|software|citizen portal|govcall|hs pay)\b/.test(prompt)) return "brand";
+  if (/\b(where|room|floor|map|venue|located|location)\b/.test(prompt)) return "venue";
   return "sessions";
 }
 
