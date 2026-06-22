@@ -1430,49 +1430,18 @@ function placeUrl(place) {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${place.name} ${address} Kansas City MO`)}`;
 }
 
-function walkingDirectionsUrl(place, origin) {
+function walkingDirectionsUrl(place) {
   const address = place.meta.split("—")[0].trim();
   const destination = encodeURIComponent(`${place.name} ${address} Kansas City MO`);
-  const originQuery = origin ? `&origin=${encodeURIComponent(origin)}` : `&origin=${encodeURIComponent("Sheraton Kansas City Hotel at Crown Center Kansas City MO")}`;
-  return `https://www.google.com/maps/dir/?api=1${originQuery}&destination=${destination}&travelmode=walking`;
+  return `https://www.google.com/maps/dir/?api=1&destination=${destination}&travelmode=walking`;
 }
 
-function openWalkingDirections(index, button) {
+function openWalkingDirections(index) {
   const place = state.guide.nearby[index];
   if (!place) return;
-  const mapWindow = window.open("about:blank", "_blank");
+  const mapWindow = window.open(walkingDirectionsUrl(place), "_blank");
   if (mapWindow) mapWindow.opener = null;
-  const sendToMaps = (origin) => {
-    const url = walkingDirectionsUrl(place, origin);
-    if (mapWindow) {
-      mapWindow.location = url;
-    } else {
-      window.location.href = url;
-    }
-  };
-
-  button.textContent = "Getting location...";
-  button.disabled = true;
-  if (!navigator.geolocation) {
-    sendToMaps("");
-    button.textContent = "Walk there";
-    button.disabled = false;
-    return;
-  }
-
-  navigator.geolocation.getCurrentPosition(
-    (position) => {
-      sendToMaps(`${position.coords.latitude},${position.coords.longitude}`);
-      button.textContent = "Walk there";
-      button.disabled = false;
-    },
-    () => {
-      sendToMaps("");
-      button.textContent = "Walk there";
-      button.disabled = false;
-    },
-    { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
-  );
+  if (!mapWindow) window.location.href = walkingDirectionsUrl(place);
 }
 
 function persistSaved() {
