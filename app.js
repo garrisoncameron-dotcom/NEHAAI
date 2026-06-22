@@ -56,6 +56,7 @@ const els = {
   conflictBanner: document.querySelector("#conflictBanner"),
   aiForm: document.querySelector("#aiForm"),
   aiPrompt: document.querySelector("#aiPrompt"),
+  aiAnswer: document.querySelector("#aiAnswer"),
   aiResults: document.querySelector("#aiResults"),
   aiReasons: document.querySelector("#aiReasons"),
   placeFilter: document.querySelector("#placeFilter"),
@@ -277,6 +278,8 @@ const venueMaps = {
     caption: "Full floor-plan packet overview from the uploaded Sheraton conference material."
   }
 };
+const stopWords = new Set("a an and are as at be but by can for from give has have how i if in into is it me my of on or our should the their them there they this to what when where who why with you your about after all also any best do does need recommend tell".split(" "));
+let knowledgeDocs = null;
 
 loadData().then(([sessions, guide]) => {
   state.sessions = sessions;
@@ -773,51 +776,69 @@ function renderDailyGrid(savedSessions) {
 }
 
 function runAi() {
-  const prompt = els.aiPrompt.value.toLowerCase();
+  const prompt = els.aiPrompt.value.trim();
   const profile = buildProfile(prompt);
+  const terms = expandTerms(tokenize(prompt));
+  const answer = buildAiAnswer(prompt, profile, terms);
   const scored = state.sessions
     .filter((session) => session.category !== "Registration")
-    .map((session) => ({ session, score: scoreSession(session, profile) }))
+    .map((session) => ({ session, score: scoreSession(session, profile, terms) }))
     .filter((item) => item.score > 0)
     .sort((a, b) => b.score - a.score || sortSessions(a.session, b.session))
     .slice(0, 12)
     .map((item) => item.session);
 
+  renderAiAnswer(answer);
   els.aiReasons.innerHTML = profile.reasons.map((reason) => `<span class="reason">${escapeHtml(reason)}</span>`).join("");
-  renderSessions(els.aiResults, scored, { empty: "Try a role, topic, CE target, or phrase like food inspector, water quality, data, climate, or leadership." });
+  renderSessions(els.aiResults, scored, { empty: "I could not find a strong session match yet. Try adding a role, topic, room, CE need, or phrase from a session title." });
 }
 
 function buildProfile(prompt) {
+  const lower = prompt.toLowerCase();
   const signals = [
-    { keys: ["food", "restaurant", "retail", "foodborne"], categories: ["Food Safety", "RFFM/Retail Program Standards"], tags: ["Food Safety & Defense", "Retail & Home Restaurants"], reason: "Prioritizing food safety and retail program standards." },
-    { keys: ["water", "pool", "aquatic", "well", "wastewater"], categories: ["Water Quality"], tags: ["Recreational Water", "Private Drinking Water", "Onsite Wastewater"], reason: "Looking for water quality and aquatic health sessions." },
-    { keys: ["director", "leader", "manager", "workforce", "staff"], categories: ["Workforce & Leadership"], tags: ["Leadership & Management"], reason: "Adding leadership and workforce development." },
-    { keys: ["climate", "heat", "resilience"], categories: ["Climate & Health", "Emergency Readiness, Recovery, & Resilience"], tags: ["Adaptation & Mitigation", "Extreme Heat"], reason: "Focusing on climate, heat, and resilience." },
-    { keys: ["data", "technology", "ai", "software"], categories: ["Data & Technology"], tags: ["Technology & Environmental Health", "Artificial Intelligence (AI)"], reason: "Elevating data, technology, and AI topics." },
-    { keys: ["vector", "pest", "rodent", "mosquito"], categories: ["Infectious & Vector-borne Diseases"], tags: ["Vector Control & Zoonotic Disease"], reason: "Matching vector control and pest topics." },
-    { keys: ["student", "career", "network"], categories: ["Networking Event"], tags: ["Student & Young Professional Career Development", "Networking Event"], reason: "Including networking and career-building options." },
+    { keys: ["food", "restaurant", "retail", "foodborne", "inspector", "inspection", "haccp", "outbreak"], categories: ["Food Safety", "RFFM/Retail Program Standards"], tags: ["Food Safety & Defense", "Retail & Home Restaurants"], reason: "Prioritizing food safety, inspection, and retail program standards." },
+    { keys: ["water", "pool", "aquatic", "well", "wastewater", "legionella", "splash", "recreational"], categories: ["Water Quality"], tags: ["Recreational Water", "Private Drinking Water", "Onsite Wastewater"], reason: "Looking for water quality, aquatic health, and recreational water sessions." },
+    { keys: ["director", "leader", "manager", "workforce", "staff", "training", "mentor", "supervisor"], categories: ["Workforce & Leadership"], tags: ["Leadership & Management"], reason: "Adding leadership, workforce development, and training topics." },
+    { keys: ["climate", "heat", "resilience", "emergency", "wildfire", "flood"], categories: ["Climate & Health", "Emergency Readiness, Recovery, & Resilience"], tags: ["Adaptation & Mitigation", "Extreme Heat"], reason: "Focusing on climate, heat, emergency readiness, and resilience." },
+    { keys: ["data", "technology", "ai", "software", "dashboard", "analytics", "satellite"], categories: ["Data & Technology"], tags: ["Technology & Environmental Health", "Artificial Intelligence (AI)"], reason: "Elevating data, technology, AI, and analytics topics." },
+    { keys: ["vector", "pest", "rodent", "mosquito", "tick", "zoonotic"], categories: ["Infectious & Vector-borne Diseases"], tags: ["Vector Control & Zoonotic Disease"], reason: "Matching vector control, pest, and zoonotic disease topics." },
+    { keys: ["student", "career", "network", "job", "young professional"], categories: ["Networking Event"], tags: ["Student & Young Professional Career Development", "Networking Event"], reason: "Including networking and career-building options." },
+    { keys: ["equity", "community", "housing", "healthy", "population", "tribal"], categories: ["Healthy Communities", "Focused Populations"], tags: ["Health Equity", "Healthy Homes"], reason: "Including community health, equity, and focused population content." },
+    { keys: ["missouri", "kansas city", "local"], categories: ["Missouri Environmental Health"], tags: [], reason: "Looking for Missouri and Kansas City context." },
     { keys: ["ce", "credit", "credits"], categories: [], tags: [], reason: "Favoring sessions with CE credit." }
   ];
-  const profile = { categories: new Set(), tags: new Set(), ce: prompt.includes("ce") || prompt.includes("credit"), workshop: prompt.includes("workshop"), reasons: [] };
+  const profile = {
+    categories: new Set(),
+    tags: new Set(),
+    ce: lower.includes("ce") || lower.includes("credit"),
+    workshop: lower.includes("workshop"),
+    reasons: [],
+    intent: detectIntent(lower)
+  };
   signals.forEach((signal) => {
-    if (signal.keys.some((key) => promptHasKey(prompt, key))) {
+    if (signal.keys.some((key) => promptHasKey(lower, key))) {
       signal.categories.forEach((category) => profile.categories.add(category));
       signal.tags.forEach((tag) => profile.tags.add(tag));
       profile.reasons.push(signal.reason);
     }
   });
-  if (!profile.reasons.length) profile.reasons.push("Using broad environmental health relevance across the uploaded schedule.");
+  if (!profile.reasons.length) profile.reasons.push("Searching across sessions, CE notes, venue guidance, Kansas City info, and uploaded HS GovTech material.");
   return profile;
 }
 
-function promptHasKey(prompt, key) {
-  if (key.length <= 2) {
-    return new RegExp(`\\b${key}\\b`, "i").test(prompt);
-  }
-  return prompt.includes(key);
+function detectIntent(prompt) {
+  if (/\b(where|room|floor|map|venue|located|location)\b/.test(prompt)) return "venue";
+  if (/\b(ce|credit|credits|continuing education|certificate)\b/.test(prompt)) return "ce";
+  if (/\b(kansas city|restaurant|coffee|bar|bbq|attraction|things to do|nearby|eat|drink)\b/.test(prompt)) return "kc";
+  if (/\b(hs govtech|hscloud|hs cloud|demo|software|citizen portal|govcall|hs pay)\b/.test(prompt)) return "brand";
+  return "sessions";
 }
 
-function scoreSession(session, profile) {
+function promptHasKey(prompt, key) {
+  return new RegExp(`\\b${escapeRegExp(key)}s?\\b`, "i").test(prompt);
+}
+
+function scoreSession(session, profile, terms = []) {
   const haystack = `${session.title} ${session.category} ${session.tags.join(" ")} ${session.info}`.toLowerCase();
   let score = 0;
   if (profile.categories.has(session.category)) score += 7;
@@ -831,8 +852,192 @@ function scoreSession(session, profile) {
       if (haystack.includes(word)) score += 0.5;
     });
   });
-  if (!profile.categories.size && !profile.tags.size) score = Number(session.ce) > 0 ? 1 : 0;
+  terms.forEach((term) => {
+    if (session.title.toLowerCase().includes(term)) score += 4;
+    if (session.category.toLowerCase().includes(term)) score += 2;
+    if (session.tags.join(" ").toLowerCase().includes(term)) score += 2;
+    if (session.info.toLowerCase().includes(term)) score += 1;
+  });
+  if (!profile.categories.size && !profile.tags.size && !terms.length) score = Number(session.ce) > 0 ? 1 : 0;
   return score;
+}
+
+function buildAiAnswer(prompt, profile, terms) {
+  const docs = rankedKnowledgeDocs(prompt, terms, profile.intent).slice(0, 5);
+  const roomAnswer = profile.intent === "venue" ? roomAnswerFor(prompt) : "";
+  const places = profile.intent === "kc" ? rankedPlaces(terms).slice(0, 4) : [];
+  const heading = answerHeading(profile.intent);
+  const summary = roomAnswer || answerSummary(profile, docs, places);
+  const bullets = answerBullets(profile.intent, docs, places);
+  const sources = [...new Set(docs.map((doc) => doc.source).filter(Boolean))].slice(0, 4);
+  return { heading, summary, bullets, sources };
+}
+
+function renderAiAnswer(answer) {
+  const bullets = answer.bullets.length ? `<ul>${answer.bullets.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>` : "";
+  const sources = answer.sources.length ? `<p class="ai-sources">Matched sources: ${answer.sources.map(escapeHtml).join(" | ")}</p>` : "";
+  els.aiAnswer.innerHTML = `
+    <article>
+      <h3>${escapeHtml(answer.heading)}</h3>
+      <p>${escapeHtml(answer.summary)}</p>
+      ${bullets}
+      ${sources}
+    </article>
+  `;
+}
+
+function answerHeading(intent) {
+  if (intent === "ce") return "CE guidance";
+  if (intent === "venue") return "Venue answer";
+  if (intent === "kc") return "Kansas City guidance";
+  if (intent === "brand") return "HS GovTech context";
+  return "Recommended path";
+}
+
+function answerSummary(profile, docs, places) {
+  if (profile.intent === "kc" && places.length) {
+    return `I found several nearby options that fit that ask. Start with ${places.slice(0, 2).map((place) => place.name).join(" and ")}, then use the Kansas City tab for links, walk times, and more choices.`;
+  }
+  if (profile.intent === "ce") {
+    return "For CE planning, favor sessions with listed CE credit and keep your attended sessions organized in MyNEHASchedule. The uploaded CE guide notes that NEHA credentials rely on continuing education contact hours during each credential cycle.";
+  }
+  if (profile.intent === "brand") {
+    return "HS GovTech is positioned around modernizing environmental health work through configurable cloud tools, mobile workflows, citizen-facing services, payments, and call handling. For a deeper product conversation, use Book Demo in the More menu.";
+  }
+  if (docs.length) {
+    return `I found useful matches in the uploaded conference material. Based on your question, I would focus on ${docs[0].title.toLowerCase()} and the sessions below.`;
+  }
+  return "I did not find an exact match in the uploaded material, but I can still help you navigate. Try adding a role, topic, room, CE need, or phrase from a session title.";
+}
+
+function answerBullets(intent, docs, places) {
+  if (intent === "kc" && places.length) {
+    return places.map((place) => `${place.name}: ${place.meta}. ${place.description}`);
+  }
+  return docs.slice(0, 3).map((doc) => `${doc.title}: ${firstSentence(doc.text)}`);
+}
+
+function rankedKnowledgeDocs(prompt, terms, intent) {
+  const phrase = prompt.toLowerCase();
+  return getKnowledgeDocs()
+    .map((doc) => ({ doc, score: scoreKnowledgeDoc(doc, terms, phrase, intent) }))
+    .filter((item) => item.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .map((item) => item.doc);
+}
+
+function getKnowledgeDocs() {
+  if (knowledgeDocs) return knowledgeDocs;
+  const docs = [];
+  state.sessions.forEach((session) => {
+    docs.push({
+      source: "NEHA AEC 2026 Session Schedule",
+      title: session.title,
+      text: `${session.time} in ${session.location}. Category: ${session.category}. Tags: ${session.tags.join(", ")}. CE: ${session.ceDisplay}. ${session.info}`,
+      view: "sessions"
+    });
+  });
+  (state.guide?.knowledge || []).forEach((chunk) => {
+    docs.push({
+      source: chunk.source || "Uploaded Knowledge Docs",
+      title: chunk.title || chunk.source || "Knowledge note",
+      text: chunk.text || "",
+      view: classifyKnowledgeView(chunk.source, chunk.title, chunk.text)
+    });
+  });
+  (state.guide?.ce?.summary || []).forEach((text, index) => docs.push({ source: state.guide.ce.source, title: `CE note ${index + 1}`, text, view: "ce" }));
+  (state.guide?.hotel?.summary || []).forEach((text, index) => docs.push({ source: state.guide.hotel.source, title: `Venue note ${index + 1}`, text, view: "venue" }));
+  (state.guide?.brand?.positioning || []).forEach((text, index) => docs.push({ source: state.guide.brand.source, title: `HS GovTech note ${index + 1}`, text, view: "brand" }));
+  knowledgeDocs = docs.map((doc) => ({ ...doc, tokens: tokenize(`${doc.title} ${doc.source} ${doc.text}`) }));
+  return knowledgeDocs;
+}
+
+function scoreKnowledgeDoc(doc, terms, phrase, intent) {
+  if (!terms.length) return 0;
+  const title = doc.title.toLowerCase();
+  const source = doc.source.toLowerCase();
+  const text = doc.text.toLowerCase();
+  let score = 0;
+  terms.forEach((term) => {
+    if (title.includes(term)) score += 7;
+    if (source.includes(term)) score += 4;
+    if (text.includes(term)) score += 1.5;
+  });
+  if (phrase.length > 8 && text.includes(phrase)) score += 10;
+  if (intent && intent !== "sessions") {
+    if (doc.view === intent) score += 12;
+    if (doc.view !== intent && doc.view !== "sessions") score *= 0.35;
+  }
+  return score;
+}
+
+function classifyKnowledgeView(source = "", title = "", text = "") {
+  const haystack = `${source} ${title} ${text}`.toLowerCase();
+  if (haystack.includes("continuing education") || haystack.includes("ce requirement")) return "ce";
+  if (haystack.includes("hs govtech") || haystack.includes("hs cloud") || haystack.includes("govcall") || haystack.includes("citizen portal")) return "brand";
+  if (haystack.includes("sheraton") || haystack.includes("floor plan") || haystack.includes("exhibit hall")) return "venue";
+  if (haystack.includes("kansas city") || haystack.includes("locations near hotel") || haystack.includes("crown center")) return "kc";
+  return "knowledge";
+}
+
+function rankedPlaces(terms) {
+  return (state.guide?.nearby || [])
+    .map((place) => {
+      const text = `${place.name} ${place.category} ${place.meta} ${place.description}`.toLowerCase();
+      let score = 0;
+      terms.forEach((term) => {
+        if (text.includes(term)) score += 1;
+      });
+      if (!score && /coffee|barbecue|dining|casual|nightlife|attractions|essentials|outdoors/i.test(place.category)) score = 0.5;
+      return { place, score };
+    })
+    .filter((item) => item.score > 0)
+    .sort((a, b) => b.score - a.score || a.place.name.localeCompare(b.place.name))
+    .map((item) => item.place);
+}
+
+function roomAnswerFor(prompt) {
+  const lower = prompt.toLowerCase();
+  const roomKey = Object.keys(state.guide?.roomFloors || {}).find((room) => lower.includes(room));
+  if (!roomKey) return "";
+  const roomName = roomKey.replace(/\b\w/g, (char) => char.toUpperCase());
+  return `${roomName} is on the ${state.guide.roomFloors[roomKey]}. Use the Venue tab for the exhibit hall and conference complex maps.`;
+}
+
+function tokenize(text) {
+  return String(text || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, " ")
+    .split(/\s+/)
+    .filter((term) => term.length > 2 && !stopWords.has(term))
+    .map((term) => term.length > 4 ? term.replace(/s$/, "") : term)
+    .filter((term) => term.length > 2 && !stopWords.has(term));
+}
+
+function expandTerms(terms) {
+  const synonyms = {
+    inspector: ["inspection", "inspections", "retail", "food"],
+    restaurant: ["retail", "food", "foodservice"],
+    pool: ["aquatic", "recreational", "water"],
+    ai: ["artificial", "intelligence", "technology"],
+    ce: ["credit", "credits", "continuing", "education"],
+    demo: ["hscloud", "software", "govtech"],
+    bbq: ["barbecue"],
+    kc: ["kansas", "city"]
+  };
+  const expanded = new Set(terms);
+  terms.forEach((term) => (synonyms[term] || []).forEach((synonym) => expanded.add(synonym)));
+  return [...expanded];
+}
+
+function firstSentence(text) {
+  const cleaned = String(text || "").replace(/\s+/g, " ").trim();
+  const match = cleaned.match(/^(.{40,220}?[.!?])\s/);
+  return match ? match[1] : `${cleaned.slice(0, 220)}${cleaned.length > 220 ? "..." : ""}`;
+}
+
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 function renderPlaces() {

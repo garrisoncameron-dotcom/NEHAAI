@@ -1,10 +1,10 @@
-const CACHE_NAME = "neha-guide-v20260619-sheetalerts";
+const CACHE_NAME = "neha-guide-v20260621-aiguide";
 const APP_ASSETS = [
   "./",
   "index.html",
-  "styles.css?v=20260619-sheetalerts",
-  "app.js?v=20260619-sheetalerts",
-  "data-bundle.js?v=20260619-lunchbreak",
+  "styles.css?v=20260621-aiguide",
+  "app.js?v=20260621-aiguide",
+  "data-bundle.js?v=20260621-aiguide",
   "lead-config.js?v=20260619",
   "manifest.webmanifest",
   "assets/hs-govtech-logo.png",

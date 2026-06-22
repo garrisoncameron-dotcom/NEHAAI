@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-title" content="NEHA Guide">
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="apple-touch-icon" href="assets/icon-192.png">
-    <link rel="stylesheet" href="styles.css?v=20260619-sheetalerts">
+    <link rel="stylesheet" href="styles.css?v=20260621-aiguide">
   </head>
   <body>
     <div id="leadGate" class="lead-gate" hidden>
@@ -120,14 +120,15 @@
           <div class="assistant-panel">
             <div class="assistant-copy">
               <p class="eyebrow">Grounded in the uploaded NEHA schedule</p>
-              <h2>Ask for session recommendations</h2>
-              <p>Try: "I'm a food inspector", "I need CE credits and water quality", or "recommend AI and data sessions for a director".</p>
+              <h2>Ask the conference guide</h2>
+              <p>Ask about sessions, CE credits, rooms, Kansas City, HS GovTech, or what to attend for your role.</p>
             </div>
             <form id="aiForm" class="prompt-box">
               <input id="aiPrompt" type="text" value="I'm a food inspector. What sessions do you recommend?">
-              <button type="submit">Recommend</button>
+              <button type="submit">Ask</button>
             </form>
           </div>
+          <div id="aiAnswer" class="ai-answer"></div>
           <div id="aiReasons" class="reason-bar"></div>
           <div id="aiResults" class="timeline compact"></div>
         </section>
@@ -270,8 +271,8 @@
       </article>
     </template>
 
-    <script src="data-bundle.js?v=20260619-lunchbreak"></script>
+    <script src="data-bundle.js?v=20260621-aiguide"></script>
     <script src="lead-config.js?v=20260619"></script>
-    <script src="app.js?v=20260619-sheetalerts"></script>
+    <script src="app.js?v=20260621-aiguide"></script>
   </body>
 </html>
