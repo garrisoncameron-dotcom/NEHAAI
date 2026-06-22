@@ -8,13 +8,13 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="NEHA Guide">
     <link rel="manifest" href="manifest.webmanifest">
-    <link rel="apple-touch-icon" href="assets/icon-192.png?v=20260622-clean-logo">
-    <link rel="stylesheet" href="styles.css?v=20260622-clean-logo">
+    <link rel="apple-touch-icon" href="assets/icon-192.png?v=20260622-community-connect">
+    <link rel="stylesheet" href="styles.css?v=20260622-community-connect">
   </head>
   <body>
     <div id="leadGate" class="lead-gate" hidden>
       <form id="leadForm" class="lead-card">
-        <img class="lead-logo" src="assets/hs-govtech-logo.png?v=20260622-clean-logo" alt="HS GovTech logo">
+        <img class="lead-logo" src="assets/hs-govtech-logo.png?v=20260622-community-connect" alt="HS GovTech logo">
         <p class="eyebrow">NEHA AEC 2026 Guide</p>
         <h2>Welcome</h2>
         <p class="lead-copy">Tell us who is using the guide, then you are in for the rest of the conference on this phone.</p>
@@ -39,7 +39,7 @@
       <aside class="rail" aria-label="Primary navigation">
         <div class="brand-lockup">
           <div class="brand-main">
-            <img class="brand-logo" src="assets/hs-govtech-logo.png?v=20260622-clean-logo" alt="HS GovTech logo">
+            <img class="brand-logo" src="assets/hs-govtech-logo.png?v=20260622-community-connect" alt="HS GovTech logo">
             <div>
               <strong>HS GovTech</strong>
               <small>NEHA Navigator</small>
@@ -56,6 +56,7 @@
           <button class="nav-item more-item" data-view="kc" type="button">KC</button>
           <button class="nav-item more-item" data-view="venue" type="button">Venue</button>
           <button class="nav-item podcast-nav more-item" data-view="podcast" type="button">Podcast</button>
+          <button class="nav-item community-nav more-item" data-view="community" type="button">Community</button>
           <button class="nav-item demo-nav more-item" data-view="demo" type="button">Book Demo</button>
           <button class="nav-item drink-nav more-item" data-view="drink" type="button">FREE DRINK</button>
         </nav>
@@ -63,6 +64,7 @@
           <button class="more-menu-item" data-view="kc" type="button">Kansas City</button>
           <button class="more-menu-item" data-view="venue" type="button">Venue</button>
           <button class="more-menu-item" data-view="podcast" type="button">Podcast</button>
+          <button class="more-menu-item community-nav" data-view="community" type="button">Community Connect</button>
           <button class="more-menu-item demo-nav" data-view="demo" type="button">Book Demo</button>
           <button class="more-menu-item drink-nav" data-view="drink" type="button">FREE DRINK</button>
         </div>
@@ -181,6 +183,42 @@
           <div id="podcastGrid" class="podcast-grid"></div>
         </section>
 
+        <section id="communityView" class="view">
+          <div class="community-layout">
+            <div class="community-panel">
+              <p class="eyebrow">Community Connect</p>
+              <h2>Find your people at NEHA</h2>
+              <p>Post a question, meet another EH pro, or share a Kansas City moment. Posts are visible to attendees using the guide.</p>
+              <div id="communityCategories" class="segmented community-tabs" aria-label="Community categories"></div>
+            </div>
+            <form id="communityForm" class="community-form">
+              <label>
+                Category
+                <select id="communityCategoryInput" name="category" required></select>
+              </label>
+              <label>
+                Title
+                <input id="communityTitle" name="title" type="text" maxlength="90" placeholder="What do you want to ask or share?" required>
+              </label>
+              <label class="wide-field">
+                Message
+                <textarea id="communityMessage" name="message" rows="4" maxlength="700" placeholder="Keep it useful, kind, and conference-friendly." required></textarea>
+              </label>
+              <label class="wide-field">
+                Image URL
+                <input id="communityImageUrl" name="imageUrl" type="url" placeholder="Optional for Kansas City photos">
+              </label>
+              <label class="community-check wide-field">
+                <input id="communityShareEmail" name="shareEmail" type="checkbox">
+                Allow attendees to email me about this post
+              </label>
+              <button type="submit">Post to Community</button>
+              <p id="communityStatus" class="community-status"></p>
+            </form>
+          </div>
+          <div id="communityPosts" class="community-posts"></div>
+        </section>
+
         <section id="demoView" class="view">
           <div class="demo-panel">
             <div class="demo-copy">
@@ -273,8 +311,8 @@
       </article>
     </template>
 
-    <script src="data-bundle.js?v=20260622-clean-logo"></script>
+    <script src="data-bundle.js?v=20260622-community-connect"></script>
     <script src="lead-config.js?v=20260619"></script>
-    <script src="app.js?v=20260622-clean-logo"></script>
+    <script src="app.js?v=20260622-community-connect"></script>
   </body>
 </html>

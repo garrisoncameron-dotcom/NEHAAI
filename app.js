@@ -9,6 +9,10 @@ const state = {
   myDay: "",
   placeFilter: "all",
   venueMap: "exhibit",
+  communityCategory: "all",
+  communityPosts: [],
+  communityLoading: false,
+  communityLoaded: false,
   pendingConflict: null,
   installPrompt: null,
   trivia: {
@@ -73,6 +77,15 @@ const els = {
   venueMapImage: document.querySelector("#venueMapImage"),
   venueMapCaption: document.querySelector("#venueMapCaption"),
   podcastGrid: document.querySelector("#podcastGrid"),
+  communityCategories: document.querySelector("#communityCategories"),
+  communityForm: document.querySelector("#communityForm"),
+  communityCategoryInput: document.querySelector("#communityCategoryInput"),
+  communityTitle: document.querySelector("#communityTitle"),
+  communityMessage: document.querySelector("#communityMessage"),
+  communityImageUrl: document.querySelector("#communityImageUrl"),
+  communityShareEmail: document.querySelector("#communityShareEmail"),
+  communityStatus: document.querySelector("#communityStatus"),
+  communityPosts: document.querySelector("#communityPosts"),
   demoForm: document.querySelector("#demoForm"),
   demoName: document.querySelector("#demoName"),
   demoAgency: document.querySelector("#demoAgency"),
@@ -101,6 +114,7 @@ const viewTitles = {
   kc: "Things To Do In Kansas City",
   venue: "Venue Navigator",
   podcast: "Beyond Data Management",
+  community: "Community Connect",
   demo: "Book an HS CloudSuite Demo",
   trivia: "EH Trivia Game",
   drink: "FREE DRINK"
@@ -121,6 +135,14 @@ const fallbackAppAlerts = [
     action: "Book Demo",
     view: "demo"
   }
+];
+
+const communityCategories = [
+  { id: "all", label: "All Threads" },
+  { id: "unique-problems", label: "Unique Problems" },
+  { id: "eh-friends", label: "Meet New EH Friends" },
+  { id: "kc-images", label: "Images of Kansas City" },
+  { id: "ask-community", label: "Ask the Community" }
 ];
 
 const podcastEpisodes = [
@@ -300,6 +322,7 @@ loadData().then(([sessions, guide]) => {
   hydrateControls();
   renderAll();
   loadAppAlerts();
+  loadCommunityPosts();
   runAi();
   if (state.drinkValidation.code) {
     setView("drink");
@@ -395,6 +418,53 @@ els.placeGrid.addEventListener("click", (event) => {
   const directions = event.target.closest("[data-place-directions]");
   if (directions) {
     openWalkingDirections(Number(directions.dataset.placeDirections), directions);
+  }
+});
+
+els.communityCategories.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-community-category]");
+  if (!button) return;
+  state.communityCategory = button.dataset.communityCategory;
+  renderCommunity();
+});
+
+els.communityForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const submitButton = els.communityForm.querySelector('button[type="submit"]');
+  const post = {
+    type: "communityPost",
+    category: els.communityCategoryInput.value,
+    title: els.communityTitle.value.trim(),
+    message: els.communityMessage.value.trim(),
+    imageUrl: els.communityImageUrl.value.trim(),
+    shareEmail: els.communityShareEmail.checked ? "Yes" : "No",
+    name: state.lead?.name || "",
+    agency: state.lead?.agency || "",
+    email: state.lead?.email || "",
+    postedAt: new Date().toISOString(),
+    source: "NEHA AEC 2026 Guide",
+    page: location.href
+  };
+  if (!post.category || !post.title || !post.message || (post.imageUrl && !els.communityImageUrl.checkValidity())) {
+    els.communityForm.reportValidity();
+    return;
+  }
+  submitButton.disabled = true;
+  submitButton.textContent = "Posting...";
+  els.communityStatus.textContent = "";
+  try {
+    await submitAppPayload(post);
+    els.communityStatus.textContent = "Posted. Refreshing Community Connect...";
+    els.communityForm.reset();
+    els.communityCategoryInput.value = post.category;
+    state.communityCategory = post.category;
+    window.setTimeout(loadCommunityPosts, 1200);
+  } catch (error) {
+    els.communityStatus.textContent = "Could not post yet. Please check connection and try again.";
+    console.error(error);
+  } finally {
+    submitButton.disabled = false;
+    submitButton.textContent = "Post to Community";
   }
 });
 
@@ -537,12 +607,13 @@ async function submitAppPayload(payload) {
 function setView(view) {
   document.querySelectorAll(".nav-item[data-view]").forEach((item) => item.classList.toggle("active", item.dataset.view === view));
   document.querySelectorAll(".more-menu-item[data-view]").forEach((item) => item.classList.toggle("active", item.dataset.view === view));
-  els.moreMenuButton.classList.toggle("active", ["kc", "venue", "podcast", "demo", "drink"].includes(view));
+  els.moreMenuButton.classList.toggle("active", ["kc", "venue", "podcast", "community", "demo", "drink"].includes(view));
   document.querySelectorAll(".view").forEach((panel) => panel.classList.toggle("active", panel.id === `${view}View`));
   els.title.textContent = viewTitles[view];
   els.search.style.display = view === "schedule" ? "block" : "none";
   if (view === "my") renderMySchedule();
   if (view === "podcast") renderPodcast();
+  if (view === "community") renderCommunity();
   if (view === "demo") prefillDemoForm();
   if (view === "trivia") renderTrivia();
   if (view === "drink") renderFreeDrink();
@@ -580,6 +651,12 @@ function hydrateControls() {
   const placeCategories = [...new Set(state.guide.nearby.map((place) => place.category))].sort();
   els.placeFilter.innerHTML += placeCategories.map((category) => `<option value="${escapeAttr(category)}">${category}</option>`).join("");
 
+  els.communityCategories.innerHTML = communityCategories.map((category) => `<button type="button" class="${category.id === state.communityCategory ? "active" : ""}" data-community-category="${category.id}">${category.label}</button>`).join("");
+  els.communityCategoryInput.innerHTML = communityCategories
+    .filter((category) => category.id !== "all")
+    .map((category) => `<option value="${category.id}">${category.label}</option>`)
+    .join("");
+
   els.venueMapTabs.innerHTML = Object.entries(venueMaps).map(([key, map]) => `<button type="button" class="${key === state.venueMap ? "active" : ""}" data-map="${key}">${map.label}</button>`).join("");
   els.venueMapTabs.querySelectorAll("button").forEach((button) => {
     button.addEventListener("click", () => {
@@ -595,6 +672,7 @@ function renderAll() {
   renderPlaces();
   renderVenue();
   renderPodcast();
+  renderCommunity();
   renderAppAlerts();
   renderTrivia();
   renderFreeDrink();
@@ -1324,6 +1402,70 @@ function renderPodcast() {
   `).join("");
 }
 
+function renderCommunity() {
+  els.communityCategories.querySelectorAll("button").forEach((button) => {
+    button.classList.toggle("active", button.dataset.communityCategory === state.communityCategory);
+  });
+  if (!els.communityCategoryInput.value) els.communityCategoryInput.value = "unique-problems";
+
+  const posts = state.communityPosts
+    .filter((post) => state.communityCategory === "all" || post.category === state.communityCategory)
+    .slice(0, 30);
+
+  if (state.communityLoading && !posts.length) {
+    els.communityPosts.innerHTML = `<div class="empty-state">Loading community posts...</div>`;
+    return;
+  }
+  if (!posts.length) {
+    els.communityPosts.innerHTML = `<div class="empty-state">No posts here yet. Be the first to start this conversation.</div>`;
+    return;
+  }
+
+  els.communityPosts.innerHTML = posts.map((post) => {
+    const category = communityCategoryLabel(post.category);
+    const email = post.shareEmail && post.email ? `<a href="mailto:${escapeAttr(post.email)}?subject=${encodeURIComponent(`NEHA Community Connect: ${post.title}`)}">Email ${escapeHtml(post.displayName || "attendee")}</a>` : "";
+    const image = safeImageUrl(post.imageUrl) ? `<img src="${escapeAttr(post.imageUrl)}" alt="${escapeAttr(post.title)}">` : "";
+    return `
+      <article class="community-post">
+        <div class="community-post-head">
+          <span>${escapeHtml(category)}</span>
+          <small>${escapeHtml(relativePostTime(post.postedAt))}</small>
+        </div>
+        <h3>${escapeHtml(post.title)}</h3>
+        <p>${escapeHtml(post.message)}</p>
+        ${image}
+        <div class="community-byline">
+          <strong>${escapeHtml(post.displayName || "NEHA attendee")}</strong>
+          <span>${escapeHtml(post.agency || "Environmental health community")}</span>
+          ${email}
+        </div>
+      </article>
+    `;
+  }).join("");
+}
+
+function loadCommunityPosts() {
+  const endpoint = window.NEHA_LEAD_ENDPOINT || "";
+  if (!endpoint) {
+    renderCommunity();
+    return Promise.resolve();
+  }
+  state.communityLoading = true;
+  renderCommunity();
+  return loadJsonp(endpoint, { action: "communityPosts" })
+    .then((data) => {
+      state.communityPosts = Array.isArray(data?.posts) ? data.posts : [];
+      state.communityLoaded = true;
+    })
+    .catch((error) => {
+      console.warn("Community posts could not load", error);
+    })
+    .finally(() => {
+      state.communityLoading = false;
+      renderCommunity();
+    });
+}
+
 function renderTrivia() {
   const trivia = state.trivia;
   const total = triviaQuestions.length;
@@ -1755,6 +1897,30 @@ function shortTime(value) {
   const hour = Number(hourText);
   const suffix = hour < 12 ? "AM" : "PM";
   return `${hour % 12 || 12}:${minute} ${suffix}`;
+}
+
+function communityCategoryLabel(id) {
+  return communityCategories.find((category) => category.id === id)?.label || "Community";
+}
+
+function relativePostTime(value) {
+  const date = new Date(value);
+  if (isNaN(date)) return "just now";
+  const minutes = Math.max(0, Math.round((Date.now() - date.getTime()) / 60000));
+  if (minutes < 2) return "just now";
+  if (minutes < 60) return `${minutes} min ago`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return `${hours} hr ago`;
+  return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
+function safeImageUrl(value) {
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" ? url.href : "";
+  } catch (error) {
+    return "";
+  }
 }
 
 function escapeHtml(value) {

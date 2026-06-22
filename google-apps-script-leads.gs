@@ -4,6 +4,7 @@ const TRIVIA_SHEET_NAME = "Trivia Scores";
 const DEMO_SHEET_NAME = "Demo Requests";
 const ALERTS_SHEET_NAME = "App Alerts";
 const DRINK_SHEET_NAME = "Drink Redemptions";
+const COMMUNITY_SHEET_NAME = "Community Posts";
 
 function doPost(e) {
   const payload = JSON.parse(e.postData.contents || "{}");
@@ -11,6 +12,7 @@ function doPost(e) {
   if (payload.type === "demoRequest") return recordDemoRequest_(payload);
   if (payload.type === "drinkRedemption") return recordDrinkRedemption_(payload);
   if (payload.type === "drinkServed") return markDrinkServed_(payload);
+  if (payload.type === "communityPost") return recordCommunityPost_(payload);
   return recordLead_(payload);
 }
 
@@ -24,6 +26,9 @@ function doGet(e) {
   }
   if (params.action === "drinkStatus") {
     return jsonOutput_({ ok: true, ticket: getDrinkTicket_(params.code || "") }, params.callback);
+  }
+  if (params.action === "communityPosts") {
+    return jsonOutput_({ ok: true, posts: getCommunityPosts_() }, params.callback);
   }
   return jsonOutput_({ ok: true }, params.callback);
 }
@@ -149,6 +154,33 @@ function markDrinkServed_(payload) {
   return jsonOutput_({ ok: true, ticket: getDrinkTicket_(code) });
 }
 
+function recordCommunityPost_(payload) {
+  const sheet = getCommunitySheet_();
+  const title = trimText_(payload.title, 90);
+  const message = trimText_(payload.message, 700);
+  if (!title || !message) return jsonOutput_({ ok: false, error: "Missing title or message" });
+
+  sheet.appendRow([
+    new Date(),
+    normalizeCommunityCategory_(payload.category),
+    title,
+    message,
+    safeHttpsUrl_(payload.imageUrl || ""),
+    displayName_(payload.name || ""),
+    payload.name || "",
+    payload.agency || "",
+    payload.email || "",
+    String(payload.shareEmail || "").toLowerCase() === "yes" ? "Yes" : "No",
+    payload.postedAt || "",
+    payload.source || "",
+    payload.page || "",
+    "Visible"
+  ]);
+  sheet.autoResizeColumns(1, 14);
+
+  return jsonOutput_({ ok: true });
+}
+
 function getLeadSheet_() {
   const spreadsheet = SpreadsheetApp.openById(SHEET_ID);
   let sheet = spreadsheet.getSheetByName(SHEET_NAME);
@@ -240,6 +272,35 @@ function getDrinkSheet_() {
     ]);
     sheet.setFrozenRows(1);
     sheet.autoResizeColumns(1, 13);
+  }
+
+  return sheet;
+}
+
+function getCommunitySheet_() {
+  const spreadsheet = SpreadsheetApp.openById(SHEET_ID);
+  let sheet = spreadsheet.getSheetByName(COMMUNITY_SHEET_NAME);
+  if (!sheet) sheet = spreadsheet.insertSheet(COMMUNITY_SHEET_NAME);
+
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow([
+      "Received At",
+      "Category",
+      "Title",
+      "Message",
+      "Image URL",
+      "Display Name",
+      "Full Name",
+      "Agency",
+      "Email",
+      "Share Email",
+      "Posted At",
+      "Source",
+      "Page",
+      "Status"
+    ]);
+    sheet.setFrozenRows(1);
+    sheet.autoResizeColumns(1, 14);
   }
 
   return sheet;
@@ -382,6 +443,41 @@ function getTriviaLeaderboard_() {
     }));
 }
 
+function getCommunityPosts_() {
+  const sheet = getCommunitySheet_();
+  const lastRow = sheet.getLastRow();
+  if (lastRow <= 1) return [];
+  const rows = sheet.getRange(2, 1, lastRow - 1, 14).getValues();
+  return rows
+    .map((row) => ({
+      receivedAt: row[0],
+      category: normalizeCommunityCategory_(row[1]),
+      title: String(row[2] || "").trim(),
+      message: String(row[3] || "").trim(),
+      imageUrl: safeHttpsUrl_(row[4] || ""),
+      displayName: row[5] || "NEHA attendee",
+      agency: row[7] || "",
+      email: String(row[9] || "").toLowerCase() === "yes" ? String(row[8] || "").trim() : "",
+      shareEmail: String(row[9] || "").toLowerCase() === "yes",
+      postedAt: row[10] || row[0],
+      status: String(row[13] || "Visible").trim().toLowerCase()
+    }))
+    .filter((post) => post.status !== "hidden" && post.title && post.message)
+    .sort((a, b) => new Date(b.receivedAt) - new Date(a.receivedAt))
+    .slice(0, 60)
+    .map((post) => ({
+      category: post.category,
+      title: post.title,
+      message: post.message,
+      imageUrl: post.imageUrl,
+      displayName: post.displayName,
+      agency: post.agency,
+      email: post.email,
+      shareEmail: post.shareEmail,
+      postedAt: post.postedAt
+    }));
+}
+
 function getDrinkTicket_(code) {
   code = String(code || "").trim();
   if (!code) return { found: false };
@@ -421,6 +517,27 @@ function displayName_(name) {
   return `${parts[0]} ${parts[parts.length - 1].charAt(0)}.`;
 }
 
+function normalizeCommunityCategory_(category) {
+  const value = String(category || "").trim().toLowerCase();
+  const allowed = {
+    "unique-problems": true,
+    "eh-friends": true,
+    "kc-images": true,
+    "ask-community": true
+  };
+  return allowed[value] ? value : "ask-community";
+}
+
+function trimText_(value, maxLength) {
+  return String(value || "").replace(/\s+/g, " ").trim().slice(0, maxLength);
+}
+
+function safeHttpsUrl_(value) {
+  const text = String(value || "").trim();
+  if (!text) return "";
+  return /^https:\/\/[^\s]+$/i.test(text) ? text : "";
+}
+
 function sendTriviaScoreEmail_(payload, score, total, hintsUsed) {
   const email = String(payload.email || "").trim();
   if (!email) return;
@@ -450,19 +567,3 @@ function sendTriviaScoreEmail_(payload, score, total, hintsUsed) {
     console.error(`Trivia score email failed for ${email}: ${error}`);
   }
 }
-const SHEET_ID = "1ya26Sqt2GlpUDspUcreXEhDySgYGIlUGcsApV6zDf5s";
-const SHEET_NAME = "NEHA Leads";
-const TRIVIA_SHEET_NAME = "Trivia Scores";
-const DEMO_SHEET_NAME = "Demo Requests";
-const ALERTS_SHEET_NAME = "App Alerts";
-const DRINK_SHEET_NAME = "Drink Redemptions";
-
-function doPost(e) {
-  const payload = JSON.parse(e.postData.contents || "{}");
-  if (payload.type === "triviaScore") return recordTriviaScore_(payload);
-  if (payload.type === "demoRequest") return recordDemoRequest_(payload);
-  if (payload.type === "drinkRedemption") return recordDrinkRedemption_(payload);
-  if (payload.type === "drinkServed") return markDrinkServed_(payload);
-  return recordLead_(payload);
-}
-
