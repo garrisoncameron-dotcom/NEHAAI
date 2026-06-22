@@ -352,6 +352,97 @@
       "meta": "Hotel Lobby — 0-minute walk",
       "walk": "Hotel Lobby — 0-minute walk",
       "description": "Located right beside the registration desk. Offers high-premium markups but serves perfectly for absolute midnight emergencies like bottled water, standard snacks, charging cords, or emergency pain relievers."
+    },
+    {
+      "name": "Walgreens Pharmacy at University Health",
+      "category": "Convenience, Grocery & Pharmacies",
+      "meta": "2301 Holmes St — 11-minute walk / 0.5 miles east",
+      "walk": "2301 Holmes St — 11-minute walk / 0.5 miles east",
+      "description": "The closest full-service pharmacy to the hotel lobby. Head east down 24th Street across Oak, Locust, and Cherry streets to the University Health / Truman Medical Center campus. This licensed outpatient pharmacy can fill or transfer prescriptions, sell over-the-counter health items, and cover basic personal hygiene needs. Typical hours are Monday-Friday 8:00 AM - 7:00 PM, closed weekends."
+    },
+    {
+      "name": "University Health Specialty Pharmacy",
+      "category": "Convenience, Grocery & Pharmacies",
+      "meta": "2101 Charlotte St — 12-minute walk / 0.6 miles northeast",
+      "walk": "2101 Charlotte St — 12-minute walk / 0.6 miles northeast",
+      "description": "A robust clinical pharmacy option on the adjacent medical campus northeast of the hotel, useful for attendees with more extensive healthcare or specialty medication needs."
+    },
+    {
+      "name": "Cosentino's Market",
+      "category": "Convenience, Grocery & Pharmacies",
+      "meta": "10 E 13th St — FREE KC Streetcar from Union Station",
+      "walk": "10 E 13th St — FREE KC Streetcar from Union Station",
+      "description": "A premium urban grocery store downtown. Walk 7 minutes through The Link to the Union Station Streetcar stop, ride free, and step off at 14th Street / Power & Light. Expect a full-service deli, hot food bars, fresh local and organic produce, sushi counter, artisan bakery, specialty cheese, groceries, beer, wine, and liquor."
+    },
+    {
+      "name": "The National WWI Museum and Memorial",
+      "category": "Exploration",
+      "meta": "2 Memorial Dr — 9-minute walk",
+      "walk": "2 Memorial Dr — 9-minute walk",
+      "description": "America’s official museum and memorial dedicated to the Great War, right across the street in Penn Valley Park. The interactive exhibitions are world-class, and the Liberty Memorial lawn gives you one of the best panoramic skyline photos in Kansas City."
+    },
+    {
+      "name": "Union Station Kansas City",
+      "category": "Exploration",
+      "meta": "30 W Pershing Rd — 7-minute walk via The Link",
+      "walk": "30 W Pershing Rd — 7-minute walk via The Link",
+      "description": "A breathtaking 1914 Beaux-Arts landmark. Wander the massive Grand Hall for 95-foot ceilings and 3,500-pound chandeliers, then check out the planetarium or rotating international touring exhibitions."
+    },
+    {
+      "name": "The Hallmark Visitors Center & Kaleidoscope",
+      "category": "Exploration",
+      "meta": "Crown Center, 2450 Grand Blvd — 4-minute walk via The Link",
+      "walk": "Crown Center, 2450 Grand Blvd — 4-minute walk via The Link",
+      "description": "A free, well-curated museum at Hallmark headquarters that tells the story of the world-famous greeting card company. Next door, Kaleidoscope offers a hands-on interactive creative arts space that is genuinely fun to explore."
+    },
+    {
+      "name": "The Money Museum at the Federal Reserve Bank",
+      "category": "Exploration",
+      "meta": "1 Memorial Dr — 8-minute walk",
+      "walk": "1 Memorial Dr — 8-minute walk",
+      "description": "A compact, high-security museum next to the WWI Memorial. Lift a real gold bar, view the Harry S. Truman presidential coin collection, and leave with a complimentary bag of shredded U.S. currency."
+    },
+    {
+      "name": "Crown Center Shops & SEA LIFE Aquarium",
+      "category": "Exploration",
+      "meta": "2450 Grand Blvd — connected via The Link",
+      "walk": "2450 Grand Blvd — connected via The Link",
+      "description": "A multi-level indoor shopping, dining, and entertainment pavilion connected to the hotel. It features local boutiques such as Halls KC, a dramatic indoor waterfall, and the SEA LIFE Aquarium."
+    },
+    {
+      "name": "Casual Animal Brewing Co.",
+      "category": "Nightlife & Spirits",
+      "meta": "1725 McGee St — 9-minute walk",
+      "walk": "1725 McGee St — 9-minute walk",
+      "description": "Head north on McGee into the Crossroads Arts District for a plant-filled taproom with a hyper-local neighborhood feel. Small-batch beers support local conservation efforts."
+    },
+    {
+      "name": "Mean Mule Distilling Co.",
+      "category": "Nightlife & Spirits",
+      "meta": "1733 Locust St — 10-minute walk",
+      "walk": "1733 Locust St — 10-minute walk",
+      "description": "A dimly lit, heritage-inspired cocktail lounge focused on American agave spirits distilled in Missouri. Think of it as the Midwest’s polished answer to high-end tequila and mezcal."
+    },
+    {
+      "name": "City Barrel Brewing Company",
+      "category": "Nightlife & Spirits",
+      "meta": "1740 Holmes St — 11-minute walk",
+      "walk": "1740 Holmes St — 11-minute walk",
+      "description": "A trendy industrial-chic brewery with soaring ceilings, creative sour beers, hazy IPAs, and a culinary-forward cocktail and food program."
+    },
+    {
+      "name": "Green Lady Lounge",
+      "category": "Nightlife & Spirits",
+      "meta": "1809 Grand Blvd — 5-minute rideshare",
+      "walk": "1809 Grand Blvd — 5-minute rideshare",
+      "description": "A Kansas City institution: retro, low-lit, red-velvet jazz lounge energy with local jazz collectives playing late into the night. The musicians play right on the floor, so you feel wrapped into the performance."
+    },
+    {
+      "name": "Corvino Supper Club & Tasting Room",
+      "category": "Nightlife & Spirits",
+      "meta": "1830 Walnut St — 5-minute rideshare to the Crossroads District",
+      "walk": "1830 Walnut St — 5-minute rideshare to the Crossroads District",
+      "description": "A spectacular upscale dinner pick blending late-night live jazz with a modern American shared-plates menu. Dark, polished, and sophisticated enough for a memorable conference-night dinner."
     }
   ],
   "kcSources": [

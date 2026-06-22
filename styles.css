@@ -918,6 +918,23 @@ select {
   font-weight: 800;
 }
 
+.kc-filter-panel {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.kc-filter-panel select {
+  width: 100%;
+}
+
+.kc-filter-panel p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
 .source-links {
   display: flex;
   flex-wrap: wrap;

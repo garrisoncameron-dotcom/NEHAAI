@@ -1854,7 +1854,7 @@ function rankedPlaces(terms) {
       terms.forEach((term) => {
         if (text.includes(term)) score += 1;
       });
-      if (!score && /coffee|barbecue|dining|casual|nightlife|attractions|essentials|outdoors/i.test(place.category)) score = 0.5;
+      if (!score && /coffee|barbecue|dining|casual|nightlife|spirits|exploration|pharmacies|grocery|essentials|outdoors/i.test(place.category)) score = 0.5;
       return { place, score };
     })
     .filter((item) => item.score > 0)
@@ -2534,14 +2534,17 @@ function sessionById(id) {
 }
 
 function placeUrl(place) {
-  const address = place.meta.split("—")[0].trim();
-  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${place.name} ${address} Kansas City MO`)}`;
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(placeMapQuery(place))}`;
 }
 
 function walkingDirectionsUrl(place) {
-  const address = place.meta.split("—")[0].trim();
-  const destination = encodeURIComponent(`${place.name} ${address} Kansas City MO`);
+  const destination = encodeURIComponent(placeMapQuery(place));
   return `https://www.google.com/maps/dir/?api=1&destination=${destination}&travelmode=walking`;
+}
+
+function placeMapQuery(place) {
+  const address = place.meta.split("—")[0].trim();
+  return `${place.name} ${address} Kansas City MO`.replace(/\s+/g, " ").trim();
 }
 
 function openWalkingDirections(index) {
