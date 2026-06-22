@@ -476,6 +476,15 @@ select {
   border-color: var(--cyan);
 }
 
+.secondary-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  text-decoration: none;
+  font-weight: 900;
+}
+
 .metrics-row {
   display: grid;
   grid-template-columns: repeat(4, minmax(140px, 1fr));
@@ -1165,6 +1174,36 @@ select {
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 14px;
+}
+
+.podcast-story-callout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: center;
+  margin: -4px 0 18px;
+  padding: 14px;
+  border: 1px solid rgba(230, 189, 86, 0.36);
+  border-radius: 8px;
+  background: #fffaf0;
+}
+
+.podcast-story-callout h3 {
+  margin-top: 2px;
+  color: var(--navy);
+}
+
+.podcast-story-callout p:not(.eyebrow) {
+  margin-top: 6px;
+  color: var(--grey-dark);
+  line-height: 1.42;
+}
+
+.podcast-story-callout .story-action {
+  color: #fff;
+  background: var(--red);
+  border-color: var(--red);
+  white-space: nowrap;
 }
 
 .podcast-grid {
@@ -2562,6 +2601,15 @@ select {
   .podcast-hero img {
     width: 76px;
     height: 76px;
+  }
+
+  .podcast-story-callout {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .podcast-story-callout .story-action {
+    width: 100%;
   }
 
   .podcast-card-body {

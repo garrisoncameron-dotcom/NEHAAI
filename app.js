@@ -7,6 +7,7 @@ const state = {
   category: "all",
   status: "all",
   query: "",
+  activeView: "my",
   alerts: [],
   alertIndex: Number(localStorage.getItem("nehaAlertIndex") || 0),
   reminders: JSON.parse(localStorage.getItem("nehaSessionReminders") || "{}"),
@@ -926,6 +927,7 @@ async function syncSavedSchedule() {
 
 function setView(view) {
   if (view === "schedule") view = "my";
+  state.activeView = view;
   document.querySelectorAll(".nav-item[data-view]").forEach((item) => item.classList.toggle("active", item.dataset.view === view));
   document.querySelectorAll(".more-menu-item[data-view]").forEach((item) => item.classList.toggle("active", item.dataset.view === view));
   els.moreMenuButton.classList.toggle("active", ["kc", "venue", "podcast", "community", "demo", "drink"].includes(view));
@@ -938,6 +940,7 @@ function setView(view) {
   if (view === "demo") prefillDemoForm();
   if (view === "trivia") renderTrivia();
   if (view === "drink") renderFreeDrink();
+  renderAppAlerts();
 }
 
 function toggleMoreMenu(open) {
@@ -1004,6 +1007,10 @@ function renderAll() {
 }
 
 function renderAppAlerts() {
+  if (state.activeView === "podcast") {
+    els.appAlerts.innerHTML = "";
+    return;
+  }
   const reminders = state.reminderAlert ? [state.reminderAlert] : [];
   const alerts = state.alerts.length ? state.alerts : fallbackAppAlerts;
   const rotating = alerts.length ? [alerts[state.alertIndex % alerts.length]] : [];
