@@ -1,10 +1,10 @@
-const CACHE_NAME = "neha-guide-v20260622-drinkqr-refresh";
+const CACHE_NAME = "neha-guide-v20260622-hsgt-palette";
 const APP_ASSETS = [
   "./",
   "index.html",
-  "styles.css?v=20260622-drinkqr-refresh",
-  "app.js?v=20260622-drinkqr-refresh",
-  "data-bundle.js?v=20260622-drinkqr-refresh",
+  "styles.css?v=20260622-hsgt-palette",
+  "app.js?v=20260622-hsgt-palette",
+  "data-bundle.js?v=20260622-hsgt-palette",
   "lead-config.js?v=20260619",
   "manifest.webmanifest",
   "assets/hs-govtech-logo.png",
