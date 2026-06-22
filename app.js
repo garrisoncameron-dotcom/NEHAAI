@@ -514,8 +514,13 @@ els.placeFilter.addEventListener("change", (event) => {
 
 els.placeGrid.addEventListener("click", (event) => {
   const directions = event.target.closest("[data-place-directions]");
+  const rideshare = event.target.closest("[data-place-rideshare]");
   if (directions) {
     openWalkingDirections(Number(directions.dataset.placeDirections), directions);
+    return;
+  }
+  if (rideshare) {
+    toggleRideshareOptions(Number(rideshare.dataset.placeRideshare));
   }
 });
 
@@ -1915,14 +1920,19 @@ function renderPlaces() {
   const places = state.guide.nearby.filter((place) => state.placeFilter === "all" || place.category === state.placeFilter);
   els.kcSourceLinks.innerHTML = state.guide.kcSources.map((source) => `<a href="${escapeAttr(source.url)}" target="_blank" rel="noreferrer">${escapeHtml(source.name)}</a>`).join("");
   els.placeGrid.innerHTML = places.map((place) => `
-    <article class="place-card">
+    <article class="place-card" data-place-card="${state.guide.nearby.indexOf(place)}">
       <span class="place-category">${escapeHtml(place.category)}</span>
       <a class="place-title" href="${escapeAttr(placeUrl(place))}" target="_blank" rel="noreferrer">${escapeHtml(place.name)}</a>
       <small>${escapeHtml(place.meta)}</small>
       <p>${escapeHtml(place.description)}</p>
       <div class="place-actions">
         <a href="${escapeAttr(placeUrl(place))}" target="_blank" rel="noreferrer">View map</a>
-        <button type="button" data-place-directions="${state.guide.nearby.indexOf(place)}">Walk there</button>
+        ${shouldShowWalk(place) ? `<button type="button" data-place-directions="${state.guide.nearby.indexOf(place)}">Walk</button>` : ""}
+        <button class="rideshare-button" type="button" data-place-rideshare="${state.guide.nearby.indexOf(place)}" aria-expanded="false">Rideshare</button>
+      </div>
+      <div class="rideshare-options" hidden>
+        <a href="${escapeAttr(uberUrl(place))}" target="_blank" rel="noreferrer">Uber</a>
+        <a href="${escapeAttr(lyftUrl(place))}" target="_blank" rel="noreferrer">Lyft</a>
       </div>
     </article>
   `).join("");
@@ -2542,9 +2552,47 @@ function walkingDirectionsUrl(place) {
   return `https://www.google.com/maps/dir/?api=1&destination=${destination}&travelmode=walking`;
 }
 
+function uberUrl(place) {
+  const destination = encodeURIComponent(placeMapQuery(place));
+  const nickname = encodeURIComponent(place.name);
+  return `https://m.uber.com/ul/?action=setPickup&pickup=my_location&dropoff[formatted_address]=${destination}&dropoff[nickname]=${nickname}`;
+}
+
+function lyftUrl(place) {
+  const destination = encodeURIComponent(placeMapQuery(place));
+  return `https://www.lyft.com/rider?destination=${destination}`;
+}
+
 function placeMapQuery(place) {
   const address = place.meta.split("—")[0].trim();
   return `${place.name} ${address} Kansas City MO`.replace(/\s+/g, " ").trim();
+}
+
+function shouldShowWalk(place) {
+  const text = `${place.category} ${place.meta} ${place.description}`.toLowerCase();
+  if (/rideshare|late-night|jazz lounge|cocktail lounge|supper club|nightlife|spirits/.test(text)) return false;
+  const miles = text.match(/(\d+(?:\.\d+)?)\s*miles?/);
+  if (miles && Number(miles[1]) > 1) return false;
+  const minutes = text.match(/(\d+)[-\s]*minute walk/);
+  if (minutes && Number(minutes[1]) > 20) return false;
+  return true;
+}
+
+function toggleRideshareOptions(index) {
+  const card = els.placeGrid.querySelector(`[data-place-card="${index}"]`);
+  if (!card) return;
+  const options = card.querySelector(".rideshare-options");
+  const button = card.querySelector("[data-place-rideshare]");
+  if (!options || !button) return;
+  const opening = options.hidden;
+  els.placeGrid.querySelectorAll(".rideshare-options").forEach((node) => {
+    node.hidden = true;
+  });
+  els.placeGrid.querySelectorAll("[data-place-rideshare]").forEach((node) => {
+    node.setAttribute("aria-expanded", "false");
+  });
+  options.hidden = !opening;
+  button.setAttribute("aria-expanded", String(opening));
 }
 
 function openWalkingDirections(index) {

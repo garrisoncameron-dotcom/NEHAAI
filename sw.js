@@ -1,16 +1,16 @@
-const CACHE_NAME = "neha-guide-v20260622-kc-guide-expansion";
+const CACHE_NAME = "neha-guide-v20260622-kc-rideshare";
 const APP_ASSETS = [
   "./",
   "index.html",
-  "styles.css?v=20260622-kc-guide-expansion",
-  "app.js?v=20260622-kc-guide-expansion",
-  "data-bundle.js?v=20260622-kc-guide-expansion",
-  "lead-config.js?v=20260622-kc-guide-expansion",
+  "styles.css?v=20260622-kc-rideshare",
+  "app.js?v=20260622-kc-rideshare",
+  "data-bundle.js?v=20260622-kc-rideshare",
+  "lead-config.js?v=20260622-kc-rideshare",
   "manifest.webmanifest",
-  "assets/hs-govtech-logo.png?v=20260622-kc-guide-expansion",
+  "assets/hs-govtech-logo.png?v=20260622-kc-rideshare",
   "assets/bdmp-icon-color.png",
-  "assets/icon-192.png?v=20260622-kc-guide-expansion",
-  "assets/icon-512.png?v=20260622-kc-guide-expansion",
+  "assets/icon-192.png?v=20260622-kc-rideshare",
+  "assets/icon-512.png?v=20260622-kc-rideshare",
   "assets/sheraton-exhibit-hall-map.png",
   "assets/sheraton-meeting-overview.png",
   "assets/sheraton-floor-overview.png"

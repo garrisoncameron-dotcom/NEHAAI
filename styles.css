@@ -1007,7 +1007,7 @@ select {
 
 .place-actions {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(94px, 1fr));
   gap: 8px;
   margin-top: 4px;
 }
@@ -1035,11 +1035,40 @@ select {
   cursor: pointer;
 }
 
+.place-actions .rideshare-button {
+  color: var(--navy);
+  border-color: rgba(4, 0, 72, 0.2);
+  background: rgba(4, 0, 72, 0.08);
+}
+
 .place-actions button:disabled {
   color: #617282;
   border-color: #d1dde5;
   background: #e7eef3;
   cursor: wait;
+}
+
+.rideshare-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.rideshare-options[hidden] {
+  display: none;
+}
+
+.rideshare-options a {
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(53, 176, 237, 0.38);
+  border-radius: 8px;
+  color: var(--navy);
+  background: var(--sky-wash);
+  font-weight: 900;
+  text-decoration: none;
 }
 
 .place-category {
