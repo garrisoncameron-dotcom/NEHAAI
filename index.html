@@ -9,6 +9,286 @@
     <meta name="apple-mobile-web-app-title" content="NEHA Guide">
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="apple-touch-icon" href="assets/icon-192.png">
+    <link rel="stylesheet" href="styles.css?v=20260622-schedule-tweaks">
+  </head>
+  <body>
+    <div id="leadGate" class="lead-gate" hidden>
+      <form id="leadForm" class="lead-card">
+        <img class="lead-logo" src="assets/hs-govtech-logo.png" alt="HS GovTech logo">
+        <p class="eyebrow">NEHA AEC 2026 Guide</p>
+        <h2>Welcome</h2>
+        <p class="lead-copy">Tell us who is using the guide, then you are in for the rest of the conference on this phone.</p>
+        <label>
+          Name
+          <input id="leadName" name="name" type="text" autocomplete="name" required>
+        </label>
+        <label>
+          What agency are you with?
+          <input id="leadAgency" name="agency" type="text" autocomplete="organization" required>
+        </label>
+        <label>
+          Email
+          <input id="leadEmail" name="email" type="email" autocomplete="email" required>
+        </label>
+        <button type="submit">Enter Guide</button>
+        <p id="leadNote" class="lead-note">Used to unlock the guide and help HS GovTech follow up after NEHA.</p>
+      </form>
+    </div>
+
+    <div class="app-shell">
+      <aside class="rail" aria-label="Primary navigation">
+        <div class="brand-lockup">
+          <div class="brand-main">
+            <img class="brand-logo" src="assets/hs-govtech-logo.png" alt="HS GovTech logo">
+            <div>
+              <strong>HS GovTech</strong>
+              <small>NEHA Navigator</small>
+            </div>
+          </div>
+          <button id="installAppButton" class="install-button" type="button">Save</button>
+        </div>
+        <nav class="nav-list">
+          <button class="nav-item active" data-view="schedule" type="button">Schedule</button>
+          <button class="nav-item" data-view="my" type="button">MyNEHA</button>
+          <button class="nav-item" data-view="ai" type="button">AI Guide</button>
+          <button class="nav-item trivia-nav" data-view="trivia" type="button">EH Trivia</button>
+          <button id="moreMenuButton" class="nav-item more-nav mobile-only" type="button" aria-expanded="false" aria-controls="moreMenu">More</button>
+          <button class="nav-item more-item" data-view="kc" type="button">KC</button>
+          <button class="nav-item more-item" data-view="venue" type="button">Venue</button>
+          <button class="nav-item podcast-nav more-item" data-view="podcast" type="button">Podcast</button>
+          <button class="nav-item demo-nav more-item" data-view="demo" type="button">Book Demo</button>
+          <button class="nav-item drink-nav more-item" data-view="drink" type="button">FREE DRINK</button>
+        </nav>
+        <div id="moreMenu" class="more-menu" hidden>
+          <button class="more-menu-item" data-view="kc" type="button">Kansas City</button>
+          <button class="more-menu-item" data-view="venue" type="button">Venue</button>
+          <button class="more-menu-item" data-view="podcast" type="button">Podcast</button>
+          <button class="more-menu-item demo-nav" data-view="demo" type="button">Book Demo</button>
+          <button class="more-menu-item drink-nav" data-view="drink" type="button">FREE DRINK</button>
+        </div>
+        <div class="rail-summary">
+          <span id="attendCount">0 attending</span>
+          <span id="watchCount">0 watching</span>
+        </div>
+      </aside>
+
+      <main class="content">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">NEHA AEC 2026 - Kansas City</p>
+            <h1 id="viewTitle">Conference Schedule</h1>
+          </div>
+          <div class="search-wrap">
+            <input id="searchInput" type="search" placeholder="Search sessions, rooms, tags">
+          </div>
+        </header>
+        <div id="appAlerts" class="app-alerts" aria-label="Conference alerts"></div>
+
+        <section id="scheduleView" class="view active" aria-labelledby="viewTitle">
+          <div class="now-next" id="nowNext"></div>
+          <div class="control-strip">
+            <div id="dayTabs" class="segmented" aria-label="Conference days"></div>
+            <select id="categorySelect" aria-label="Category filter">
+              <option value="all">All categories</option>
+            </select>
+            <select id="statusSelect" aria-label="Saved filter">
+              <option value="all">All sessions</option>
+              <option value="attending">Attending</option>
+              <option value="watching">Watch list</option>
+              <option value="ce">CE eligible</option>
+            </select>
+          </div>
+          <div class="metrics-row" id="metricsRow"></div>
+          <div class="timeline" id="sessionList"></div>
+        </section>
+
+        <section id="myView" class="view">
+          <div class="section-intro">
+            <div>
+              <h2>MyNEHASchedule</h2>
+              <p>Your selected sessions stay in this browser for fast conference planning.</p>
+            </div>
+            <button id="clearSaved" class="secondary-action" type="button">Clear saved</button>
+          </div>
+          <div id="mySummary" class="metrics-row"></div>
+          <div id="conflictBanner" class="conflict-banner" hidden></div>
+          <div id="myDayTabs" class="segmented my-day-tabs" aria-label="My schedule days"></div>
+          <div id="myDailyGrid" class="daily-grid"></div>
+        </section>
+
+        <section id="aiView" class="view">
+          <div class="assistant-panel">
+            <div class="assistant-copy">
+              <p class="eyebrow">Grounded in the uploaded NEHA schedule</p>
+              <h2>Ask the conference guide</h2>
+              <p>Ask about sessions, CE credits, rooms, Kansas City, HS GovTech, or what to attend for your role.</p>
+            </div>
+            <form id="aiForm" class="prompt-box">
+              <input id="aiPrompt" type="text" value="I'm a food inspector. What sessions do you recommend?">
+              <button type="submit">Ask</button>
+            </form>
+          </div>
+          <div id="aiAnswer" class="ai-answer"></div>
+          <div id="aiReasons" class="reason-bar"></div>
+          <div id="aiResults" class="timeline compact"></div>
+        </section>
+
+        <section id="kcView" class="view">
+          <div class="section-intro">
+            <div>
+              <h2>Things To Do In Kansas City</h2>
+              <p>Walkable restaurants, coffee, attractions, and essentials around Crown Center.</p>
+            </div>
+            <select id="placeFilter" aria-label="Place type filter">
+              <option value="all">All places</option>
+            </select>
+          </div>
+          <div id="kcSourceLinks" class="source-links" aria-label="Official Kansas City links"></div>
+          <div id="placeGrid" class="place-grid"></div>
+        </section>
+
+        <section id="venueView" class="view">
+          <div class="section-intro">
+            <div>
+              <p class="eyebrow">Sheraton Kansas City Hotel at Crown Center</p>
+              <h2>Venue Navigator</h2>
+            </div>
+            <div id="venueMapTabs" class="segmented" aria-label="Venue maps"></div>
+          </div>
+          <div class="venue-layout">
+            <figure class="floor-plan featured-map">
+              <img id="venueMapImage" src="assets/sheraton-exhibit-hall-map.png" alt="Sheraton exhibit hall and mezzanine level map">
+              <figcaption id="venueMapCaption">Exhibit hall and mezzanine map from the uploaded Sheraton conference material.</figcaption>
+            </figure>
+            <div class="venue-copy">
+              <div id="hotelTips" class="info-stack"></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="podcastView" class="view">
+          <div class="podcast-hero">
+            <img src="assets/bdmp-icon-color.png" alt="Beyond Data Management podcast logo">
+            <div>
+              <p class="eyebrow">HS GovTech Podcast</p>
+              <h2>Beyond Data Management</h2>
+              <p>Recent conversations on food safety, environmental health, regulation, inspections, technology, and the future of public health work.</p>
+              <div class="podcast-actions">
+                <a class="secondary-action" href="https://youtube.com/@beyonddatamanagement" target="_blank" rel="noreferrer">Open Channel</a>
+              </div>
+            </div>
+          </div>
+          <div id="podcastGrid" class="podcast-grid"></div>
+        </section>
+
+        <section id="demoView" class="view">
+          <div class="demo-panel">
+            <div class="demo-copy">
+              <p class="eyebrow">HS CloudSuite</p>
+              <h2>Book a Demo</h2>
+              <p>Enter your information and someone will reach out to facilitate an HS CloudSuite demo.</p>
+            </div>
+            <form id="demoForm" class="demo-form">
+              <label>
+                Name
+                <input id="demoName" name="name" type="text" autocomplete="name" required>
+              </label>
+              <label>
+                Agency
+                <input id="demoAgency" name="agency" type="text" autocomplete="organization" required>
+              </label>
+              <label>
+                Email
+                <input id="demoEmail" name="email" type="email" autocomplete="email" required>
+              </label>
+              <label>
+                Phone
+                <input id="demoPhone" name="phone" type="tel" autocomplete="tel">
+              </label>
+              <label class="wide-field">
+                What would you like to see?
+                <textarea id="demoNotes" name="notes" rows="4" placeholder="Permitting, inspections, citizen portal, mobile field tools, data/reporting..."></textarea>
+              </label>
+              <button type="submit">Request Demo</button>
+              <p id="demoStatus" class="demo-status"></p>
+            </form>
+          </div>
+        </section>
+
+        <section id="triviaView" class="view">
+          <div class="trivia-shell">
+            <div class="trivia-hero">
+              <div>
+                <p class="eyebrow">2022 FDA Food Code Challenge</p>
+                <h2>EH Trivia Game</h2>
+                <p>Perfect scores win a prize. Test your retail food safety instincts with twelve quick questions, instant feedback, and brag-worthy achievement levels.</p>
+              </div>
+              <div class="trivia-badge">
+                <span id="triviaScore">0/12</span>
+                <small>current score</small>
+              </div>
+            </div>
+            <div class="trivia-progress" aria-label="Trivia progress">
+              <span id="triviaProgressBar"></span>
+            </div>
+            <div id="triviaStage" class="trivia-stage"></div>
+          </div>
+        </section>
+
+        <section id="drinkView" class="view">
+          <div class="drink-card">
+            <p class="eyebrow">HS GovTech Booth</p>
+            <h2>FREE DRINK</h2>
+            <p class="drink-instruction">DO NOT PRESS THE BUTTON present to anyone at hsgovtech booth for a free alcoholic beverage.</p>
+            <button id="freeDrinkButton" class="free-drink-button" type="button">FREE DRINK</button>
+            <div id="drinkQr" class="drink-qr" hidden></div>
+            <div id="drinkValidator" class="drink-validator" hidden></div>
+            <p id="freeDrinkStatus" class="drink-status"></p>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <template id="sessionTemplate">
+      <article class="session-card">
+        <div class="time-block">
+          <strong data-field="start"></strong>
+          <span data-field="end"></span>
+        </div>
+        <div class="session-body">
+          <div class="session-head">
+            <div>
+              <p class="session-kicker" data-field="meta"></p>
+              <h3 data-field="title"></h3>
+            </div>
+            <div class="ce-pill" data-field="ce"></div>
+          </div>
+          <p data-field="info" class="session-info"></p>
+          <div class="tag-row" data-field="tags"></div>
+          <div class="session-actions">
+            <button class="watch-btn" type="button">Watch</button>
+            <button class="attend-btn" type="button">Attend</button>
+          </div>
+        </div>
+      </article>
+    </template>
+
+    <script src="data-bundle.js?v=20260622-schedule-tweaks"></script>
+    <script src="lead-config.js?v=20260619"></script>
+    <script src="app.js?v=20260622-schedule-tweaks"></script>
+  </body>
+</html>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>HS GovTech NEHA Guide</title>
+    <meta name="theme-color" content="#040048">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="NEHA Guide">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="apple-touch-icon" href="assets/icon-192.png">
     <link rel="stylesheet" href="styles.css?v=20260622-hsgt-palette">
   </head>
   <body>
