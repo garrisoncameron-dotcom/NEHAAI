@@ -15,6 +15,8 @@ const SCHEDULE_SYNC_SHEET_NAME = "Synced Schedules";
 const DAILY_SCHEDULE_EMAIL_LOG_SHEET_NAME = "Daily Schedule Email Log";
 const PODCAST_CHANNEL_URL = "https://www.youtube.com/@beyonddatamanagement";
 const PODCAST_CACHE_KEY = "podcastEpisodes:v1";
+const OUTBOUND_EMAIL_FROM = "NEHADailyBrief@conferenceguide.ai";
+const OUTBOUND_EMAIL_NAME = "NEHA Daily Brief";
 
 function doPost(e) {
   if (!e || !e.postData) return jsonOutput_({ ok: true, authorization: authorizeScriptAccess() });
@@ -1177,11 +1179,7 @@ function authorizeScriptAccess() {
   const file = DriveApp.createFile(blob);
   file.setTrashed(true);
   const email = Session.getActiveUser().getEmail() || "garrison.cameron@gmail.com";
-  MailApp.sendEmail({
-    to: email,
-    subject: "NEHA Guide email authorization check",
-    body: "Email sending is authorized for the NEHA Guide Apps Script."
-  });
+  sendNehaEmail_(email, "NEHA Guide email authorization check", "Email sending is authorized for the NEHA Guide Apps Script.");
   return `Drive and email authorized: ${file.getId()}`;
 }
 
@@ -1216,11 +1214,7 @@ function sendTriviaScoreEmail_(payload, score, total, hintsUsed) {
   ].join("\n");
 
   try {
-    MailApp.sendEmail({
-      to: email,
-      subject: `Your ${boardName} EH Trivia score: ${score}/${total}`,
-      body
-    });
+    sendNehaEmail_(email, `Your ${boardName} EH Trivia score: ${score}/${total}`, body);
   } catch (error) {
     console.error(`Trivia score email failed for ${email}: ${error}`);
   }
@@ -1248,11 +1242,7 @@ function sendScheduleEmail_(payload, sessions) {
   ].join("\n");
 
   try {
-    MailApp.sendEmail({
-      to: email,
-      subject: "Your MyNEHA schedule",
-      body
-    });
+    sendNehaEmail_(email, "Your MyNEHA schedule", body);
     return `Sent to ${email}`;
   } catch (error) {
     console.error(`Schedule email failed for ${email}: ${error}`);
@@ -1283,11 +1273,7 @@ function sendSessionNotesEmail_(payload, session, notes, recipientEmail) {
   ].filter((line) => line !== "").join("\n");
 
   try {
-    MailApp.sendEmail({
-      to: recipientEmail,
-      subject: `Your NEHA session notes: ${sessionTitle}`,
-      body
-    });
+    sendNehaEmail_(recipientEmail, `Your NEHA session notes: ${sessionTitle}`, body);
     return `Sent to ${recipientEmail}`;
   } catch (error) {
     console.error(`Session notes email failed for ${recipientEmail}: ${error}`);
@@ -1415,16 +1401,20 @@ function sendDailyScheduleEmail_(schedule, sessions, scheduleDate) {
   ].join("\n");
 
   try {
-    MailApp.sendEmail({
-      to: email,
-      subject: `Your NEHA agenda for ${formattedDate}`,
-      body
-    });
+    sendNehaEmail_(email, `Your NEHA agenda for ${formattedDate}`, body);
     return `Sent to ${email}`;
   } catch (error) {
     console.error(`Daily schedule email failed for ${email}: ${error}`);
     return `Failed: ${String(error).slice(0, 220)}`;
   }
+}
+
+function sendNehaEmail_(to, subject, body) {
+  GmailApp.sendEmail(to, subject, body, {
+    from: OUTBOUND_EMAIL_FROM,
+    name: OUTBOUND_EMAIL_NAME,
+    replyTo: OUTBOUND_EMAIL_FROM
+  });
 }
 
 function parseJsonArray_(value) {
