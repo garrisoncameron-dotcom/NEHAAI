@@ -462,6 +462,15 @@ select {
   max-width: 100%;
 }
 
+.dashboard-tabs {
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.dashboard-tabs button {
+  padding-inline: 18px;
+}
+
 .segmented button,
 .secondary-action,
 .install-button,
