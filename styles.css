@@ -463,6 +463,17 @@ select {
   padding: 0 14px;
 }
 
+.search-wrap {
+  display: grid;
+  gap: 6px;
+}
+
+.search-wrap p {
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
 .install-button {
   min-height: 34px;
   white-space: nowrap;
@@ -964,6 +975,14 @@ select {
 
 .ai-answer {
   margin: 14px 0;
+}
+
+.my-ai-panel {
+  margin-bottom: 18px;
+}
+
+.my-ai-panel[hidden] {
+  display: none;
 }
 
 .ai-answer article {

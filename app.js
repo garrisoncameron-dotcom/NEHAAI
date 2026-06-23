@@ -7,6 +7,7 @@ const state = {
   category: "all",
   status: "all",
   query: "",
+  aiQuery: "",
   activeView: "my",
   alerts: [],
   alertIndex: Number(localStorage.getItem("nehaAlertIndex") || 0),
@@ -74,6 +75,7 @@ const els = {
   leadEmail: document.querySelector("#leadEmail"),
   leadNote: document.querySelector("#leadNote"),
   title: document.querySelector("#viewTitle"),
+  searchWrap: document.querySelector(".search-wrap"),
   search: document.querySelector("#searchInput"),
   appAlerts: document.querySelector("#appAlerts"),
   dayTabs: document.querySelector("#dayTabs"),
@@ -87,6 +89,10 @@ const els = {
   myModeTabs: document.querySelector("#myModeTabs"),
   mySavedPanel: document.querySelector("#mySavedPanel"),
   myBrowsePanel: document.querySelector("#myBrowsePanel"),
+  myAiPanel: document.querySelector("#myAiPanel"),
+  myAiAnswer: document.querySelector("#myAiAnswer"),
+  myAiReasons: document.querySelector("#myAiReasons"),
+  myAiResults: document.querySelector("#myAiResults"),
   myDayTabs: document.querySelector("#myDayTabs"),
   myDailyGrid: document.querySelector("#myDailyGrid"),
   emailSchedule: document.querySelector("#emailSchedule"),
@@ -440,9 +446,15 @@ els.leadForm.addEventListener("submit", async (event) => {
 });
 
 els.search.addEventListener("input", (event) => {
-  state.query = event.target.value.trim().toLowerCase();
-  state.myMode = state.query ? "all" : state.myMode;
-  renderSchedule();
+  const value = event.target.value.trim();
+  if (isAiSearchPrompt(value)) {
+    state.aiQuery = value;
+    state.query = "";
+  } else {
+    state.aiQuery = "";
+    state.query = value.toLowerCase();
+  }
+  state.myMode = value ? "all" : state.myMode;
   renderMySchedule();
 });
 
@@ -945,7 +957,7 @@ function setView(view) {
   els.moreMenuButton.classList.toggle("active", ["kc", "venue", "podcast", "community", "drink"].includes(view));
   document.querySelectorAll(".view").forEach((panel) => panel.classList.toggle("active", panel.id === `${view}View`));
   els.title.textContent = viewTitles[view];
-  els.search.style.display = view === "my" ? "block" : "none";
+  els.searchWrap.style.display = view === "my" ? "grid" : "none";
   if (view === "my") renderMySchedule();
   if (view === "podcast") renderPodcast();
   if (view === "community") renderCommunity();
@@ -1448,6 +1460,7 @@ function renderMySchedule() {
     [conflictCount(attending), "time conflicts"]
   ]);
   renderSchedule();
+  renderMyAiPanel();
 }
 
 function renderMyModeTabs(attending, watching) {
@@ -1687,6 +1700,36 @@ els.myDailyGrid.addEventListener("click", (event) => {
 
 function runAi() {
   const prompt = els.aiPrompt.value.trim();
+  const response = getAiResponse(prompt);
+  renderAiAnswer(response.answer, els.aiAnswer);
+  renderAiReasons(response.profile, els.aiReasons);
+  if (response.shouldRecommendSessions) {
+    renderSessions(els.aiResults, response.scored, { empty: "I could not find a strong session match yet. Try adding a role, topic, room, CE need, or phrase from a session title." });
+  } else {
+    els.aiResults.innerHTML = "";
+  }
+}
+
+function renderMyAiPanel() {
+  if (!state.aiQuery) {
+    els.myAiPanel.hidden = true;
+    els.myAiAnswer.innerHTML = "";
+    els.myAiReasons.innerHTML = "";
+    els.myAiResults.innerHTML = "";
+    return;
+  }
+  const response = getAiResponse(state.aiQuery);
+  els.myAiPanel.hidden = false;
+  renderAiAnswer(response.answer, els.myAiAnswer);
+  renderAiReasons(response.profile, els.myAiReasons);
+  if (response.shouldRecommendSessions) {
+    renderSessions(els.myAiResults, response.scored, { empty: "AEC AI did not find a strong session match yet. Try adding a role, topic, room, CE need, or phrase from a session title." });
+  } else {
+    els.myAiResults.innerHTML = "";
+  }
+}
+
+function getAiResponse(prompt) {
   const profile = buildProfile(prompt);
   const terms = expandTerms(tokenize(prompt));
   const answer = buildAiAnswer(prompt, profile, terms);
@@ -1698,14 +1741,7 @@ function runAi() {
     .sort((a, b) => b.score - a.score || sortSessions(a.session, b.session))
     .slice(0, 12)
     .map((item) => item.session) : [];
-
-  renderAiAnswer(answer);
-  els.aiReasons.innerHTML = profile.reasons.map((reason) => `<span class="reason">${escapeHtml(reason)}</span>`).join("");
-  if (shouldRecommendSessions) {
-    renderSessions(els.aiResults, scored, { empty: "I could not find a strong session match yet. Try adding a role, topic, room, CE need, or phrase from a session title." });
-  } else {
-    els.aiResults.innerHTML = "";
-  }
+  return { answer, profile, shouldRecommendSessions, scored };
 }
 
 function buildProfile(prompt) {
@@ -1749,6 +1785,15 @@ function detectIntent(prompt) {
   return "sessions";
 }
 
+function isAiSearchPrompt(value) {
+  const prompt = value.trim().toLowerCase();
+  if (prompt.length < 8) return false;
+  if (prompt.endsWith("?")) return true;
+  if (/^(who|what|where|when|why|how|which|can|could|should|would|tell|recommend|suggest|give|find|show)\b/.test(prompt)) return true;
+  if (/\b(recommend|suggest|best|should i attend|what sessions|which sessions|where is|tell me|help me|for my role|i am|i'm|i work|aec ai|hs govtech|hscloud|hs cloudsuite)\b/.test(prompt)) return true;
+  return prompt.split(/\s+/).length >= 5;
+}
+
 function promptHasKey(prompt, key) {
   return new RegExp(`\\b${escapeRegExp(key)}s?\\b`, "i").test(prompt);
 }
@@ -1788,10 +1833,10 @@ function buildAiAnswer(prompt, profile, terms) {
   return { heading, summary, bullets, sources };
 }
 
-function renderAiAnswer(answer) {
+function renderAiAnswer(answer, target = els.aiAnswer) {
   const bullets = answer.bullets.length ? `<ul>${answer.bullets.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>` : "";
   const sources = answer.sources.length ? `<p class="ai-sources">Matched sources: ${answer.sources.map(escapeHtml).join(" | ")}</p>` : "";
-  els.aiAnswer.innerHTML = `
+  target.innerHTML = `
     <article>
       <h3>${escapeHtml(answer.heading)}</h3>
       <p>${escapeHtml(answer.summary)}</p>
@@ -1799,6 +1844,10 @@ function renderAiAnswer(answer) {
       ${sources}
     </article>
   `;
+}
+
+function renderAiReasons(profile, target = els.aiReasons) {
+  target.innerHTML = profile.reasons.map((reason) => `<span class="reason">${escapeHtml(reason)}</span>`).join("");
 }
 
 function answerHeading(intent) {
