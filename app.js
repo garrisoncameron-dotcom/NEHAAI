@@ -156,6 +156,11 @@ const els = {
   installHelpModal: document.querySelector("#installHelpModal"),
   installHelpClose: document.querySelector("#installHelpClose"),
   installHelpSteps: document.querySelector("#installHelpSteps"),
+  imageViewerModal: document.querySelector("#imageViewerModal"),
+  imageViewerClose: document.querySelector("#imageViewerClose"),
+  imageViewerImage: document.querySelector("#imageViewerImage"),
+  imageViewerTitle: document.querySelector("#imageViewerTitle"),
+  imageViewerOpen: document.querySelector("#imageViewerOpen"),
   sessionToolTitle: document.querySelector("#sessionToolTitle"),
   sessionToolMeta: document.querySelector("#sessionToolMeta"),
   sessionToolTabs: document.querySelector("#sessionToolTabs"),
@@ -1350,6 +1355,12 @@ els.communityPosts.addEventListener("submit", async (event) => {
   }
 });
 
+els.communityPosts.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-community-image]");
+  if (!button) return;
+  openImageViewer(button.dataset.communityImage, button.dataset.communityImageTitle || "Community photo");
+});
+
 els.demoForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const submitButton = els.demoForm.querySelector('button[type="submit"]');
@@ -1443,6 +1454,18 @@ els.installAppButton.addEventListener("click", async () => {
 els.installHelpClose.addEventListener("click", closeInstallHelp);
 els.installHelpModal.addEventListener("click", (event) => {
   if (event.target === els.installHelpModal) closeInstallHelp();
+});
+
+els.imageViewerClose.addEventListener("click", closeImageViewer);
+els.imageViewerModal.addEventListener("click", (event) => {
+  if (event.target === els.imageViewerModal) closeImageViewer();
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key !== "Escape") return;
+  if (!els.imageViewerModal.hidden) closeImageViewer();
+  else if (!els.installHelpModal.hidden) closeInstallHelp();
+  else if (!els.sessionToolModal.hidden) closeSessionTool();
 });
 
 window.addEventListener("beforeinstallprompt", (event) => {
@@ -2129,7 +2152,25 @@ function openInstallHelp() {
 
 function closeInstallHelp() {
   els.installHelpModal.hidden = true;
-  if (els.sessionToolModal.hidden) document.body.classList.remove("modal-open");
+  if (els.sessionToolModal.hidden && els.imageViewerModal.hidden) document.body.classList.remove("modal-open");
+}
+
+function openImageViewer(imageUrl, title = "Community photo") {
+  if (!imageUrl) return;
+  els.imageViewerImage.src = imageUrl;
+  els.imageViewerImage.alt = title;
+  els.imageViewerTitle.textContent = title;
+  els.imageViewerOpen.href = imageUrl;
+  els.imageViewerModal.hidden = false;
+  document.body.classList.add("modal-open");
+}
+
+function closeImageViewer() {
+  els.imageViewerModal.hidden = true;
+  els.imageViewerImage.removeAttribute("src");
+  els.imageViewerImage.alt = "";
+  els.imageViewerOpen.href = "#";
+  if (els.sessionToolModal.hidden && els.installHelpModal.hidden) document.body.classList.remove("modal-open");
 }
 
 function renderSessionTool() {
@@ -2779,7 +2820,12 @@ function renderCommunity() {
     const category = communityCategoryLabel(post.category);
     const email = post.shareEmail && post.email ? `<a href="mailto:${escapeAttr(post.email)}?subject=${encodeURIComponent(`NEHA Community Connect: ${post.title}`)}">Email ${escapeHtml(post.displayName || "attendee")}</a>` : "";
     const imageUrl = safeImageUrl(post.imageUrl);
-    const image = imageUrl ? `<img src="${escapeAttr(imageUrl)}" alt="${escapeAttr(post.title)}" loading="lazy">` : "";
+    const image = imageUrl ? `
+      <button class="community-image-button" type="button" data-community-image="${escapeAttr(imageUrl)}" data-community-image-title="${escapeAttr(post.title)}" aria-label="Open ${escapeAttr(post.title)} image full screen">
+        <img src="${escapeAttr(imageUrl)}" alt="${escapeAttr(post.title)}" loading="lazy">
+        <span>Tap to view full screen</span>
+      </button>
+    ` : "";
     const replies = Array.isArray(post.replies) ? post.replies.slice(0, 20) : [];
     const replyLabel = `${replies.length} ${replies.length === 1 ? "reply" : "replies"}`;
     return `

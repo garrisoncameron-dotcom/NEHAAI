@@ -864,7 +864,8 @@ select {
 }
 
 .session-tool-modal,
-.install-help-modal {
+.install-help-modal,
+.image-viewer-modal {
   width: min(760px, 100%);
   max-height: min(760px, calc(100vh - 36px));
   overflow: auto;
@@ -906,6 +907,62 @@ select {
   color: var(--navy);
   font-size: clamp(1.45rem, 5vw, 2.1rem);
   line-height: 1.05;
+}
+
+.image-viewer-backdrop {
+  z-index: 80;
+  padding: 10px;
+  background: rgba(4, 0, 72, 0.88);
+}
+
+.image-viewer-modal {
+  width: min(980px, 100%);
+  max-height: calc(100vh - 20px);
+  gap: 10px;
+  border-color: rgba(255, 255, 255, 0.18);
+  background: #040048;
+  padding: 10px;
+}
+
+.image-viewer-close {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.32);
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.image-viewer-modal img {
+  width: 100%;
+  max-height: calc(100vh - 116px);
+  object-fit: contain;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.image-viewer-caption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: #fff;
+}
+
+.image-viewer-caption h2 {
+  min-width: 0;
+  overflow: hidden;
+  color: #fff;
+  font-size: 1rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.image-viewer-caption a {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  padding: 8px 12px;
+  color: var(--navy);
+  background: #fff;
+  font-weight: 900;
+  text-decoration: none;
 }
 
 .install-steps {
@@ -1726,12 +1783,35 @@ select {
   white-space: pre-wrap;
 }
 
-.community-post img {
+.community-image-button {
+  position: relative;
+  display: block;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  cursor: zoom-in;
+  padding: 0;
+  text-align: left;
+}
+
+.community-image-button img {
   width: 100%;
   max-height: 340px;
   object-fit: cover;
   border-radius: 8px;
   border: 1px solid var(--line);
+}
+
+.community-image-button span {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  border-radius: 999px;
+  padding: 7px 10px;
+  color: #fff;
+  background: rgba(4, 0, 72, 0.76);
+  font-size: 0.78rem;
+  font-weight: 900;
 }
 
 .community-byline {
@@ -2799,6 +2879,28 @@ select {
 
   .install-help-modal {
     width: 100%;
+  }
+
+  .image-viewer-backdrop {
+    padding: 6px;
+  }
+
+  .image-viewer-modal {
+    max-height: calc(100vh - 12px);
+    padding: 8px;
+  }
+
+  .image-viewer-modal img {
+    max-height: calc(100vh - 128px);
+  }
+
+  .image-viewer-caption {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .image-viewer-caption a {
+    text-align: center;
   }
 
   .brand-main {
