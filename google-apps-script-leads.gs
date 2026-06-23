@@ -18,7 +18,7 @@ const PODCAST_CACHE_KEY = "podcastEpisodes:v1";
 const OUTBOUND_EMAIL_FROM = "NEHADailyBrief@conferenceguide.ai";
 const OUTBOUND_EMAIL_NAME = "NEHA Daily Brief";
 const HSGT_WEBSITE_URL = "https://hsgovtech.com";
-const HSGT_LOGO_URL = "https://neha.conferenceguide.ai/assets/hs-govtech-logo.png";
+const HSGT_LOGO_URL = "https://neha.conferenceguide.ai/assets/hs-govtech-email-logo.png";
 
 function doPost(e) {
   if (!e || !e.postData) return jsonOutput_({ ok: true, authorization: authorizeScriptAccess() });
@@ -1479,7 +1479,7 @@ function brandedEmailHtml_({ eyebrow, title, intro, content }) {
       <div style="max-width:720px;margin:0 auto;padding:24px 14px;">
         <div style="background:#ffffff;border:1px solid #C7D2D8;border-radius:10px;overflow:hidden;">
           <div style="padding:20px 22px;background:#040048;color:#ffffff;">
-            <img src="${HSGT_LOGO_URL}" alt="HS GovTech" width="58" height="58" style="display:block;width:58px;height:58px;border-radius:8px;background:#ffffff;margin-bottom:12px;">
+            <img src="${HSGT_LOGO_URL}" alt="HS GovTech" width="246" height="53" style="display:block;width:246px;max-width:100%;height:auto;border-radius:6px;background:#ffffff;margin-bottom:14px;">
             <div style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#35B0ED;font-weight:900;">${escapeHtml_(eyebrow || "NEHA Guide")}</div>
             <h1 style="margin:6px 0 0;font-size:24px;line-height:1.2;color:#ffffff;">${escapeHtml_(title || "NEHA Guide")}</h1>
           </div>
