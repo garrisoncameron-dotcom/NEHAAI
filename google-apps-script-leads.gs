@@ -18,7 +18,7 @@ const PODCAST_CACHE_KEY = "podcastEpisodes:v1";
 const OUTBOUND_EMAIL_FROM = "NEHADailyBrief@conferenceguide.ai";
 const OUTBOUND_EMAIL_NAME = "NEHA Daily Brief";
 const HSGT_WEBSITE_URL = "https://hsgovtech.com";
-const HSGT_LOGO_URL = "https://neha.conferenceguide.ai/assets/hs-govtech-email-logo.png";
+const HSGT_LOGO_URL = "https://raw.githubusercontent.com/garrisoncameron-dotcom/NEHAAI/main/assets/hs-govtech-email-logo.png";
 
 function doPost(e) {
   if (!e || !e.postData) return jsonOutput_({ ok: true, authorization: authorizeScriptAccess() });
