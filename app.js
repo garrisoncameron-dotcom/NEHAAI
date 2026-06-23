@@ -1,6 +1,8 @@
 const TRIVIA_ROUND_STORAGE_PREFIX = "nehaTriviaRound";
 const TRIVIA_ROUND_SIZE = 12;
 const APP_ALERT_SNOOZE_MS = 2 * 60 * 60 * 1000;
+const PODCAST_CACHE_KEY = "nehaPodcastEpisodes";
+const PODCAST_CACHE_MS = 24 * 60 * 60 * 1000;
 
 const state = {
   sessions: [],
@@ -24,6 +26,7 @@ const state = {
   myMetricView: "",
   placeFilter: "all",
   venueMap: "exhibit",
+  podcastEpisodes: [],
   communityCategory: "all",
   communityPosts: [],
   communityLoading: false,
@@ -902,11 +905,13 @@ if (new URLSearchParams(location.search).has("refreshApp")) {
 loadData().then(([sessions, guide]) => {
   state.sessions = sessions;
   state.guide = guide;
+  state.podcastEpisodes = loadCachedPodcastEpisodes();
   normalizeTriviaRound();
   pruneSaved();
   hydrateControls();
   renderAll();
   loadAppAlerts();
+  loadPodcastEpisodes();
   startAlertRotation();
   startLocalSessionReminders();
   loadSessionPresentations().then(renderAll);
@@ -1971,6 +1976,45 @@ function loadJsonp(endpoint, params) {
   });
 }
 
+function loadCachedPodcastEpisodes() {
+  try {
+    const cached = JSON.parse(localStorage.getItem(PODCAST_CACHE_KEY) || "null");
+    if (cached?.fetchedAt && Array.isArray(cached.episodes) && cached.episodes.length && Date.now() - cached.fetchedAt < PODCAST_CACHE_MS) {
+      return cached.episodes;
+    }
+  } catch (error) {
+    localStorage.removeItem(PODCAST_CACHE_KEY);
+  }
+  return podcastEpisodes;
+}
+
+function loadPodcastEpisodes() {
+  const endpoint = window.NEHA_LEAD_ENDPOINT || "";
+  let cached = null;
+  try {
+    cached = JSON.parse(localStorage.getItem(PODCAST_CACHE_KEY) || "null");
+  } catch (error) {
+    localStorage.removeItem(PODCAST_CACHE_KEY);
+  }
+  if (!endpoint || (cached?.fetchedAt && Date.now() - cached.fetchedAt < PODCAST_CACHE_MS)) return Promise.resolve();
+
+  return loadJsonp(endpoint, { action: "podcastEpisodes" })
+    .then((data) => {
+      const episodes = Array.isArray(data?.episodes) ? data.episodes.filter(isUsablePodcastEpisode).slice(0, 6) : [];
+      if (!episodes.length) return;
+      state.podcastEpisodes = episodes;
+      localStorage.setItem(PODCAST_CACHE_KEY, JSON.stringify({ fetchedAt: Date.now(), episodes }));
+      if (state.activeView === "podcast") renderPodcast();
+    })
+    .catch((error) => {
+      console.warn("Podcast episodes could not refresh yet.", error);
+    });
+}
+
+function isUsablePodcastEpisode(episode) {
+  return episode?.title && episode?.url && /^https:\/\/(www\.)?youtube\.com\//.test(episode.url);
+}
+
 function renderSchedule() {
   const sessions = filteredSessions();
   renderNowNext();
@@ -2777,7 +2821,8 @@ function renderVenue() {
 }
 
 function renderPodcast() {
-  els.podcastGrid.innerHTML = podcastEpisodes.map((episode) => `
+  const episodes = state.podcastEpisodes.length ? state.podcastEpisodes : podcastEpisodes;
+  els.podcastGrid.innerHTML = episodes.map((episode) => `
     <article class="podcast-card">
       <a class="video-frame" href="${escapeAttr(episode.url)}" target="_blank" rel="noreferrer" aria-label="Play ${escapeAttr(episode.title)} on YouTube">
         <img src="${escapeAttr(episode.thumbnail)}" alt="">

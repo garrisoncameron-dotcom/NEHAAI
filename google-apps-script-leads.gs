@@ -13,6 +13,8 @@ const SCHEDULE_EMAIL_SHEET_NAME = "Schedule Email Requests";
 const SESSION_NOTES_EMAIL_SHEET_NAME = "Session Notes Email Requests";
 const SCHEDULE_SYNC_SHEET_NAME = "Synced Schedules";
 const DAILY_SCHEDULE_EMAIL_LOG_SHEET_NAME = "Daily Schedule Email Log";
+const PODCAST_CHANNEL_URL = "https://www.youtube.com/@beyonddatamanagement";
+const PODCAST_CACHE_KEY = "podcastEpisodes:v1";
 
 function doPost(e) {
   if (!e || !e.postData) return jsonOutput_({ ok: true, authorization: authorizeScriptAccess() });
@@ -50,6 +52,9 @@ function doGet(e) {
   }
   if (params.action === "sessionPresentations") {
     return jsonOutput_({ ok: true, presentations: getSessionPresentations_() }, params.callback);
+  }
+  if (params.action === "podcastEpisodes") {
+    return jsonOutput_({ ok: true, episodes: getPodcastEpisodes_() }, params.callback);
   }
   return jsonOutput_({ ok: true }, params.callback);
 }
@@ -1017,6 +1022,72 @@ function getSessionPresentations_() {
       });
       return grouped;
     }, {});
+}
+
+function getPodcastEpisodes_() {
+  const cache = CacheService.getScriptCache();
+  const cached = cache.get(PODCAST_CACHE_KEY);
+  if (cached) {
+    try {
+      const episodes = JSON.parse(cached);
+      if (Array.isArray(episodes) && episodes.length) return episodes;
+    } catch (error) {
+      // Ignore malformed cache and refresh below.
+    }
+  }
+
+  const channelId = resolvePodcastChannelId_();
+  if (!channelId) return [];
+  const feedUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${encodeURIComponent(channelId)}`;
+  const response = UrlFetchApp.fetch(feedUrl, { muteHttpExceptions: true, followRedirects: true });
+  if (response.getResponseCode() >= 400) return [];
+
+  const document = XmlService.parse(response.getContentText());
+  const root = document.getRootElement();
+  const atom = XmlService.getNamespace("http://www.w3.org/2005/Atom");
+  const media = XmlService.getNamespace("media", "http://search.yahoo.com/mrss/");
+  const yt = XmlService.getNamespace("yt", "http://www.youtube.com/xml/schemas/2015");
+  const entries = root.getChildren("entry", atom);
+  const timezone = Session.getScriptTimeZone() || "America/New_York";
+  const episodes = entries.slice(0, 6).map((entry) => {
+    const videoId = entry.getChildText("videoId", yt) || "";
+    const title = entry.getChildText("title", atom) || "Beyond Data Management episode";
+    const publishedRaw = entry.getChildText("published", atom) || "";
+    const mediaGroup = entry.getChild("group", media);
+    const thumbnail = mediaGroup?.getChild("thumbnail", media)?.getAttribute("url")?.getValue() || (videoId ? `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg` : "");
+    const description = trimText_(mediaGroup?.getChildText("description", media) || "", 220);
+    return {
+      id: videoId,
+      title,
+      url: videoId ? `https://www.youtube.com/watch?v=${videoId}` : PODCAST_CHANNEL_URL,
+      thumbnail,
+      published: formatPodcastDate_(publishedRaw, timezone),
+      description: description || "Recent Beyond Data Management conversation for environmental health professionals."
+    };
+  }).filter((episode) => episode.id && episode.title);
+
+  if (episodes.length) cache.put(PODCAST_CACHE_KEY, JSON.stringify(episodes), 6 * 60 * 60);
+  return episodes;
+}
+
+function resolvePodcastChannelId_() {
+  const cache = CacheService.getScriptCache();
+  const cached = cache.get("podcastChannelId:v1");
+  if (cached) return cached;
+
+  const response = UrlFetchApp.fetch(PODCAST_CHANNEL_URL, { muteHttpExceptions: true, followRedirects: true });
+  if (response.getResponseCode() >= 400) return "";
+  const html = response.getContentText();
+  const match = html.match(/"channelId":"(UC[^"]+)"/) || html.match(/\/channel\/(UC[a-zA-Z0-9_-]+)/);
+  const channelId = match ? match[1] : "";
+  if (channelId) cache.put("podcastChannelId:v1", channelId, 24 * 60 * 60);
+  return channelId;
+}
+
+function formatPodcastDate_(value, timezone) {
+  const date = new Date(value);
+  if (isNaN(date)) return "";
+  return Utilities.formatDate(date, timezone, "MMM d, yyyy");
 }
 
 function getDrinkTicket_(code) {

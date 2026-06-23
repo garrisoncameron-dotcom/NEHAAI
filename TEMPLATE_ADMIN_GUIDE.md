@@ -59,6 +59,12 @@ Stores "Book a Demo" submissions:
 - notes
 - request time
 
+### Podcast Feed
+
+The Podcast tab starts with curated fallback episodes in the app code, then refreshes from the Beyond Data Management YouTube channel through Apps Script. Each phone caches refreshed episodes for 24 hours so the tab can update daily without a new app deployment.
+
+For a future conference, update `PODCAST_CHANNEL_URL` in `google-apps-script-leads.gs` and the fallback `podcastEpisodes` list in `app.js`.
+
 ### Trivia Scores
 
 Stores every completed trivia round:
@@ -104,6 +110,25 @@ These are strong candidates for future sheet-backed admin control without changi
 - `App Copy`: configurable prize, demo, free drink, and sponsor messaging.
 
 Schedule data can stay file-based for now. For urgent changes, add a future `Schedule Overrides` tab rather than asking marketing users to edit the full schedule JSON.
+
+## Future Productization Ideas
+
+Longer-term, evolve this from a cloned static app into a configurable ConferenceGuide.ai-style platform where training, configuration, and admin controls are built into the product itself.
+
+Key idea: give a marketing or events user an admin console that can configure each conference instance without code changes.
+
+Potential admin capabilities:
+
+- Upload conference training materials for the AI guide.
+- Configure event name, dates, venue, branding, colors, logo, and app icon.
+- Import or edit schedules, speakers, session descriptions, rooms, CE details, and presentation links.
+- Configure lead capture fields, demo forms, prize redemptions, and booth campaigns.
+- Manage sponsor placements, rotating alerts, paid announcements, and timing windows.
+- Add or update nearby places, venue resources, podcast links, trivia boards, and community categories.
+- Review leads, demo requests, trivia scores, community activity, and sponsor engagement.
+- Clone a prior conference as a starting template for a new event.
+
+Near-term path: continue using Google Sheets as the admin backend, but structure the sheets as if they are the future database tables. That keeps this NEHA app useful now while preserving a clean migration path to a real multi-conference backend later.
 
 ## New Conference Clone Checklist
 
