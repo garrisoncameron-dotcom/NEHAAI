@@ -1787,6 +1787,8 @@ function detectIntent(prompt) {
 
 function isAiSearchPrompt(value) {
   const prompt = value.trim().toLowerCase();
+  if (!prompt) return false;
+  if (/\b(kc|kansas city|bbq|barbecue|restaurant|restaurants|coffee|bar|bars|attraction|attractions|nearby|eat|drink|food|room|rooms|venue|map|floor|ce|credit|credits|certificate|hs govtech|hsgovtech|hscloud|cloudsuite|demo|software|inspector|director|manager|student|career|water|pool|wastewater|climate|vector|pest|housing|equity)\b/.test(prompt)) return true;
   if (prompt.length < 8) return false;
   if (prompt.endsWith("?")) return true;
   if (/^(who|what|where|when|why|how|which|can|could|should|would|tell|recommend|suggest|give|find|show)\b/.test(prompt)) return true;
