@@ -1,5 +1,6 @@
 const TRIVIA_ROUND_STORAGE_PREFIX = "nehaTriviaRound";
 const TRIVIA_ROUND_SIZE = 12;
+const APP_ALERT_SNOOZE_MS = 2 * 60 * 60 * 1000;
 
 const state = {
   sessions: [],
@@ -12,7 +13,7 @@ const state = {
   activeView: "my",
   alerts: [],
   alertIndex: Number(localStorage.getItem("nehaAlertIndex") || 0),
-  dismissedAlerts: JSON.parse(sessionStorage.getItem("nehaDismissedAlerts") || "[]"),
+  alertSnoozeUntil: Number(localStorage.getItem("nehaAlertSnoozeUntil") || 0),
   reminders: JSON.parse(localStorage.getItem("nehaSessionReminders") || "{}"),
   scheduleSyncTimer: null,
   scheduleSyncInFlight: false,
@@ -1562,13 +1563,15 @@ function renderAppAlerts() {
     els.appAlerts.innerHTML = "";
     return;
   }
+  if (Date.now() < state.alertSnoozeUntil) {
+    els.appAlerts.innerHTML = "";
+    return;
+  }
   const reminders = state.reminderAlert ? [state.reminderAlert] : [];
   const alerts = state.alerts.length ? state.alerts : fallbackAppAlerts;
   const rotating = alerts.length ? [alerts[state.alertIndex % alerts.length]] : [];
-  const dismissed = new Set(state.dismissedAlerts);
   const visibleAlerts = [...reminders, ...rotating]
-    .map((alert) => ({ ...alert, id: appAlertId(alert) }))
-    .filter((alert) => !dismissed.has(alert.id));
+    .map((alert) => ({ ...alert, id: appAlertId(alert) }));
   els.appAlerts.innerHTML = visibleAlerts.map((alert) => `
     <article class="app-alert" data-alert-id="${escapeAttr(alert.id)}">
       <span>${escapeHtml(brandCopy(alert.label))}</span>
@@ -1590,10 +1593,8 @@ function appAlertId(alert) {
 
 function dismissAppAlert(alertId) {
   if (!alertId) return;
-  if (!state.dismissedAlerts.includes(alertId)) {
-    state.dismissedAlerts.push(alertId);
-    sessionStorage.setItem("nehaDismissedAlerts", JSON.stringify(state.dismissedAlerts));
-  }
+  state.alertSnoozeUntil = Date.now() + APP_ALERT_SNOOZE_MS;
+  localStorage.setItem("nehaAlertSnoozeUntil", String(state.alertSnoozeUntil));
   if (state.reminderAlert && appAlertId(state.reminderAlert) === alertId) state.reminderAlert = null;
   renderAppAlerts();
 }
