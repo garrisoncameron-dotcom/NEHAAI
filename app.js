@@ -2669,12 +2669,21 @@ function walkingDirectionsUrl(place) {
 }
 
 function uberUrl(place) {
-  const params = new URLSearchParams();
-  params.set("action", "setPickup");
-  params.set("pickup", "my_location");
-  params.set("dropoff[formatted_address]", rideshareDestination(place));
-  params.set("dropoff[nickname]", place.name);
-  return `https://m.uber.com/ul/?${params.toString()}`;
+  const destination = rideshareDestination(place);
+  const coords = rideshareCoordinates(place);
+  const params = [
+    ["action", "setPickup"],
+    ["pickup", "my_location"],
+    ["dropoff[formatted_address]", destination],
+    ["dropoff[nickname]", place.name]
+  ];
+
+  if (coords) {
+    params.push(["dropoff[latitude]", coords.lat]);
+    params.push(["dropoff[longitude]", coords.lng]);
+  }
+
+  return `https://m.uber.com/ul/?${params.map(([key, value]) => `${key}=${encodeURIComponent(value)}`).join("&")}`;
 }
 
 function lyftUrl(place) {
@@ -2690,13 +2699,52 @@ function rideshareDestination(place) {
   return `${place.name}, ${placeAddress(place)}`.replace(/\s+/g, " ").trim();
 }
 
+function rideshareCoordinates(place) {
+  return rideshareCoordinateMap[normalizeAddress(placeAddress(place))] || null;
+}
+
 function placeAddress(place) {
-  const address = place.meta.split("—")[0].trim();
+  let address = place.meta.split("—")[0].trim();
+  if (/crown center/i.test(address)) address = "2450 Grand Blvd";
+  if (/union station/i.test(address)) address = "30 W Pershing Rd";
+  if (/the westin/i.test(address)) address = "1 E Pershing Rd";
+  if (/sheraton|hotel lobby|inside the sheraton/i.test(address)) address = "2345 McGee St";
+  address = address.replace(/,\s*(level|lobby level).*$/i, "").trim();
   if (!address || !/\d/.test(address) || /^(inside|hotel lobby|connected)/i.test(address)) {
     return "Kansas City, MO";
   }
   return `${address}, Kansas City, MO`;
 }
+
+function normalizeAddress(address) {
+  return address.toLowerCase().replace(/\s+/g, " ").replace(/\s*,\s*/g, ", ").trim();
+}
+
+const rideshareCoordinateMap = {
+  [normalizeAddress("2345 Grand Blvd, Kansas City, MO")]: { lat: "39.0846722", lng: "-94.5812608" },
+  [normalizeAddress("1624 Grand Blvd, Kansas City, MO")]: { lat: "39.0935183", lng: "-94.5816209" },
+  [normalizeAddress("30 W Pershing Rd, Kansas City, MO")]: { lat: "39.0853037", lng: "-94.5857704" },
+  [normalizeAddress("2980 McGee Trafficway, Kansas City, MO")]: { lat: "39.0772407", lng: "-94.5803587" },
+  [normalizeAddress("2450 Grand Blvd, Kansas City, MO")]: { lat: "39.0825550", lng: "-94.5824390" },
+  [normalizeAddress("1 E Pershing Rd, Kansas City, MO")]: { lat: "39.0827401", lng: "-94.5830320" },
+  [normalizeAddress("2460 Pershing Road, Kansas City, MO")]: { lat: "39.0823729", lng: "-94.5789893" },
+  [normalizeAddress("101 W 22nd St, Kansas City, MO")]: { lat: "39.0874708", lng: "-94.5853595" },
+  [normalizeAddress("1927 McGee St, Kansas City, MO")]: { lat: "39.0892837", lng: "-94.5798486" },
+  [normalizeAddress("2000 Grand Blvd, Kansas City, MO")]: { lat: "39.0888726", lng: "-94.5818613" },
+  [normalizeAddress("2345 McGee St, Kansas City, MO")]: { lat: "39.0852981", lng: "-94.5796375" },
+  [normalizeAddress("1727 McGee St, Kansas City, MO")]: { lat: "39.0923242", lng: "-94.5797777" },
+  [normalizeAddress("2405 Grand Blvd, Kansas City, MO")]: { lat: "39.0833027", lng: "-94.5814386" },
+  [normalizeAddress("2301 Holmes St, Kansas City, MO")]: { lat: "39.0845711", lng: "-94.5752264" },
+  [normalizeAddress("2101 Charlotte St, Kansas City, MO")]: { lat: "39.0869", lng: "-94.5745" },
+  [normalizeAddress("10 E 13th St, Kansas City, MO")]: { lat: "39.0987093", lng: "-94.5830685" },
+  [normalizeAddress("2 Memorial Dr, Kansas City, MO")]: { lat: "39.0806754", lng: "-94.5860757" },
+  [normalizeAddress("1 Memorial Dr, Kansas City, MO")]: { lat: "39.0751944", lng: "-94.5862079" },
+  [normalizeAddress("1725 McGee St, Kansas City, MO")]: { lat: "39.0924047", lng: "-94.5797743" },
+  [normalizeAddress("1733 Locust St, Kansas City, MO")]: { lat: "39.0920624", lng: "-94.5774614" },
+  [normalizeAddress("1740 Holmes St, Kansas City, MO")]: { lat: "39.0918436", lng: "-94.5757887" },
+  [normalizeAddress("1809 Grand Blvd, Kansas City, MO")]: { lat: "39.0913444", lng: "-94.5809785" },
+  [normalizeAddress("1830 Walnut St, Kansas City, MO")]: { lat: "39.0912818", lng: "-94.5826133" }
+};
 
 function shouldShowWalk(place) {
   const text = `${place.category} ${place.meta} ${place.description}`.toLowerCase();

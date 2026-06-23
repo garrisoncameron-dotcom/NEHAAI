@@ -1,16 +1,16 @@
-const CACHE_NAME = "neha-guide-v20260622-uber-destination";
+const CACHE_NAME = "neha-guide-v20260622-uber-coordinates";
 const APP_ASSETS = [
   "./",
   "index.html",
-  "styles.css?v=20260622-uber-destination",
-  "app.js?v=20260622-uber-destination",
-  "data-bundle.js?v=20260622-uber-destination",
-  "lead-config.js?v=20260622-uber-destination",
+  "styles.css?v=20260622-uber-coordinates",
+  "app.js?v=20260622-uber-coordinates",
+  "data-bundle.js?v=20260622-uber-coordinates",
+  "lead-config.js?v=20260622-uber-coordinates",
   "manifest.webmanifest",
-  "assets/hs-govtech-logo.png?v=20260622-uber-destination",
+  "assets/hs-govtech-logo.png?v=20260622-uber-coordinates",
   "assets/bdmp-icon-color.png",
-  "assets/icon-192.png?v=20260622-uber-destination",
-  "assets/icon-512.png?v=20260622-uber-destination",
+  "assets/icon-192.png?v=20260622-uber-coordinates",
+  "assets/icon-512.png?v=20260622-uber-coordinates",
   "assets/sheraton-exhibit-hall-map.png",
   "assets/sheraton-meeting-overview.png",
   "assets/sheraton-floor-overview.png"
