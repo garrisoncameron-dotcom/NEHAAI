@@ -1892,6 +1892,47 @@ select {
   background: var(--grey-light);
 }
 
+.trivia-board-picker {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.trivia-board-picker button {
+  min-height: 58px;
+  border: 1px solid rgba(53, 176, 237, 0.34);
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: var(--navy);
+  background: #fff;
+  cursor: pointer;
+  text-align: left;
+  box-shadow: 0 8px 20px rgba(4, 0, 72, 0.06);
+}
+
+.trivia-board-picker button.active {
+  color: #fff;
+  border-color: var(--navy);
+  background: linear-gradient(135deg, var(--navy), #163080);
+}
+
+.trivia-board-picker span,
+.trivia-board-picker small {
+  display: block;
+}
+
+.trivia-board-picker span {
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.trivia-board-picker small {
+  margin-top: 2px;
+  color: inherit;
+  opacity: 0.78;
+  font-weight: 800;
+}
+
 .trivia-progress span {
   width: 0;
   height: 100%;

@@ -1,16 +1,16 @@
-const CACHE_NAME = "neha-guide-v20260622-uber-coordinates";
+const CACHE_NAME = "neha-guide-v20260622-pool-trivia";
 const APP_ASSETS = [
   "./",
   "index.html",
-  "styles.css?v=20260622-uber-coordinates",
-  "app.js?v=20260622-uber-coordinates",
-  "data-bundle.js?v=20260622-uber-coordinates",
-  "lead-config.js?v=20260622-uber-coordinates",
+  "styles.css?v=20260622-pool-trivia",
+  "app.js?v=20260622-pool-trivia",
+  "data-bundle.js?v=20260622-pool-trivia",
+  "lead-config.js?v=20260622-pool-trivia",
   "manifest.webmanifest",
-  "assets/hs-govtech-logo.png?v=20260622-uber-coordinates",
+  "assets/hs-govtech-logo.png?v=20260622-pool-trivia",
   "assets/bdmp-icon-color.png",
-  "assets/icon-192.png?v=20260622-uber-coordinates",
-  "assets/icon-512.png?v=20260622-uber-coordinates",
+  "assets/icon-192.png?v=20260622-pool-trivia",
+  "assets/icon-512.png?v=20260622-pool-trivia",
   "assets/sheraton-exhibit-hall-map.png",
   "assets/sheraton-meeting-overview.png",
   "assets/sheraton-floor-overview.png"

@@ -35,7 +35,7 @@ function doGet(e) {
     return jsonOutput_({ ok: true, alerts: getActiveAlerts_() }, params.callback);
   }
   if (params.action === "leaderboard") {
-    return jsonOutput_({ ok: true, leaders: getTriviaLeaderboard_() }, params.callback);
+    return jsonOutput_({ ok: true, leaders: getTriviaLeaderboard_(params.boardId || "food") }, params.callback);
   }
   if (params.action === "drinkStatus") {
     return jsonOutput_({ ok: true, ticket: getDrinkTicket_(params.code || "") }, params.callback);
@@ -99,7 +99,9 @@ function recordTriviaScore_(payload) {
     hintsUsed,
     payload.completedAt || "",
     payload.source || "",
-    payload.page || ""
+    payload.page || "",
+    payload.boardId || "food",
+    payload.boardName || "Food Code"
   ]);
   sendTriviaScoreEmail_(payload, score, total, hintsUsed);
 
@@ -390,8 +392,14 @@ function getTriviaSheet_() {
       "Hints Used",
       "Completed At",
       "Source",
-      "Page"
+      "Page",
+      "Board ID",
+      "Board Name"
     ]);
+    sheet.setFrozenRows(1);
+    sheet.autoResizeColumns(1, 14);
+  } else if (sheet.getLastColumn() < 14) {
+    sheet.getRange(1, 13, 1, 2).setValues([["Board ID", "Board Name"]]);
   }
 
   return sheet;
@@ -745,11 +753,12 @@ function parseSheetDate_(value) {
   return isNaN(parsed) ? null : parsed;
 }
 
-function getTriviaLeaderboard_() {
+function getTriviaLeaderboard_(boardId) {
   const sheet = getTriviaSheet_();
   const lastRow = sheet.getLastRow();
   if (lastRow <= 1) return [];
-  const rows = sheet.getRange(2, 1, lastRow - 1, 12).getValues();
+  const rows = sheet.getRange(2, 1, lastRow - 1, Math.max(14, sheet.getLastColumn())).getValues();
+  const requestedBoard = String(boardId || "food").trim() || "food";
   return rows
     .map((row) => ({
       receivedAt: row[0],
@@ -758,8 +767,11 @@ function getTriviaLeaderboard_() {
       score: Number(row[5] || 0),
       total: Number(row[6] || 12),
       achievement: row[7] || "",
-      hintsUsed: Number(row[8] || 0)
+      hintsUsed: Number(row[8] || 0),
+      boardId: row[12] || "food",
+      boardName: row[13] || "Food Code"
     }))
+    .filter((entry) => entry.boardId === requestedBoard)
     .sort((a, b) => {
       if (b.score !== a.score) return b.score - a.score;
       if (a.hintsUsed !== b.hintsUsed) return a.hintsUsed - b.hintsUsed;
@@ -773,7 +785,9 @@ function getTriviaLeaderboard_() {
       score: entry.score,
       total: entry.total,
       achievement: entry.achievement,
-      hintsUsed: entry.hintsUsed
+      hintsUsed: entry.hintsUsed,
+      boardId: entry.boardId,
+      boardName: entry.boardName
     }));
 }
 
@@ -1054,10 +1068,11 @@ function sendTriviaScoreEmail_(payload, score, total, hintsUsed) {
   const email = String(payload.email || "").trim();
   if (!email) return;
   const achievement = payload.achievement || "EH Trivia Player";
+  const boardName = payload.boardName || "Food Code";
   const body = [
     `Hi ${payload.name || "there"},`,
     "",
-    `Thanks for playing the EH Trivia Game at NEHA.`,
+    `Thanks for playing the ${boardName} EH Trivia board at NEHA.`,
     "",
     `Your final score: ${score}/${total}`,
     `Achievement: ${achievement}`,
@@ -1072,7 +1087,7 @@ function sendTriviaScoreEmail_(payload, score, total, hintsUsed) {
   try {
     MailApp.sendEmail({
       to: email,
-      subject: `Your EH Trivia score: ${score}/${total}`,
+      subject: `Your ${boardName} EH Trivia score: ${score}/${total}`,
       body
     });
   } catch (error) {

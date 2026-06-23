@@ -1,4 +1,4 @@
-const TRIVIA_ROUND_STORAGE_KEY = "nehaTriviaRound";
+const TRIVIA_ROUND_STORAGE_PREFIX = "nehaTriviaRound";
 
 const state = {
   sessions: [],
@@ -35,6 +35,7 @@ const state = {
   },
   pendingConflict: null,
   installPrompt: null,
+  triviaBoard: localStorage.getItem("nehaTriviaBoard") || "food",
   trivia: {
     index: 0,
     score: 0,
@@ -130,6 +131,9 @@ const els = {
   demoState: document.querySelector("#demoState"),
   demoNotes: document.querySelector("#demoNotes"),
   demoStatus: document.querySelector("#demoStatus"),
+  triviaBoardEyebrow: document.querySelector("#triviaBoardEyebrow"),
+  triviaBoardDescription: document.querySelector("#triviaBoardDescription"),
+  triviaBoardPicker: document.querySelector("#triviaBoardPicker"),
   triviaScore: document.querySelector("#triviaScore"),
   triviaProgressBar: document.querySelector("#triviaProgressBar"),
   triviaStage: document.querySelector("#triviaStage"),
@@ -237,112 +241,237 @@ const podcastEpisodes = [
   }
 ];
 
-const triviaQuestions = [
-  {
-    section: "2-301.12",
-    category: "Hands",
-    question: "Food employees must clean their hands and exposed portions of arms for at least how long?",
-    options: ["20 seconds", "10 seconds", "45 seconds", "Only until visibly clean"],
-    answer: 0,
-    explanation: "Section 2-301.12 sets a minimum 20-second handwashing procedure."
+const triviaBoards = {
+  food: {
+    id: "food",
+    label: "Food Code",
+    shortLabel: "Food",
+    eyebrow: "2022 FDA Food Code Challenge",
+    description: "Perfect scores win a prize. Test your retail food safety instincts with twelve quick questions, instant feedback, and brag-worthy achievement levels.",
+    sourceNote: "Food Code note",
+    bestKey: "nehaTriviaBestFood",
+    legacyBestKey: "nehaTriviaBest",
+    questions: [
+      {
+        section: "2-301.12",
+        category: "Hands",
+        question: "Food employees must clean their hands and exposed portions of arms for at least how long?",
+        options: ["20 seconds", "10 seconds", "45 seconds", "Only until visibly clean"],
+        answer: 0,
+        explanation: "Section 2-301.12 sets a minimum 20-second handwashing procedure."
+      },
+      {
+        section: "3-501.16",
+        category: "Cold Holding",
+        question: "Cold-held TCS food should generally be maintained at what temperature?",
+        options: ["41°F or less", "45°F or less", "50°F or less", "32°F exactly"],
+        answer: 0,
+        explanation: "Cold holding for TCS food is generally 41°F or less."
+      },
+      {
+        section: "3-501.16",
+        category: "Hot Holding",
+        question: "Hot-held TCS food should generally be maintained at what temperature?",
+        options: ["135°F or above", "120°F or above", "145°F or above", "165°F or above"],
+        answer: 0,
+        explanation: "Hot holding for TCS food is generally 135°F or above."
+      },
+      {
+        section: "3-401.11",
+        category: "Cooking",
+        question: "Poultry, baluts, stuffed fish, stuffed meat, and stuffed pasta must be cooked to what minimum temperature?",
+        options: ["165°F", "155°F", "145°F", "135°F"],
+        answer: 0,
+        explanation: "The Food Code places poultry and stuffed foods in the 165°F minimum cooking group."
+      },
+      {
+        section: "3-401.11",
+        category: "Cooking",
+        question: "Comminuted meat, such as ground beef, is commonly associated with which minimum cooking temperature?",
+        options: ["155°F", "145°F", "165°F", "135°F"],
+        answer: 0,
+        explanation: "Comminuted meat is in the 155°F minimum cooking group."
+      },
+      {
+        section: "3-501.14",
+        category: "Cooling",
+        question: "Cooked TCS food must cool from 135°F to 70°F within 2 hours, and then to 41°F or less within what total time?",
+        options: ["6 hours total", "4 hours total", "8 hours total", "24 hours total"],
+        answer: 0,
+        explanation: "Cooling is 135°F to 70°F within 2 hours and 135°F to 41°F or less within a total of 6 hours."
+      },
+      {
+        section: "3-501.17",
+        category: "Date Marking",
+        question: "Refrigerated, ready-to-eat TCS food held at 41°F or less is generally date marked for no more than how many days?",
+        options: ["7 days", "3 days", "10 days", "14 days"],
+        answer: 0,
+        explanation: "The maximum is generally 7 days, counting the preparation or opening day as day 1."
+      },
+      {
+        section: "3-301.11",
+        category: "Contamination",
+        question: "Which practice is generally prohibited with ready-to-eat food?",
+        options: ["Bare-hand contact", "Using deli tissue", "Using single-use gloves", "Using dispensing utensils"],
+        answer: 0,
+        explanation: "Food employees may not contact exposed ready-to-eat food with bare hands except as allowed by the Code."
+      },
+      {
+        section: "2-201.11",
+        category: "Employee Health",
+        question: "Which symptom should a food employee report to the person in charge?",
+        options: ["Vomiting", "A mild headache only", "Seasonal allergies only", "Tired feet after a long shift"],
+        answer: 0,
+        explanation: "Vomiting, diarrhea, jaundice, sore throat with fever, and infected lesions are among key reportable items."
+      },
+      {
+        section: "3-603.11",
+        category: "Consumer Advisory",
+        question: "A consumer advisory is tied to which menu situation?",
+        options: ["Raw or undercooked animal foods offered for consumption", "Any food served cold", "All packaged bottled drinks", "Only foods with added sugar"],
+        answer: 0,
+        explanation: "Consumer advisories apply when raw or undercooked animal foods are offered in ready-to-eat form."
+      },
+      {
+        section: "1-201.10",
+        category: "Allergens",
+        question: "Which food was added as a major food allergen in the 2022 Food Code era?",
+        options: ["Sesame", "Rice", "Chicken", "Tomato"],
+        answer: 0,
+        explanation: "Sesame joins the major food allergen list reflected in the 2022 Food Code materials."
+      },
+      {
+        section: "3-203.12",
+        category: "Shellfish",
+        question: "Shellstock tags or labels must generally be kept for how long after the container is emptied?",
+        options: ["90 days", "7 days", "30 days", "1 year"],
+        answer: 0,
+        explanation: "Shellstock tags are retained for 90 calendar days after the container is emptied."
+      }
+    ],
+    achievements: [
+      { min: 11, title: "Food Code Champion", note: "You are dangerous with a thermometer and a code book." },
+      { min: 9, title: "Risk Factor Ranger", note: "Strong command of the stuff that prevents bad days." },
+      { min: 6, title: "Inspection Ready", note: "Solid field instincts. Worthy of the clipboard." },
+      { min: 3, title: "Code Cadet", note: "You are warming up. Keep the sanitizer test strips close." },
+      { min: 0, title: "Fresh Permittee", note: "Everybody starts somewhere. The Food Code is waiting." }
+    ]
   },
-  {
-    section: "3-501.16",
-    category: "Cold Holding",
-    question: "Cold-held TCS food should generally be maintained at what temperature?",
-    options: ["41°F or less", "45°F or less", "50°F or less", "32°F exactly"],
-    answer: 0,
-    explanation: "Cold holding for TCS food is generally 41°F or less."
-  },
-  {
-    section: "3-501.16",
-    category: "Hot Holding",
-    question: "Hot-held TCS food should generally be maintained at what temperature?",
-    options: ["135°F or above", "120°F or above", "145°F or above", "165°F or above"],
-    answer: 0,
-    explanation: "Hot holding for TCS food is generally 135°F or above."
-  },
-  {
-    section: "3-401.11",
-    category: "Cooking",
-    question: "Poultry, baluts, stuffed fish, stuffed meat, and stuffed pasta must be cooked to what minimum temperature?",
-    options: ["165°F", "155°F", "145°F", "135°F"],
-    answer: 0,
-    explanation: "The Food Code places poultry and stuffed foods in the 165°F minimum cooking group."
-  },
-  {
-    section: "3-401.11",
-    category: "Cooking",
-    question: "Comminuted meat, such as ground beef, is commonly associated with which minimum cooking temperature?",
-    options: ["155°F", "145°F", "165°F", "135°F"],
-    answer: 0,
-    explanation: "Comminuted meat is in the 155°F minimum cooking group."
-  },
-  {
-    section: "3-501.14",
-    category: "Cooling",
-    question: "Cooked TCS food must cool from 135°F to 70°F within 2 hours, and then to 41°F or less within what total time?",
-    options: ["6 hours total", "4 hours total", "8 hours total", "24 hours total"],
-    answer: 0,
-    explanation: "Cooling is 135°F to 70°F within 2 hours and 135°F to 41°F or less within a total of 6 hours."
-  },
-  {
-    section: "3-501.17",
-    category: "Date Marking",
-    question: "Refrigerated, ready-to-eat TCS food held at 41°F or less is generally date marked for no more than how many days?",
-    options: ["7 days", "3 days", "10 days", "14 days"],
-    answer: 0,
-    explanation: "The maximum is generally 7 days, counting the preparation or opening day as day 1."
-  },
-  {
-    section: "3-301.11",
-    category: "Contamination",
-    question: "Which practice is generally prohibited with ready-to-eat food?",
-    options: ["Bare-hand contact", "Using deli tissue", "Using single-use gloves", "Using dispensing utensils"],
-    answer: 0,
-    explanation: "Food employees may not contact exposed ready-to-eat food with bare hands except as allowed by the Code."
-  },
-  {
-    section: "2-201.11",
-    category: "Employee Health",
-    question: "Which symptom should a food employee report to the person in charge?",
-    options: ["Vomiting", "A mild headache only", "Seasonal allergies only", "Tired feet after a long shift"],
-    answer: 0,
-    explanation: "Vomiting, diarrhea, jaundice, sore throat with fever, and infected lesions are among key reportable items."
-  },
-  {
-    section: "3-603.11",
-    category: "Consumer Advisory",
-    question: "A consumer advisory is tied to which menu situation?",
-    options: ["Raw or undercooked animal foods offered for consumption", "Any food served cold", "All packaged bottled drinks", "Only foods with added sugar"],
-    answer: 0,
-    explanation: "Consumer advisories apply when raw or undercooked animal foods are offered in ready-to-eat form."
-  },
-  {
-    section: "1-201.10",
-    category: "Allergens",
-    question: "Which food was added as a major food allergen in the 2022 Food Code era?",
-    options: ["Sesame", "Rice", "Chicken", "Tomato"],
-    answer: 0,
-    explanation: "Sesame joins the major food allergen list reflected in the 2022 Food Code materials."
-  },
-  {
-    section: "3-203.12",
-    category: "Shellfish",
-    question: "Shellstock tags or labels must generally be kept for how long after the container is emptied?",
-    options: ["90 days", "7 days", "30 days", "1 year"],
-    answer: 0,
-    explanation: "Shellstock tags are retained for 90 calendar days after the container is emptied."
+  pools: {
+    id: "pools",
+    label: "Pool Inspections",
+    shortLabel: "Pools",
+    eyebrow: "Public Pool Inspection Challenge",
+    description: "Choose the pool board for twelve CDC/MAHC-inspired questions on chemistry, contamination, safety equipment, hot tubs, and operator controls.",
+    sourceNote: "Pool inspection note",
+    bestKey: "nehaTriviaBestPools",
+    questions: [
+      {
+        section: "CDC MAHC",
+        category: "Code Basics",
+        question: "What is the Model Aquatic Health Code designed to help jurisdictions prevent at public aquatic venues?",
+        options: ["Injuries and illnesses", "Only noise complaints", "Only construction delays", "Private backyard pool costs"],
+        answer: 0,
+        explanation: "CDC describes the MAHC as guidance to prevent injury and illness at public pools, hot tubs, splash pads, and similar venues."
+      },
+      {
+        section: "Inspection Toolkit",
+        category: "Inspection Role",
+        question: "During a public pool inspection, what is the inspector primarily assessing?",
+        options: ["Whether operation and maintenance meet the applicable health code", "Whether the water looks nice from the lobby", "Whether the operator has enough social media posts", "Whether admission prices are reasonable"],
+        answer: 0,
+        explanation: "CDC's Pool Inspection Toolkit frames inspections around whether facility operation and maintenance meet the jurisdiction's public health code."
+      },
+      {
+        section: "CDC Healthy Pools",
+        category: "Disinfectant",
+        question: "In CDC healthy pool guidance, what is the typical chlorine range operators are told to maintain?",
+        options: ["1-4 ppm", "0 ppm", "10-20 ppm at all times", "Only enough to smell chlorine"],
+        answer: 0,
+        explanation: "CDC's public guidance lists a typical chlorine range of 1-4 ppm, while local code requirements may be more specific by venue type."
+      },
+      {
+        section: "CDC Healthy Pools",
+        category: "Disinfectant",
+        question: "In CDC healthy pool guidance, what is the typical bromine range operators are told to maintain?",
+        options: ["3-8 ppm", "0.5-1 ppm", "10-15 ppm", "Bromine is never measured"],
+        answer: 0,
+        explanation: "CDC's general healthy pool guidance lists 3-8 ppm as the typical bromine range."
+      },
+      {
+        section: "CDC Healthy Pools",
+        category: "pH",
+        question: "Which pH range does CDC list in its healthy pool guidance?",
+        options: ["7.0-7.8", "5.0-6.0", "8.5-9.5", "pH is not part of pool chemistry"],
+        answer: 0,
+        explanation: "CDC guidance lists pH 7.0-7.8 and explains that pH affects disinfectant performance, comfort, and equipment."
+      },
+      {
+        section: "CDC Healthy Pools",
+        category: "pH",
+        question: "Why does pH matter during a pool inspection?",
+        options: ["Improper pH can reduce disinfectant effectiveness and irritate skin or eyes", "It only changes the color of the pool tile", "It replaces the need for chlorine", "It only matters in natural lakes"],
+        answer: 0,
+        explanation: "CDC notes that pH that is too high or too low can make chlorine or bromine less effective, irritate swimmers, and damage equipment."
+      },
+      {
+        section: "CDC Healthy Pools",
+        category: "Crypto",
+        question: "Which germ is especially chlorine-tolerant and can survive more than 7 days even in properly treated water?",
+        options: ["Cryptosporidium", "Norovirus", "E. coli", "Listeria"],
+        answer: 0,
+        explanation: "CDC highlights Cryptosporidium as a chlorine-tolerant parasite and a leading cause of pool-related outbreaks."
+      },
+      {
+        section: "CDC Contamination",
+        category: "Incident Response",
+        question: "A diarrheal incident in a public pool should be treated as high risk because it may involve which chlorine-tolerant pathogen?",
+        options: ["Cryptosporidium", "Tetanus", "Botulism", "Hepatitis B only"],
+        answer: 0,
+        explanation: "CDC's contamination response materials connect diarrheal incidents with Crypto risk and hyperchlorination protocols."
+      },
+      {
+        section: "CDC Healthy Pools",
+        category: "Bather Hygiene",
+        question: "CDC recommends swimmers shower for at least how long before entering the water?",
+        options: ["1 minute", "5 seconds", "10 minutes", "Only after swimming"],
+        answer: 0,
+        explanation: "CDC recommends showering for at least 1 minute to remove dirt and other materials that use up disinfectant."
+      },
+      {
+        section: "CDC Chemical Safety",
+        category: "Chemicals",
+        question: "Which chemical storage practice should an inspector expect to see?",
+        options: ["Pool chemicals kept secure and handled according to label directions", "Open buckets stored next to food", "Different chemicals mixed together to save space", "Chemicals stored where children can reach them"],
+        answer: 0,
+        explanation: "CDC emphasizes reading product labels, using protective equipment, and keeping pool chemicals secure."
+      },
+      {
+        section: "CDC Hot Tubs",
+        category: "Hot Tubs",
+        question: "Why do hot tubs deserve special attention during inspections?",
+        options: ["Users can breathe contaminated mists or aerosols, not just swallow water", "Hot water kills every germ instantly", "Hot tubs never need disinfectant", "Only the filter color matters"],
+        answer: 0,
+        explanation: "CDC notes that hot tub users may get respiratory, skin, or gastrointestinal illness from swallowing, contacting, or breathing contaminated water aerosols."
+      },
+      {
+        section: "CDC Drowning Prevention",
+        category: "Safety",
+        question: "Which finding is most aligned with an inspector's injury-prevention focus?",
+        options: ["A self-closing, self-latching gate is not working", "A lounge chair is the wrong shade of blue", "The snack bar menu is too short", "The music is not aquatic themed"],
+        answer: 0,
+        explanation: "CDC drowning-prevention guidance emphasizes barriers, supervision, CPR readiness, and other controls that keep swimmers from entering unsafe situations."
+      }
+    ],
+    achievements: [
+      { min: 11, title: "Aquatic Health Ace", note: "You are reading the pool like the water is talking back." },
+      { min: 9, title: "Deck Walk Pro", note: "Strong inspection instincts from chemistry to contamination response." },
+      { min: 6, title: "Pool Form Ready", note: "Solid command of the public pool basics most forms care about." },
+      { min: 3, title: "Test Strip Trainee", note: "You have the clipboard. Now keep practicing the chemistry." },
+      { min: 0, title: "New Lifeguard Energy", note: "A fresh start. The MAHC is waiting at the deep end." }
+    ]
   }
-];
-
-const triviaAchievements = [
-  { min: 11, title: "Food Code Champion", note: "You are dangerous with a thermometer and a code book." },
-  { min: 9, title: "Risk Factor Ranger", note: "Strong command of the stuff that prevents bad days." },
-  { min: 6, title: "Inspection Ready", note: "Solid field instincts. Worthy of the clipboard." },
-  { min: 3, title: "Code Cadet", note: "You are warming up. Keep the sanitizer test strips close." },
-  { min: 0, title: "Fresh Permittee", note: "Everybody starts somewhere. The Food Code is waiting." }
-];
+};
 
 const dayFormatter = new Intl.DateTimeFormat("en-US", { weekday: "short", month: "short", day: "numeric" });
 const venueMaps = {
@@ -843,6 +972,11 @@ els.triviaStage.addEventListener("click", (event) => {
     return;
   }
   if (restartButton) restartTrivia();
+});
+
+els.triviaBoardPicker.addEventListener("click", (event) => {
+  const boardButton = event.target.closest("[data-trivia-board]");
+  if (boardButton) setTriviaBoard(boardButton.dataset.triviaBoard);
 });
 
 els.installAppButton.addEventListener("click", async () => {
@@ -2231,7 +2365,12 @@ function compressCommunityImage(file) {
 function renderTrivia() {
   ensureTriviaRound();
   const trivia = state.trivia;
-  const total = triviaQuestions.length;
+  const board = activeTriviaBoard();
+  const questions = activeTriviaQuestions();
+  const total = questions.length;
+  renderTriviaBoardPicker();
+  els.triviaBoardEyebrow.textContent = board.eyebrow;
+  els.triviaBoardDescription.textContent = board.description;
   els.triviaScore.textContent = `${trivia.score}/${total}`;
   els.triviaProgressBar.style.width = `${Math.round((trivia.index / total) * 100)}%`;
 
@@ -2241,7 +2380,7 @@ function renderTrivia() {
     return;
   }
 
-  const question = triviaQuestions[trivia.index];
+  const question = questions[trivia.index];
   const status = trivia.answered ? (trivia.selected === question.answer ? "Correct" : "Not quite") : "Choose one";
   els.triviaStage.innerHTML = `
     <div class="trivia-card">
@@ -2256,7 +2395,7 @@ function renderTrivia() {
       </div>
       <div class="trivia-feedback ${trivia.answered ? "show" : ""}">
         <strong>${escapeHtml(status)}</strong>
-        <p>${trivia.answered ? escapeHtml(question.explanation) : "Lock in an answer to reveal the Food Code note."}</p>
+        <p>${trivia.answered ? escapeHtml(question.explanation) : `Lock in an answer to reveal the ${escapeHtml(board.sourceNote)}.`}</p>
       </div>
       <div class="trivia-footer">
         <button class="hint-button" type="button" data-trivia-hint ${trivia.answered || trivia.hintsRemaining <= 0 || hiddenTriviaOptions().length >= question.options.length - 2 ? "disabled" : ""}>Use Hint (${trivia.hintsRemaining})</button>
@@ -2272,6 +2411,55 @@ function renderTrivia() {
       </div>
     </div>
   `;
+}
+
+function renderTriviaBoardPicker() {
+  els.triviaBoardPicker.innerHTML = Object.values(triviaBoards).map((board) => `
+    <button type="button" data-trivia-board="${escapeAttr(board.id)}" class="${board.id === state.triviaBoard ? "active" : ""}" aria-pressed="${board.id === state.triviaBoard}">
+      <span>${escapeHtml(board.shortLabel)}</span>
+      <small>${escapeHtml(board.label)}</small>
+    </button>
+  `).join("");
+}
+
+function activeTriviaBoard() {
+  return triviaBoards[state.triviaBoard] || triviaBoards.food;
+}
+
+function activeTriviaQuestions() {
+  return activeTriviaBoard().questions;
+}
+
+function activeTriviaAchievements() {
+  return activeTriviaBoard().achievements;
+}
+
+function triviaRoundStorageKey(boardId = state.triviaBoard) {
+  return `${TRIVIA_ROUND_STORAGE_PREFIX}:${boardId}`;
+}
+
+function triviaBestScore(board = activeTriviaBoard()) {
+  const primary = Number(localStorage.getItem(board.bestKey) || 0);
+  const legacy = board.legacyBestKey ? Number(localStorage.getItem(board.legacyBestKey) || 0) : 0;
+  return Math.max(primary || 0, legacy || 0);
+}
+
+function setTriviaBoard(boardId) {
+  if (!triviaBoards[boardId] || boardId === state.triviaBoard) return;
+  state.triviaBoard = boardId;
+  localStorage.setItem("nehaTriviaBoard", boardId);
+  state.trivia = {
+    ...freshTriviaState(),
+    ...loadStoredTriviaRound(boardId),
+    leaderboard: [],
+    leaderboardLoading: false,
+    leaderboardError: "",
+    submitting: false,
+    best: triviaBestScore(triviaBoards[boardId])
+  };
+  normalizeTriviaRound();
+  loadTriviaLeaderboard();
+  renderTrivia();
 }
 
 function triviaAnswerButton(question, option, index) {
@@ -2293,12 +2481,12 @@ function hiddenTriviaOptions() {
 }
 
 function resetTriviaOrder() {
-  state.trivia.order = triviaQuestions.map((question) => shuffleArray(question.options.map((_, index) => index)));
+  state.trivia.order = activeTriviaQuestions().map((question) => shuffleArray(question.options.map((_, index) => index)));
 }
 
-function loadStoredTriviaRound() {
+function loadStoredTriviaRound(boardId = localStorage.getItem("nehaTriviaBoard") || "food") {
   try {
-    const stored = JSON.parse(localStorage.getItem(TRIVIA_ROUND_STORAGE_KEY) || "null");
+    const stored = JSON.parse(localStorage.getItem(triviaRoundStorageKey(boardId)) || (boardId === "food" ? localStorage.getItem("nehaTriviaRound") : "null") || "null");
     if (!stored || typeof stored !== "object") return {};
     return {
       index: Number(stored.index) || 0,
@@ -2322,6 +2510,29 @@ function loadStoredTriviaRound() {
   }
 }
 
+function freshTriviaState() {
+  return {
+    index: 0,
+    score: 0,
+    selected: null,
+    answered: false,
+    complete: false,
+    streak: 0,
+    hintsRemaining: 3,
+    hidden: {},
+    submitted: false,
+    submitting: false,
+    leaderboard: [],
+    leaderboardLoading: false,
+    leaderboardError: "",
+    order: [],
+    best: triviaBestScore(),
+    roundId: "",
+    startedAt: "",
+    completedAt: ""
+  };
+}
+
 function ensureTriviaRound() {
   if (!state.trivia.roundId) {
     state.trivia.roundId = `round-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
@@ -2332,11 +2543,12 @@ function ensureTriviaRound() {
 }
 
 function normalizeTriviaRound() {
-  const total = triviaQuestions.length;
+  const total = activeTriviaQuestions().length;
   state.trivia.index = Math.min(Math.max(Number(state.trivia.index) || 0, 0), total - 1);
   state.trivia.score = Math.min(Math.max(Number(state.trivia.score) || 0, 0), total);
   state.trivia.streak = Math.min(Math.max(Number(state.trivia.streak) || 0, 0), total);
   state.trivia.hintsRemaining = Math.min(Math.max(Number(state.trivia.hintsRemaining) || 0, 0), 3);
+  state.trivia.best = triviaBestScore();
   if (!state.trivia.order.length || state.trivia.order.length !== total) resetTriviaOrder();
   if (state.trivia.roundId) persistTriviaRound();
 }
@@ -2357,7 +2569,7 @@ function persistTriviaRound() {
     submitted: state.trivia.submitted,
     order: state.trivia.order
   };
-  localStorage.setItem(TRIVIA_ROUND_STORAGE_KEY, JSON.stringify(round));
+  localStorage.setItem(triviaRoundStorageKey(), JSON.stringify(round));
 }
 
 function shuffleArray(items) {
@@ -2370,7 +2582,7 @@ function shuffleArray(items) {
 }
 
 function useTriviaHint() {
-  const question = triviaQuestions[state.trivia.index];
+  const question = activeTriviaQuestions()[state.trivia.index];
   if (state.trivia.answered || state.trivia.hintsRemaining <= 0) return;
   const hidden = hiddenTriviaOptions();
   const candidates = triviaOptionOrder(question).filter((index) => index !== question.answer && !hidden.includes(index));
@@ -2383,7 +2595,7 @@ function useTriviaHint() {
 }
 
 function answerTrivia(index) {
-  const question = triviaQuestions[state.trivia.index];
+  const question = activeTriviaQuestions()[state.trivia.index];
   state.trivia.selected = index;
   state.trivia.answered = true;
   if (index === question.answer) {
@@ -2398,11 +2610,14 @@ function answerTrivia(index) {
 
 function nextTriviaQuestion() {
   if (!state.trivia.answered) return;
-  if (state.trivia.index >= triviaQuestions.length - 1) {
+  const questions = activeTriviaQuestions();
+  const board = activeTriviaBoard();
+  if (state.trivia.index >= questions.length - 1) {
     state.trivia.complete = true;
     state.trivia.completedAt = new Date().toISOString();
     state.trivia.best = Math.max(state.trivia.best, state.trivia.score);
-    localStorage.setItem("nehaTriviaBest", String(state.trivia.best));
+    localStorage.setItem(board.bestKey, String(state.trivia.best));
+    if (board.legacyBestKey) localStorage.setItem(board.legacyBestKey, String(state.trivia.best));
     persistTriviaRound();
     postTriviaScore();
   } else {
@@ -2426,6 +2641,7 @@ function restartTrivia() {
   state.trivia.submitted = false;
   state.trivia.submitting = false;
   state.trivia.leaderboardError = "";
+  state.trivia.best = triviaBestScore();
   state.trivia.roundId = `round-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
   state.trivia.startedAt = new Date().toISOString();
   state.trivia.completedAt = "";
@@ -2435,8 +2651,10 @@ function restartTrivia() {
 }
 
 function renderTriviaResults() {
-  const total = triviaQuestions.length;
-  const achievement = triviaAchievements.find((item) => state.trivia.score >= item.min);
+  const board = activeTriviaBoard();
+  const achievements = activeTriviaAchievements();
+  const total = activeTriviaQuestions().length;
+  const achievement = achievements.find((item) => state.trivia.score >= item.min);
   const perfect = state.trivia.score === total;
   const postStatus = state.trivia.submitted ? "Score posted to the leaderboard." : state.trivia.submitting ? "Posting score to the leaderboard..." : "Score will post automatically.";
   els.triviaProgressBar.style.width = "100%";
@@ -2458,7 +2676,7 @@ function renderTriviaResults() {
       </div>
       ${renderLeaderboard()}
       <div class="achievement-list">
-        ${triviaAchievements.map((item) => `
+        ${achievements.map((item) => `
           <div class="${state.trivia.score >= item.min ? "earned" : ""}">
             <strong>${escapeHtml(item.title)}</strong>
             <span>${item.min}+ correct</span>
@@ -2474,10 +2692,11 @@ function renderLeaderboard() {
   if (state.trivia.leaderboardLoading) return `<div class="leaderboard-card">Loading leaderboard...</div>`;
   if (state.trivia.leaderboardError) return `<div class="leaderboard-card">${escapeHtml(state.trivia.leaderboardError)}</div>`;
   if (!state.trivia.leaderboard.length) return `<div class="leaderboard-card">Post a score to start the leaderboard.</div>`;
+  const board = activeTriviaBoard();
   return `
     <div class="leaderboard-card">
       <div class="leaderboard-head">
-        <strong>Leaderboard</strong>
+        <strong>${escapeHtml(board.label)} Leaderboard</strong>
         <span>Top ${state.trivia.leaderboard.length}</span>
       </div>
       ${state.trivia.leaderboard.map((entry) => `
@@ -2485,7 +2704,7 @@ function renderLeaderboard() {
           <span>${escapeHtml(String(entry.rank))}</span>
           <strong>${escapeHtml(entry.name)}</strong>
           <small>${escapeHtml(entry.agency || "Agency not listed")}</small>
-          <b>${escapeHtml(String(entry.score))}/12</b>
+          <b>${escapeHtml(String(entry.score))}/${escapeHtml(String(entry.total || activeTriviaQuestions().length))}</b>
         </div>
       `).join("")}
     </div>
@@ -2496,14 +2715,17 @@ async function postTriviaScore() {
   if (state.trivia.submitted || state.trivia.submitting) return;
   state.trivia.submitting = true;
   renderTrivia();
-  const achievement = triviaAchievements.find((item) => state.trivia.score >= item.min);
+  const board = activeTriviaBoard();
+  const achievement = activeTriviaAchievements().find((item) => state.trivia.score >= item.min);
   const payload = {
     type: "triviaScore",
+    boardId: board.id,
+    boardName: board.label,
     name: state.lead?.name || "",
     agency: state.lead?.agency || "",
     email: state.lead?.email || "",
     score: state.trivia.score,
-    total: triviaQuestions.length,
+    total: activeTriviaQuestions().length,
     achievement: achievement.title,
     hintsUsed: 3 - state.trivia.hintsRemaining,
     roundId: state.trivia.roundId,
@@ -2559,7 +2781,7 @@ function loadTriviaLeaderboard() {
       renderTrivia();
       resolve();
     };
-    script.src = `${endpoint}?action=leaderboard&callback=${callbackName}&t=${Date.now()}`;
+    script.src = `${endpoint}?action=leaderboard&boardId=${encodeURIComponent(activeTriviaBoard().id)}&callback=${callbackName}&t=${Date.now()}`;
     script.onerror = () => {
       cleanup();
       state.trivia.leaderboardLoading = false;
