@@ -549,6 +549,11 @@ select {
   margin-bottom: 18px;
 }
 
+.my-schedule-actions {
+  justify-content: flex-start;
+  margin: -4px 0 18px;
+}
+
 .metric {
   min-height: 78px;
   padding: 14px;
