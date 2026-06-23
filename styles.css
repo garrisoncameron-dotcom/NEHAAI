@@ -1671,12 +1671,21 @@ select {
   min-height: 44px;
   display: inline-grid;
   place-items: center;
+  border: 1px solid var(--cyan);
   border-radius: 8px;
   color: #fff;
-  background: var(--navy);
+  background: var(--cyan);
   cursor: pointer;
   padding: 0 16px;
   font-weight: 900;
+  text-decoration: none;
+  box-shadow: 0 8px 18px rgba(53, 176, 237, 0.24);
+}
+
+.community-file-button:hover,
+.community-file-button:focus-within {
+  background: #1f9ddb;
+  border-color: #1f9ddb;
 }
 
 .community-file-button input {
