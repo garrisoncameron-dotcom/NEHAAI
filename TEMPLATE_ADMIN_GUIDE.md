@@ -55,6 +55,7 @@ Stores "Book a Demo" submissions:
 - agency
 - email
 - phone
+- state
 - notes
 - request time
 

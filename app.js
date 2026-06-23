@@ -121,6 +121,7 @@ const els = {
   demoAgency: document.querySelector("#demoAgency"),
   demoEmail: document.querySelector("#demoEmail"),
   demoPhone: document.querySelector("#demoPhone"),
+  demoState: document.querySelector("#demoState"),
   demoNotes: document.querySelector("#demoNotes"),
   demoStatus: document.querySelector("#demoStatus"),
   triviaScore: document.querySelector("#triviaScore"),
@@ -758,13 +759,16 @@ els.communityPosts.addEventListener("submit", async (event) => {
 els.demoForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const submitButton = els.demoForm.querySelector('button[type="submit"]');
+  const demoState = els.demoState.value.trim();
+  const demoNotes = els.demoNotes.value.trim();
   const request = {
     type: "demoRequest",
     name: els.demoName.value.trim(),
     agency: els.demoAgency.value.trim(),
     email: els.demoEmail.value.trim(),
     phone: els.demoPhone.value.trim(),
-    notes: els.demoNotes.value.trim(),
+    state: demoState,
+    notes: [demoNotes, demoState ? `State: ${demoState}` : ""].filter(Boolean).join("\n\n"),
     requestedAt: new Date().toISOString(),
     source: "NEHA AEC 2026 Guide",
     page: location.href

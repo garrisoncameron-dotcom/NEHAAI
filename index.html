@@ -8,13 +8,13 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="NEHA Guide">
     <link rel="manifest" href="manifest.webmanifest">
-    <link rel="apple-touch-icon" href="assets/icon-192.png?v=20260622-podcast-story">
-    <link rel="stylesheet" href="styles.css?v=20260622-podcast-story">
+    <link rel="apple-touch-icon" href="assets/icon-192.png?v=20260622-demo-state">
+    <link rel="stylesheet" href="styles.css?v=20260622-demo-state">
   </head>
   <body>
     <div id="leadGate" class="lead-gate" hidden>
       <form id="leadForm" class="lead-card">
-        <img class="lead-logo" src="assets/hs-govtech-logo.png?v=20260622-podcast-story" alt="HS GovTech logo">
+        <img class="lead-logo" src="assets/hs-govtech-logo.png?v=20260622-demo-state" alt="HS GovTech logo">
         <p class="eyebrow">NEHA AEC 2026 Guide</p>
         <h2>Welcome</h2>
         <p class="lead-copy">Your companion for the NEHA conference. I’m here to help you navigate the schedule and venue, find the city's best BBQ, play some EH trivia between sessions and connect with other conference attendees.</p>
@@ -38,7 +38,7 @@
       <aside class="rail" aria-label="Primary navigation">
         <div class="brand-lockup">
           <div class="brand-main">
-            <img class="brand-logo" src="assets/hs-govtech-logo.png?v=20260622-podcast-story" alt="HS GovTech logo">
+            <img class="brand-logo" src="assets/hs-govtech-logo.png?v=20260622-demo-state" alt="HS GovTech logo">
             <div>
               <strong>HS GovTech</strong>
               <small>NEHA Navigator</small>
@@ -239,6 +239,10 @@
               <p class="eyebrow">HS CloudSuite</p>
               <h2>Book a Demo</h2>
               <p>Enter your information and someone will reach out to facilitate an HS CloudSuite demo.</p>
+              <div class="demo-info">
+                <h3>Built for Environmental Health</h3>
+                <p>HSCloud Suite is the definitive leader in EH data management. From permitting of any type, to inspections, complaints, analytics, and much more, over 1,000 agencies have chosen HSCloud Suite as their system of record.</p>
+              </div>
             </div>
             <form id="demoForm" class="demo-form">
               <label>
@@ -256,6 +260,10 @@
               <label>
                 Phone
                 <input id="demoPhone" name="phone" type="tel" autocomplete="tel">
+              </label>
+              <label>
+                State
+                <input id="demoState" name="state" type="text" autocomplete="address-level1" maxlength="40">
               </label>
               <label class="wide-field">
                 What would you like to see?
@@ -369,8 +377,8 @@
       </section>
     </div>
 
-    <script src="data-bundle.js?v=20260622-podcast-story"></script>
-    <script src="lead-config.js?v=20260622-podcast-story"></script>
-    <script src="app.js?v=20260622-podcast-story"></script>
+    <script src="data-bundle.js?v=20260622-demo-state"></script>
+    <script src="lead-config.js?v=20260622-demo-state"></script>
+    <script src="app.js?v=20260622-demo-state"></script>
   </body>
 </html>
