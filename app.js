@@ -2569,7 +2569,7 @@ function renderConflictBanner() {
   els.conflictBanner.innerHTML = `
     <div>
       <strong>So much goodness - you have a choice to make</strong>
-      <p>${escapeHtml(session.title)} overlaps with ${escapeHtml(conflicts.map((conflict) => `${conflict.title} (${conflict.time})`).join("; "))}.</p>
+      <p>${escapeHtml(session.title)} on ${escapeHtml(dayLabel(session.date))} (${escapeHtml(session.time)}) overlaps with ${escapeHtml(conflicts.map((conflict) => `${conflict.title} on ${dayLabel(conflict.date)} (${conflict.time})`).join("; "))}.</p>
     </div>
     <div class="conflict-actions">
       <button type="button" data-conflict="cancel">Keep current</button>
