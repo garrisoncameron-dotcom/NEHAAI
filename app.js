@@ -1184,7 +1184,7 @@ function renderInstallButton() {
     els.installAppButton.disabled = true;
     return;
   }
-  els.installAppButton.textContent = state.installPrompt ? "Download" : "Save";
+  els.installAppButton.textContent = "Install App";
   els.installAppButton.disabled = false;
 }
 
