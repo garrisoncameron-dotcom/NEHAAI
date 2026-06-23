@@ -2038,7 +2038,7 @@ function renderPlaces() {
         <button class="rideshare-button" type="button" data-place-rideshare="${state.guide.nearby.indexOf(place)}" aria-expanded="false">Rideshare</button>
       </div>
       <div class="rideshare-options" hidden>
-        <a href="${escapeAttr(uberUrl(place))}" target="_blank" rel="noreferrer">Uber</a>
+        <a href="${escapeAttr(uberUrl(place))}" rel="noreferrer">Uber</a>
         <a href="${escapeAttr(lyftUrl(place))}" target="_blank" rel="noreferrer">Lyft</a>
       </div>
     </article>
@@ -2669,9 +2669,12 @@ function walkingDirectionsUrl(place) {
 }
 
 function uberUrl(place) {
-  const destination = encodeURIComponent(placeMapQuery(place));
-  const nickname = encodeURIComponent(place.name);
-  return `https://m.uber.com/ul/?action=setPickup&pickup=my_location&dropoff[formatted_address]=${destination}&dropoff[nickname]=${nickname}`;
+  const params = new URLSearchParams();
+  params.set("action", "setPickup");
+  params.set("pickup", "my_location");
+  params.set("dropoff[formatted_address]", rideshareDestination(place));
+  params.set("dropoff[nickname]", place.name);
+  return `https://m.uber.com/ul/?${params.toString()}`;
 }
 
 function lyftUrl(place) {
@@ -2680,8 +2683,19 @@ function lyftUrl(place) {
 }
 
 function placeMapQuery(place) {
+  return `${place.name}, ${placeAddress(place)}`.replace(/\s+/g, " ").trim();
+}
+
+function rideshareDestination(place) {
+  return `${place.name}, ${placeAddress(place)}`.replace(/\s+/g, " ").trim();
+}
+
+function placeAddress(place) {
   const address = place.meta.split("—")[0].trim();
-  return `${place.name} ${address} Kansas City MO`.replace(/\s+/g, " ").trim();
+  if (!address || !/\d/.test(address) || /^(inside|hotel lobby|connected)/i.test(address)) {
+    return "Kansas City, MO";
+  }
+  return `${address}, Kansas City, MO`;
 }
 
 function shouldShowWalk(place) {
