@@ -170,6 +170,16 @@ select {
   box-shadow: 0 0 0 2px rgba(53, 176, 237, 0.78);
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mobile-demo-button {
+  display: none;
+}
+
 .brand-lockup strong {
   display: block;
   font-size: 1.02rem;
@@ -2316,6 +2326,26 @@ select {
     font-size: 0.95rem;
   }
 
+  .header-actions {
+    gap: 6px;
+  }
+
+  .mobile-demo-button {
+    min-height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(53, 176, 237, 0.64);
+    border-radius: 8px;
+    color: var(--navy);
+    background: #fff;
+    cursor: pointer;
+    font-size: 0.78rem;
+    font-weight: 900;
+    padding: 0 10px;
+    white-space: nowrap;
+  }
+
   .brand-lockup .install-button {
     min-height: 34px;
     padding: 0 10px;
@@ -2544,6 +2574,24 @@ select {
 }
 
 @media (max-width: 620px) {
+  .brand-main {
+    gap: 8px;
+  }
+
+  .brand-lockup {
+    gap: 8px;
+  }
+
+  .brand-lockup small {
+    display: none;
+  }
+
+  .mobile-demo-button,
+  .brand-lockup .install-button {
+    padding: 0 8px;
+    font-size: 0.72rem;
+  }
+
   .content {
     padding: 18px 12px 34px;
   }

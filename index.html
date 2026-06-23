@@ -8,13 +8,13 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="NEHA Guide">
     <link rel="manifest" href="manifest.webmanifest">
-    <link rel="apple-touch-icon" href="assets/icon-192.png?v=20260622-install-label">
-    <link rel="stylesheet" href="styles.css?v=20260622-install-label">
+    <link rel="apple-touch-icon" href="assets/icon-192.png?v=20260622-mobile-demo-cta">
+    <link rel="stylesheet" href="styles.css?v=20260622-mobile-demo-cta">
   </head>
   <body>
     <div id="leadGate" class="lead-gate" hidden>
       <form id="leadForm" class="lead-card">
-        <img class="lead-logo" src="assets/hs-govtech-logo.png?v=20260622-install-label" alt="HS GovTech logo">
+        <img class="lead-logo" src="assets/hs-govtech-logo.png?v=20260622-mobile-demo-cta" alt="HS GovTech logo">
         <p class="eyebrow">NEHA AEC 2026 Guide</p>
         <h2>Welcome</h2>
         <p class="lead-copy">Your companion for the NEHA conference. I’m here to help you navigate the schedule and venue, find the city's best BBQ, play some EH trivia between sessions and connect with other conference attendees.</p>
@@ -38,13 +38,16 @@
       <aside class="rail" aria-label="Primary navigation">
         <div class="brand-lockup">
           <button class="brand-main brand-home" data-view="my" type="button" aria-label="Open schedule">
-            <img class="brand-logo" src="assets/hs-govtech-logo.png?v=20260622-install-label" alt="HS GovTech logo">
+            <img class="brand-logo" src="assets/hs-govtech-logo.png?v=20260622-mobile-demo-cta" alt="HS GovTech logo">
             <div>
               <strong>HS GovTech</strong>
               <small>NEHA Navigator</small>
             </div>
           </button>
-          <button id="installAppButton" class="install-button" type="button">Install App</button>
+          <div class="header-actions">
+            <button class="mobile-demo-button" data-view="demo" type="button">Book Demo</button>
+            <button id="installAppButton" class="install-button" type="button">Install App</button>
+          </div>
         </div>
         <nav class="nav-list">
           <button class="nav-item active" data-view="my" type="button">MyNEHA</button>
@@ -62,7 +65,6 @@
           <button class="more-menu-item" data-view="kc" type="button">Kansas City</button>
           <button class="more-menu-item" data-view="podcast" type="button">Podcast</button>
           <button class="more-menu-item community-nav" data-view="community" type="button">Community Connect</button>
-          <button class="more-menu-item demo-nav" data-view="demo" type="button">Book Demo</button>
           <button class="more-menu-item drink-nav" data-view="drink" type="button">FREE DRINK</button>
           <button class="more-menu-item" data-view="venue" type="button">Venue</button>
         </div>
@@ -377,8 +379,8 @@
       </section>
     </div>
 
-    <script src="data-bundle.js?v=20260622-install-label"></script>
-    <script src="lead-config.js?v=20260622-install-label"></script>
-    <script src="app.js?v=20260622-install-label"></script>
+    <script src="data-bundle.js?v=20260622-mobile-demo-cta"></script>
+    <script src="lead-config.js?v=20260622-mobile-demo-cta"></script>
+    <script src="app.js?v=20260622-mobile-demo-cta"></script>
   </body>
 </html>

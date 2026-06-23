@@ -385,7 +385,7 @@ loadData().then(([sessions, guide]) => {
   console.error(error);
 });
 
-document.querySelectorAll(".nav-item[data-view], .more-menu-item[data-view], .brand-home[data-view]").forEach((button) => {
+document.querySelectorAll(".nav-item[data-view], .more-menu-item[data-view], .brand-home[data-view], .mobile-demo-button[data-view]").forEach((button) => {
   button.addEventListener("click", () => {
     closeMoreMenu();
     setView(button.dataset.view);
@@ -934,7 +934,7 @@ function setView(view) {
   state.activeView = view;
   document.querySelectorAll(".nav-item[data-view]").forEach((item) => item.classList.toggle("active", item.dataset.view === view));
   document.querySelectorAll(".more-menu-item[data-view]").forEach((item) => item.classList.toggle("active", item.dataset.view === view));
-  els.moreMenuButton.classList.toggle("active", ["kc", "venue", "podcast", "community", "demo", "drink"].includes(view));
+  els.moreMenuButton.classList.toggle("active", ["kc", "venue", "podcast", "community", "drink"].includes(view));
   document.querySelectorAll(".view").forEach((panel) => panel.classList.toggle("active", panel.id === `${view}View`));
   els.title.textContent = viewTitles[view];
   els.search.style.display = view === "my" ? "block" : "none";
