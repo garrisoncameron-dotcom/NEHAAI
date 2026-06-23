@@ -12,6 +12,7 @@ const state = {
   activeView: "my",
   alerts: [],
   alertIndex: Number(localStorage.getItem("nehaAlertIndex") || 0),
+  dismissedAlerts: JSON.parse(sessionStorage.getItem("nehaDismissedAlerts") || "[]"),
   reminders: JSON.parse(localStorage.getItem("nehaSessionReminders") || "{}"),
   scheduleSyncTimer: null,
   scheduleSyncInFlight: false,
@@ -922,6 +923,11 @@ els.moreMenuButton?.addEventListener("click", () => {
 });
 
 els.appAlerts.addEventListener("click", (event) => {
+  const dismiss = event.target.closest("[data-alert-dismiss]");
+  if (dismiss) {
+    dismissAppAlert(dismiss.dataset.alertDismiss);
+    return;
+  }
   const action = event.target.closest("[data-alert-view]");
   if (action) setView(action.dataset.alertView);
 });
@@ -1559,17 +1565,37 @@ function renderAppAlerts() {
   const reminders = state.reminderAlert ? [state.reminderAlert] : [];
   const alerts = state.alerts.length ? state.alerts : fallbackAppAlerts;
   const rotating = alerts.length ? [alerts[state.alertIndex % alerts.length]] : [];
-  const visibleAlerts = [...reminders, ...rotating];
+  const dismissed = new Set(state.dismissedAlerts);
+  const visibleAlerts = [...reminders, ...rotating]
+    .map((alert) => ({ ...alert, id: appAlertId(alert) }))
+    .filter((alert) => !dismissed.has(alert.id));
   els.appAlerts.innerHTML = visibleAlerts.map((alert) => `
-    <article class="app-alert">
+    <article class="app-alert" data-alert-id="${escapeAttr(alert.id)}">
       <span>${escapeHtml(brandCopy(alert.label))}</span>
       <div>
         <strong>${escapeHtml(brandCopy(alert.title))}</strong>
         <p>${escapeHtml(brandCopy(alert.message))}</p>
       </div>
       <button type="button" data-alert-view="${escapeAttr(alert.view)}">${escapeHtml(brandCopy(alert.action))}</button>
+      <button class="alert-dismiss" type="button" data-alert-dismiss="${escapeAttr(alert.id)}" aria-label="Close alert">&times;</button>
     </article>
   `).join("");
+}
+
+function appAlertId(alert) {
+  return [alert.label, alert.title, alert.message, alert.action, alert.view]
+    .map((part) => String(part || "").trim().toLowerCase())
+    .join("|");
+}
+
+function dismissAppAlert(alertId) {
+  if (!alertId) return;
+  if (!state.dismissedAlerts.includes(alertId)) {
+    state.dismissedAlerts.push(alertId);
+    sessionStorage.setItem("nehaDismissedAlerts", JSON.stringify(state.dismissedAlerts));
+  }
+  if (state.reminderAlert && appAlertId(state.reminderAlert) === alertId) state.reminderAlert = null;
+  renderAppAlerts();
 }
 
 function startAlertRotation() {

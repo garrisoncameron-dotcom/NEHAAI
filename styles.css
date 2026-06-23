@@ -327,8 +327,9 @@ figcaption,
 }
 
 .app-alert {
+  position: relative;
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
   gap: 12px;
   align-items: center;
   min-height: 82px;
@@ -360,7 +361,7 @@ figcaption,
   line-height: 1.35;
 }
 
-.app-alert button {
+.app-alert [data-alert-view] {
   min-height: 40px;
   border: 0;
   border-radius: 8px;
@@ -370,6 +371,26 @@ figcaption,
   font-weight: 900;
   padding: 0 12px;
   white-space: nowrap;
+}
+
+.alert-dismiss {
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(4, 0, 72, 0.12);
+  border-radius: 999px;
+  color: var(--dark);
+  background: #fff;
+  cursor: pointer;
+  font-size: 1.25rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.alert-dismiss:hover,
+.alert-dismiss:focus-visible {
+  color: var(--navy);
+  border-color: rgba(234, 83, 83, 0.45);
+  outline: 0;
 }
 
 h1,
@@ -2709,8 +2730,14 @@ select {
     align-items: stretch;
   }
 
-  .app-alert button {
+  .app-alert [data-alert-view] {
     width: 100%;
+  }
+
+  .alert-dismiss {
+    position: absolute;
+    top: 8px;
+    right: 8px;
   }
 
   .prompt-box,
