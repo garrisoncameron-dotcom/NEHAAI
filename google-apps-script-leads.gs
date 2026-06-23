@@ -17,6 +17,8 @@ const PODCAST_CHANNEL_URL = "https://www.youtube.com/@beyonddatamanagement";
 const PODCAST_CACHE_KEY = "podcastEpisodes:v1";
 const OUTBOUND_EMAIL_FROM = "NEHADailyBrief@conferenceguide.ai";
 const OUTBOUND_EMAIL_NAME = "NEHA Daily Brief";
+const HSGT_WEBSITE_URL = "https://hsgovtech.com";
+const HSGT_LOGO_URL = "https://neha.conferenceguide.ai/assets/hs-govtech-logo.png";
 
 function doPost(e) {
   if (!e || !e.postData) return jsonOutput_({ ok: true, authorization: authorizeScriptAccess() });
@@ -1212,9 +1214,23 @@ function sendTriviaScoreEmail_(payload, score, total, hintsUsed) {
     "",
     "HS GovTech"
   ].join("\n");
+  const htmlBody = brandedEmailHtml_({
+    eyebrow: "EH Trivia",
+    title: `${boardName} score: ${score}/${total}`,
+    intro: `Thanks for playing the ${escapeHtml_(boardName)} EH Trivia board at NEHA.`,
+    content: `
+      ${summaryGridHtml_([
+        ["Score", `${score}/${total}`],
+        ["Achievement", achievement],
+        ["Hints used", String(hintsUsed)]
+      ])}
+      ${score === total ? `<div style="margin:18px 0;padding:14px;border-radius:8px;background:#eaf7ef;color:#040048;font-weight:800;">Perfect score. Visit the HS GovTech booth for a special prize.</div>` : ""}
+      <p style="margin:18px 0 0;color:#383748;line-height:1.5;">Open the NEHA guide anytime to play again, check the leaderboard, or book an HS CloudSuite demo.</p>
+    `
+  });
 
   try {
-    sendNehaEmail_(email, `Your ${boardName} EH Trivia score: ${score}/${total}`, body);
+    sendNehaEmail_(email, `Your ${boardName} EH Trivia score: ${score}/${total}`, body, htmlBody);
   } catch (error) {
     console.error(`Trivia score email failed for ${email}: ${error}`);
   }
@@ -1240,9 +1256,18 @@ function sendScheduleEmail_(payload, sessions) {
     "",
     "HS GovTech"
   ].join("\n");
+  const htmlBody = brandedEmailHtml_({
+    eyebrow: "MyNEHA Schedule",
+    title: "Your MyNEHA schedule",
+    intro: `Hi ${escapeHtml_(payload.name || "there")}, here is your current attending schedule.`,
+    content: `
+      ${sessionsTableHtml_(sessions, true)}
+      <p style="margin:18px 0 0;color:#383748;line-height:1.5;">Open the NEHA guide to update your agenda, add notes, ask session questions, or browse all sessions.</p>
+    `
+  });
 
   try {
-    sendNehaEmail_(email, "Your MyNEHA schedule", body);
+    sendNehaEmail_(email, "Your MyNEHA schedule", body, htmlBody);
     return `Sent to ${email}`;
   } catch (error) {
     console.error(`Schedule email failed for ${email}: ${error}`);
@@ -1271,9 +1296,28 @@ function sendSessionNotesEmail_(payload, session, notes, recipientEmail) {
     "",
     "HS GovTech"
   ].filter((line) => line !== "").join("\n");
+  const htmlBody = brandedEmailHtml_({
+    eyebrow: "Session Notes",
+    title: `Your NEHA session notes`,
+    intro: `Here are your private notes from ${escapeHtml_(sessionTitle)}.`,
+    content: `
+      ${summaryGridHtml_([
+        ["Session", sessionTitle],
+        ["Date", session.date || ""],
+        ["Time", session.time || ""],
+        ["Room", session.location || ""],
+        ["CE", session.ce || ""]
+      ].filter((item) => item[1]))}
+      <div style="margin-top:18px;">
+        <div style="font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:#040048;font-weight:900;">Notes</div>
+        <div style="margin-top:8px;padding:14px;border:1px solid #C7D2D8;border-radius:8px;background:#f8fbfc;color:#383748;line-height:1.55;white-space:pre-wrap;">${escapeHtml_(notes)}</div>
+      </div>
+      <p style="margin:18px 0 0;color:#383748;line-height:1.5;">Open the NEHA guide to update your notes, view presentations, ask session questions, or manage your MyNEHA agenda.</p>
+    `
+  });
 
   try {
-    sendNehaEmail_(recipientEmail, `Your NEHA session notes: ${sessionTitle}`, body);
+    sendNehaEmail_(recipientEmail, `Your NEHA session notes: ${sessionTitle}`, body, htmlBody);
     return `Sent to ${recipientEmail}`;
   } catch (error) {
     console.error(`Session notes email failed for ${recipientEmail}: ${error}`);
@@ -1399,9 +1443,18 @@ function sendDailyScheduleEmail_(schedule, sessions, scheduleDate) {
     "",
     "HS GovTech"
   ].join("\n");
+  const htmlBody = brandedEmailHtml_({
+    eyebrow: "Daily Brief",
+    title: `Your NEHA agenda for ${formattedDate}`,
+    intro: `Good morning ${escapeHtml_(schedule.name || "there")}. Here is your MyNEHA agenda for today.`,
+    content: `
+      ${sessionsTableHtml_(sessions, false)}
+      <p style="margin:18px 0 0;color:#383748;line-height:1.5;">Open the NEHA guide to adjust your schedule, view presentations, add notes, or ask session questions.</p>
+    `
+  });
 
   try {
-    sendNehaEmail_(email, `Your NEHA agenda for ${formattedDate}`, body);
+    sendNehaEmail_(email, `Your NEHA agenda for ${formattedDate}`, body, htmlBody);
     return `Sent to ${email}`;
   } catch (error) {
     console.error(`Daily schedule email failed for ${email}: ${error}`);
@@ -1409,14 +1462,99 @@ function sendDailyScheduleEmail_(schedule, sessions, scheduleDate) {
   }
 }
 
-function sendNehaEmail_(to, subject, body) {
+function sendNehaEmail_(to, subject, body, htmlBody) {
   const effectiveEmail = String(Session.getEffectiveUser().getEmail() || Session.getActiveUser().getEmail() || "").toLowerCase();
   const options = {
     name: OUTBOUND_EMAIL_NAME,
     replyTo: OUTBOUND_EMAIL_FROM
   };
+  if (htmlBody) options.htmlBody = htmlBody;
   if (effectiveEmail !== OUTBOUND_EMAIL_FROM.toLowerCase()) options.from = OUTBOUND_EMAIL_FROM;
   GmailApp.sendEmail(to, subject, body, options);
+}
+
+function brandedEmailHtml_({ eyebrow, title, intro, content }) {
+  return `
+    <div style="margin:0;padding:0;background:#f3f7f9;font-family:Arial,Helvetica,sans-serif;color:#383748;">
+      <div style="max-width:720px;margin:0 auto;padding:24px 14px;">
+        <div style="background:#ffffff;border:1px solid #C7D2D8;border-radius:10px;overflow:hidden;">
+          <div style="padding:20px 22px;background:#040048;color:#ffffff;">
+            <img src="${HSGT_LOGO_URL}" alt="HS GovTech" width="58" height="58" style="display:block;width:58px;height:58px;border-radius:8px;background:#ffffff;margin-bottom:12px;">
+            <div style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#35B0ED;font-weight:900;">${escapeHtml_(eyebrow || "NEHA Guide")}</div>
+            <h1 style="margin:6px 0 0;font-size:24px;line-height:1.2;color:#ffffff;">${escapeHtml_(title || "NEHA Guide")}</h1>
+          </div>
+          <div style="padding:22px;">
+            <p style="margin:0 0 18px;color:#383748;line-height:1.55;font-size:15px;">${intro || ""}</p>
+            ${content || ""}
+          </div>
+          ${emailSignatureHtml_()}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function emailSignatureHtml_() {
+  return `
+    <div style="border-top:1px solid #C7D2D8;padding:18px 22px;background:#f8fbfc;">
+      <div style="font-weight:900;color:#040048;">HS GovTech</div>
+      <div style="margin-top:4px;color:#383748;">Environmental health data management, inspections, permitting, analytics, and more.</div>
+      <a href="${HSGT_WEBSITE_URL}" style="display:inline-block;margin-top:10px;color:#040048;font-weight:900;text-decoration:none;">Visit hsgovtech.com</a>
+    </div>
+  `;
+}
+
+function sessionsTableHtml_(sessions, includeDate) {
+  const dateHeader = includeDate ? `<th style="${emailThStyle_()}">Date</th>` : "";
+  const rows = sessions.map((session) => `
+    <tr>
+      ${includeDate ? `<td style="${emailTdStyle_()}">${escapeHtml_(session.date || "")}</td>` : ""}
+      <td style="${emailTdStyle_()}">${escapeHtml_(session.time || "")}</td>
+      <td style="${emailTdStyle_()}"><strong style="color:#040048;">${escapeHtml_(session.title || "Untitled session")}</strong></td>
+      <td style="${emailTdStyle_()}">${escapeHtml_(session.location || "")}</td>
+      <td style="${emailTdStyle_()}">${escapeHtml_(session.ce || "")}</td>
+    </tr>
+  `).join("");
+  return `
+    <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;border:1px solid #C7D2D8;border-radius:8px;overflow:hidden;">
+      <thead>
+        <tr style="background:#040048;color:#ffffff;">
+          ${dateHeader}
+          <th style="${emailThStyle_()}">Time</th>
+          <th style="${emailThStyle_()}">Session</th>
+          <th style="${emailThStyle_()}">Room</th>
+          <th style="${emailThStyle_()}">CE</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+}
+
+function summaryGridHtml_(items) {
+  const cells = items.map(([label, value]) => `
+    <td style="width:${Math.floor(100 / Math.max(items.length, 1))}%;padding:12px;border:1px solid #C7D2D8;background:#f8fbfc;vertical-align:top;">
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#A5A3AF;font-weight:900;">${escapeHtml_(label)}</div>
+      <div style="margin-top:4px;color:#040048;font-weight:900;">${escapeHtml_(value)}</div>
+    </td>
+  `).join("");
+  return `<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;"><tr>${cells}</tr></table>`;
+}
+
+function emailThStyle_() {
+  return "padding:10px;border:1px solid #040048;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:#ffffff;";
+}
+
+function emailTdStyle_() {
+  return "padding:11px;border:1px solid #C7D2D8;text-align:left;vertical-align:top;color:#383748;font-size:14px;line-height:1.35;";
+}
+
+function escapeHtml_(value) {
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }
 
 function parseJsonArray_(value) {
