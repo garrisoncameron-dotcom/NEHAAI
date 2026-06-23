@@ -6,6 +6,8 @@ This repo is the production template for HS GovTech conference guide apps. NEHA 
 
 The public app remains a static website. Non-technical updates are managed through Google Sheets, with Google Apps Script acting as the lightweight backend.
 
+For production, the Apps Script Web App should be owned and deployed by `NEHADailyBrief@conferenceguide.ai`, not a personal Gmail account. That keeps outbound app emails, 6am agenda triggers, podcast refreshes, and future backend operations tied to the conference domain identity.
+
 Recommended early-stage pattern:
 
 1. Clone the repo for each conference.

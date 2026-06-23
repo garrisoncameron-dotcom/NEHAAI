@@ -1,1 +1,1 @@
-window.NEHA_LEAD_ENDPOINT = "https://script.google.com/macros/s/AKfycbzMKGsD7r9oeGz04Qe_yrk_8J980mQdiZXEwRHBdlKG5wFk3Ki-woBVEo5NJ42nx-_y/exec";
+window.NEHA_LEAD_ENDPOINT = "https://script.google.com/macros/s/AKfycbzfiOct307nr_6B85EC_KGbSyYrBAPUKlQj_Rvuy79-Wo22jaQ0EUBcNJTl3J1251M1/exec";
