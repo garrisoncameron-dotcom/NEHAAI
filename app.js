@@ -1616,7 +1616,7 @@ function renderAll() {
 }
 
 function renderAppAlerts() {
-  if (["podcast", "demo"].includes(state.activeView)) {
+  if (["podcast", "demo", "drink"].includes(state.activeView)) {
     els.appAlerts.innerHTML = "";
     return;
   }
