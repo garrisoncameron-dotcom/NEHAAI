@@ -1,4 +1,5 @@
 const TRIVIA_ROUND_STORAGE_PREFIX = "nehaTriviaRound";
+const TRIVIA_ROUND_SIZE = 12;
 
 const state = {
   sessions: [],
@@ -51,6 +52,7 @@ const state = {
     leaderboardLoading: false,
     leaderboardError: "",
     order: [],
+    questionIndexes: [],
     best: Number(localStorage.getItem("nehaTriviaBest") || 0),
     roundId: "",
     startedAt: "",
@@ -347,6 +349,198 @@ const triviaBoards = {
         options: ["90 days", "7 days", "30 days", "1 year"],
         answer: 0,
         explanation: "Shellstock tags are retained for 90 calendar days after the container is emptied."
+      },
+      {
+        section: "2-401.11",
+        category: "Employee Practices",
+        question: "Where should an employee drink be stored during food preparation?",
+        options: ["Where it cannot contaminate food, equipment, utensils, or single-service items", "On the prep table if it has a lid", "Inside a reach-in cooler above ready-to-eat food", "Anywhere if the employee is careful"],
+        answer: 0,
+        explanation: "Employee drinks must be handled and located to prevent contamination of food and food-contact surfaces."
+      },
+      {
+        section: "2-402.11",
+        category: "Employee Practices",
+        question: "What is the main food-safety purpose of hair restraints?",
+        options: ["To keep hair from contacting exposed food and clean equipment", "To identify the manager on duty", "To replace handwashing", "To keep employees warmer in cold rooms"],
+        answer: 0,
+        explanation: "Hair restraints help prevent hair from contacting exposed food, clean equipment, utensils, linens, and unwrapped single-service items."
+      },
+      {
+        section: "2-303.11",
+        category: "Hands",
+        question: "Which jewelry is generally allowed on food employees' hands and arms during food prep?",
+        options: ["A plain ring such as a wedding band", "A watch with a cloth band", "Bracelets with charms", "Any jewelry under gloves"],
+        answer: 0,
+        explanation: "The Food Code generally limits hand and arm jewelry to a plain ring, because jewelry can trap soil and interfere with handwashing."
+      },
+      {
+        section: "2-301.14",
+        category: "Hands",
+        question: "When must a food employee wash hands?",
+        options: ["After handling raw animal food and before working with ready-to-eat food", "Only at the start of the shift", "Only when the manager asks", "Only after using gloves"],
+        answer: 0,
+        explanation: "Handwashing is required at key contamination points, including after handling raw animal food before working with ready-to-eat food."
+      },
+      {
+        section: "5-205.11",
+        category: "Hand Sinks",
+        question: "A handwashing sink in a food prep area should be used for what purpose?",
+        options: ["Handwashing only", "Dumping mop water", "Rinsing lettuce", "Storing sanitizer buckets"],
+        answer: 0,
+        explanation: "Handwashing sinks must be accessible and used for handwashing, not as utility, food prep, or storage sinks."
+      },
+      {
+        section: "3-302.11",
+        category: "Separation",
+        question: "Which storage order best protects ready-to-eat food in a refrigerator?",
+        options: ["Ready-to-eat foods above raw animal foods", "Raw chicken above salad", "Raw ground beef above cooked rice", "Raw shell eggs above uncovered desserts"],
+        answer: 0,
+        explanation: "Ready-to-eat foods should be protected from raw animal food drip and cross-contamination."
+      },
+      {
+        section: "3-201.11",
+        category: "Approved Source",
+        question: "Which receiving finding is a basic approved-source concern?",
+        options: ["Food arrives from an unapproved home kitchen", "A delivery arrives 10 minutes early", "Cases are labeled with a brand name", "The invoice is printed in black ink"],
+        answer: 0,
+        explanation: "Food must be obtained from approved sources that comply with applicable law."
+      },
+      {
+        section: "3-202.11",
+        category: "Receiving",
+        question: "Which receiving condition should trigger concern for refrigerated TCS food?",
+        options: ["It arrives above required cold-holding temperature", "It arrives with an invoice", "It arrives before lunch", "It arrives in a clean truck"],
+        answer: 0,
+        explanation: "Receiving is a control point; TCS foods must arrive at safe temperatures and in sound condition."
+      },
+      {
+        section: "3-501.13",
+        category: "Thawing",
+        question: "Which is an approved way to thaw TCS food?",
+        options: ["Under refrigeration that maintains safe food temperature", "On the counter overnight", "In standing warm water", "On top of the dishwasher"],
+        answer: 0,
+        explanation: "Approved thawing methods include refrigeration, as part of cooking, microwave followed by cooking, or under controlled running water."
+      },
+      {
+        section: "3-403.11",
+        category: "Reheating",
+        question: "Commercially processed TCS food reheated for hot holding should generally reach what temperature?",
+        options: ["135°F", "100°F", "120°F", "Only room temperature"],
+        answer: 0,
+        explanation: "Commercially processed ready-to-eat TCS food reheated for hot holding is generally reheated to 135°F."
+      },
+      {
+        section: "3-403.11",
+        category: "Reheating",
+        question: "Leftover TCS food made in-house and reheated for hot holding should generally reach what temperature?",
+        options: ["165°F for 15 seconds", "135°F for 1 second", "145°F for 4 minutes", "70°F within 2 hours"],
+        answer: 0,
+        explanation: "Food cooked, cooled, and reheated for hot holding is generally reheated to 165°F for 15 seconds."
+      },
+      {
+        section: "3-501.15",
+        category: "Cooling",
+        question: "Which cooling method is generally appropriate for hot TCS food?",
+        options: ["Using shallow pans or smaller portions", "Leaving a deep covered stockpot on the counter", "Putting hot food in a sealed five-gallon bucket", "Cooling only after the facility closes"],
+        answer: 0,
+        explanation: "Cooling methods should speed heat removal, such as shallow pans, smaller portions, ice baths, or rapid cooling equipment."
+      },
+      {
+        section: "3-501.19",
+        category: "Time Control",
+        question: "When using time as a public health control, what must the facility generally have?",
+        options: ["Written procedures and a way to mark or track time", "Only a verbal promise from staff", "No temperature records ever", "A customer-facing sign only"],
+        answer: 0,
+        explanation: "Time as a public health control requires written procedures and tracking so food is served or discarded within allowed time limits."
+      },
+      {
+        section: "3-304.14",
+        category: "Sanitizer",
+        question: "Wet wiping cloths used with sanitizer should generally be stored how between uses?",
+        options: ["In sanitizer solution at proper concentration", "Dry on the prep table", "In a pocket", "In the hand sink"],
+        answer: 0,
+        explanation: "Wet wiping cloths used for food-contact surfaces are stored in sanitizer solution between uses."
+      },
+      {
+        section: "4-302.14",
+        category: "Sanitizer",
+        question: "Why does a facility need sanitizer test strips or a test kit?",
+        options: ["To verify sanitizer concentration", "To check employee schedules", "To measure refrigerator noise", "To replace cleaning"],
+        answer: 0,
+        explanation: "A test kit or device is needed to accurately measure sanitizing solution concentration."
+      },
+      {
+        section: "4-703.11",
+        category: "Warewashing",
+        question: "After washing and rinsing food-contact equipment, what final step is required before air drying?",
+        options: ["Sanitizing", "Polishing with a used towel", "Storing wet", "Spraying with fragrance"],
+        answer: 0,
+        explanation: "Food-contact surfaces must be washed, rinsed, sanitized, and air dried."
+      },
+      {
+        section: "4-204.112",
+        category: "Equipment",
+        question: "A hot water dish machine should have what available for the inspector/operator to verify sanitizing?",
+        options: ["A way to measure the required final rinse temperature", "A scented detergent label only", "A customer comment card", "A freezer thermometer"],
+        answer: 0,
+        explanation: "Warewashing equipment needs monitoring tools so operators can verify sanitizing temperatures or chemical concentration."
+      },
+      {
+        section: "4-204.112",
+        category: "Thermometers",
+        question: "A cold holding unit should have what to help verify food safety control?",
+        options: ["An accurate temperature measuring device", "A decorative dial with no numbers", "A calendar on the door", "Only a light switch"],
+        answer: 0,
+        explanation: "Cold holding equipment needs accurate temperature measurement so the operator can verify it is maintaining safe temperatures."
+      },
+      {
+        section: "3-304.12",
+        category: "Utensils",
+        question: "In-use utensils for TCS food may generally be stored how?",
+        options: ["In the food with the handle above the food surface", "In sanitizer with the food end submerged", "On the floor next to the prep table", "In a handwashing sink"],
+        answer: 0,
+        explanation: "In-use utensil storage must protect food and food-contact surfaces from contamination."
+      },
+      {
+        section: "3-502.12",
+        category: "Special Processes",
+        question: "Reduced oxygen packaging of TCS food usually raises what kind of inspection concern?",
+        options: ["Specialized process controls or a variance/HACCP requirement", "No concern if the bag is clear", "Only menu font size", "Only customer seating capacity"],
+        answer: 0,
+        explanation: "Reduced oxygen packaging can create serious hazards and commonly requires strict controls, HACCP documentation, or a variance."
+      },
+      {
+        section: "3-402.11",
+        category: "Parasites",
+        question: "Fish intended for raw or undercooked service generally requires attention to what control?",
+        options: ["Parasite destruction/freezing documentation unless exempt", "Only garnish temperature", "Only plate color", "No supplier information"],
+        answer: 0,
+        explanation: "Fish served raw or undercooked often requires parasite destruction controls or supplier documentation unless an exemption applies."
+      },
+      {
+        section: "2-501.11",
+        category: "Cleanup",
+        question: "A facility should have procedures for responding to what event?",
+        options: ["Vomiting or diarrheal events", "A customer asking for extra napkins", "A menu price change", "A delivery truck parking nearby"],
+        answer: 0,
+        explanation: "The Food Code requires procedures for employees to follow when responding to vomiting or diarrheal events."
+      },
+      {
+        section: "2-102.11",
+        category: "Person in Charge",
+        question: "What should the person in charge be able to demonstrate during an inspection?",
+        options: ["Knowledge of foodborne disease prevention and Code duties", "Only where menus are printed", "Only how to decorate plates", "Only the Wi-Fi password"],
+        answer: 0,
+        explanation: "The person in charge must demonstrate knowledge and active managerial control over food safety practices."
+      },
+      {
+        section: "8-103.11",
+        category: "Variances",
+        question: "Which operation commonly requires a variance or special approval?",
+        options: ["Curing food or using additives to preserve food", "Washing whole apples", "Serving bottled soda", "Using a commercial refrigerator"],
+        answer: 0,
+        explanation: "Specialized processes such as curing, smoking for preservation, or certain reduced oxygen packaging may require a variance."
       }
     ],
     achievements: [
@@ -461,6 +655,198 @@ const triviaBoards = {
         options: ["A self-closing, self-latching gate is not working", "A lounge chair is the wrong shade of blue", "The snack bar menu is too short", "The music is not aquatic themed"],
         answer: 0,
         explanation: "CDC drowning-prevention guidance emphasizes barriers, supervision, CPR readiness, and other controls that keep swimmers from entering unsafe situations."
+      },
+      {
+        section: "MAHC Operations",
+        category: "Closure",
+        question: "Which finding is most likely to require immediate action or closure?",
+        options: ["No measurable disinfectant residual", "A faded umbrella logo", "A towel folded unevenly", "A snack machine out of chips"],
+        answer: 0,
+        explanation: "No measurable disinfectant residual is a direct illness-prevention hazard because germs are not being controlled."
+      },
+      {
+        section: "MAHC Operations",
+        category: "Water Clarity",
+        question: "Why is pool water clarity a critical inspection item?",
+        options: ["Poor clarity can prevent staff from seeing a swimmer in distress or a body on the bottom", "It only affects how photos look", "It replaces the need for disinfectant", "It only matters in competition pools"],
+        answer: 0,
+        explanation: "Water clarity is both a safety and operations issue; poor visibility can hide drowning hazards and signal filtration or chemistry problems."
+      },
+      {
+        section: "MAHC Operations",
+        category: "Records",
+        question: "What should pool operators generally document during routine operation?",
+        options: ["Disinfectant, pH, maintenance, and incident checks", "Only the weather forecast", "Only how many towels were used", "Only social media comments"],
+        answer: 0,
+        explanation: "Operational records help show that chemistry and equipment are being monitored between inspections."
+      },
+      {
+        section: "CDC Healthy Pools",
+        category: "Testing",
+        question: "CDC public guidance says disinfectant and pH should be checked at least how often during routine use?",
+        options: ["At least twice per day, and more often during heavy use", "Only once per month", "Only before opening day", "Only after a complaint"],
+        answer: 0,
+        explanation: "CDC advises checking disinfectant and pH at least twice per day and more often when the pool is heavily used."
+      },
+      {
+        section: "MAHC Operations",
+        category: "Cyanuric Acid",
+        question: "What is the main inspection concern with too much cyanuric acid in an outdoor pool?",
+        options: ["It can reduce chlorine effectiveness against germs", "It makes bromine required", "It makes pH testing unnecessary", "It eliminates the need for filtration"],
+        answer: 0,
+        explanation: "Cyanuric acid can protect chlorine from sunlight, but excessive levels can slow chlorine's ability to inactivate pathogens."
+      },
+      {
+        section: "MAHC Operations",
+        category: "Combined Chlorine",
+        question: "High combined chlorine is most often a sign of what problem?",
+        options: ["Chlorine reacting with swimmer waste and contaminants", "Too much fresh air outdoors", "A missing pool vacuum hose", "Too much lifeguard training"],
+        answer: 0,
+        explanation: "Combined chlorine forms when disinfectant reacts with nitrogen-containing waste such as sweat, urine, and other contaminants."
+      },
+      {
+        section: "CDC Healthy Pools",
+        category: "Bather Hygiene",
+        question: "Why should swimmers stay out of the water when they have diarrhea?",
+        options: ["They can introduce germs that make other swimmers sick", "It protects the deck paint", "It keeps the water warmer", "It prevents sunscreen from washing off"],
+        answer: 0,
+        explanation: "CDC emphasizes keeping diarrhea out of recreational water because one incident can release large numbers of germs."
+      },
+      {
+        section: "CDC Healthy Pools",
+        category: "Bather Hygiene",
+        question: "Where should diapers be changed at an aquatic facility?",
+        options: ["Away from poolside in a proper changing area", "On the pool deck", "In shallow water", "On a food-service counter"],
+        answer: 0,
+        explanation: "CDC recommends changing diapers away from poolside to keep germs from getting into the water."
+      },
+      {
+        section: "MAHC Safety",
+        category: "Emergency Equipment",
+        question: "Which item belongs in a public pool safety inspection?",
+        options: ["Required lifesaving equipment is present and accessible", "Lobby plants are watered", "Pool furniture is color-coordinated", "Music volume is trendy"],
+        answer: 0,
+        explanation: "Inspectors commonly verify lifesaving equipment is available, accessible, and in usable condition."
+      },
+      {
+        section: "MAHC Safety",
+        category: "Emergency Response",
+        question: "Why is an emergency phone or communication system important at a pool?",
+        options: ["Staff need a reliable way to summon emergency help", "It replaces CPR training", "It measures chlorine", "It controls the pool heater"],
+        answer: 0,
+        explanation: "Emergency communication supports rapid response when injury, drowning, or other urgent events occur."
+      },
+      {
+        section: "MAHC Safety",
+        category: "Barriers",
+        question: "What is the public health purpose of a self-closing, self-latching pool gate?",
+        options: ["To reduce unsupervised access, especially by children", "To keep leaves off the deck", "To improve water chemistry", "To make entry lines shorter"],
+        answer: 0,
+        explanation: "Barriers and working gates help prevent unsupervised access and drowning risk."
+      },
+      {
+        section: "MAHC Safety",
+        category: "Entrapment",
+        question: "Which drain-related issue is a serious safety concern?",
+        options: ["Missing, broken, or noncompliant drain cover", "A drain cover that matches the tile", "A drain listed on a maintenance log", "A drain visible in clear water"],
+        answer: 0,
+        explanation: "Drain covers and suction outlet protections are critical to reducing entrapment hazards."
+      },
+      {
+        section: "MAHC Operations",
+        category: "Filtration",
+        question: "A sudden abnormal filter pressure reading may suggest what?",
+        options: ["A filtration or flow problem needing operator attention", "The pool is automatically safer", "The pH test is no longer needed", "The pool has too many deck chairs"],
+        answer: 0,
+        explanation: "Filter pressure and flow indicators can reveal filtration problems that affect water quality."
+      },
+      {
+        section: "MAHC Operations",
+        category: "Recirculation",
+        question: "Why does recirculation matter for pool health?",
+        options: ["It moves water through filtration and treatment systems", "It changes the pool's address", "It replaces operator checks", "It only affects decorative fountains"],
+        answer: 0,
+        explanation: "Recirculation helps water reach filters and treatment equipment so disinfectant and filtration can work throughout the venue."
+      },
+      {
+        section: "MAHC Operations",
+        category: "Chemical Feed",
+        question: "What is a key concern with chemical feed equipment?",
+        options: ["It should operate as designed and not feed chemicals unsafely", "It should be hidden from all staff", "It should be adjusted only by swimmers", "It should never be labeled"],
+        answer: 0,
+        explanation: "Chemical feeders must be maintained and operated to deliver disinfectant and pH control safely and consistently."
+      },
+      {
+        section: "CDC Chemical Safety",
+        category: "Chemicals",
+        question: "What is unsafe when handling pool chemicals?",
+        options: ["Mixing incompatible chemicals together", "Reading the product label", "Wearing goggles when directed", "Keeping chemicals secured"],
+        answer: 0,
+        explanation: "CDC chemical safety materials warn that mishandling or mixing incompatible pool chemicals can cause serious injury."
+      },
+      {
+        section: "CDC Chemical Safety",
+        category: "Chemicals",
+        question: "Which storage setup is most concerning?",
+        options: ["Acid and chlorine products stored so leaks or spills can mix", "Chemicals kept secure and dry", "Products stored in labeled containers", "Safety equipment available nearby"],
+        answer: 0,
+        explanation: "Chemical storage should prevent incompatible products from mixing and creating hazardous reactions."
+      },
+      {
+        section: "CDC Hot Tubs",
+        category: "Hot Tubs",
+        question: "CDC recommends which group avoid hot tubs?",
+        options: ["Children younger than 5 years old", "Adults who can swim", "People wearing sandals on deck", "People who showered first"],
+        answer: 0,
+        explanation: "CDC hot tub guidance says children less than 5 years old should not use hot tubs."
+      },
+      {
+        section: "MAHC Hot Tubs",
+        category: "Hot Tubs",
+        question: "Which hot tub water temperature is a common maximum limit inspectors look for?",
+        options: ["104°F", "120°F", "140°F", "No maximum is needed"],
+        answer: 0,
+        explanation: "Public spa and hot tub codes commonly use 104°F as a maximum to reduce overheating and injury risk."
+      },
+      {
+        section: "CDC Hot Tubs",
+        category: "Hot Tubs",
+        question: "Why can poorly maintained hot tubs be associated with respiratory illness?",
+        options: ["Users can breathe contaminated aerosols or mist", "Hot tubs do not create aerosols", "Warm water makes all germs harmless", "Respiratory illness only comes from food"],
+        answer: 0,
+        explanation: "CDC notes hot tub users can be exposed by breathing mist or aerosols from contaminated water."
+      },
+      {
+        section: "CDC Contamination",
+        category: "Incident Response",
+        question: "What should happen first when a fecal incident is identified in pool water?",
+        options: ["Clear swimmers from the affected water and start the response procedure", "Ignore it if the water is clear", "Add air freshener", "Let swimmers decide"],
+        answer: 0,
+        explanation: "Contamination response begins with removing bathers from affected water and following the appropriate disinfection procedure."
+      },
+      {
+        section: "CDC Contamination",
+        category: "Incident Response",
+        question: "Why are diarrheal incidents handled more aggressively than formed-stool incidents?",
+        options: ["Diarrhea has higher Crypto concern and can spread widely in water", "Diarrhea is easier to see", "Formed stool is always sterile", "No disinfectant is needed for diarrhea"],
+        answer: 0,
+        explanation: "CDC treats diarrheal incidents as high risk because they may involve Cryptosporidium and other germs that spread through recreational water."
+      },
+      {
+        section: "MAHC Splash Pads",
+        category: "Splash Pads",
+        question: "Why are splash pads included in aquatic health guidance?",
+        options: ["Their water can spread germs if treatment and operations fail", "They never recirculate water", "They are only decorative sidewalks", "They cannot be used by children"],
+        answer: 0,
+        explanation: "CDC and MAHC materials include splash pads because treated recreational water venues can spread illness when controls fail."
+      },
+      {
+        section: "MAHC Safety",
+        category: "Signage",
+        question: "Which rule is most important to communicate to swimmers?",
+        options: ["Do not swim when sick with diarrhea", "Only swim in matching towels", "No talking near the pool", "Use only blue goggles"],
+        answer: 0,
+        explanation: "Clear bather rules help prevent contamination, especially keeping diarrheal illness out of the water."
       }
     ],
     achievements: [
@@ -2427,7 +2813,11 @@ function activeTriviaBoard() {
 }
 
 function activeTriviaQuestions() {
-  return activeTriviaBoard().questions;
+  const board = activeTriviaBoard();
+  if (!state.trivia.questionIndexes?.length) return board.questions.slice(0, Math.min(TRIVIA_ROUND_SIZE, board.questions.length));
+  return state.trivia.questionIndexes
+    .map((index) => board.questions[index])
+    .filter(Boolean);
 }
 
 function activeTriviaAchievements() {
@@ -2484,10 +2874,20 @@ function resetTriviaOrder() {
   state.trivia.order = activeTriviaQuestions().map((question) => shuffleArray(question.options.map((_, index) => index)));
 }
 
+function resetTriviaQuestionSet() {
+  const board = activeTriviaBoard();
+  const indexes = board.questions.map((_, index) => index);
+  state.trivia.questionIndexes = shuffleArray(indexes).slice(0, Math.min(TRIVIA_ROUND_SIZE, indexes.length));
+  resetTriviaOrder();
+}
+
 function loadStoredTriviaRound(boardId = localStorage.getItem("nehaTriviaBoard") || "food") {
   try {
     const stored = JSON.parse(localStorage.getItem(triviaRoundStorageKey(boardId)) || (boardId === "food" ? localStorage.getItem("nehaTriviaRound") : "null") || "null");
     if (!stored || typeof stored !== "object") return {};
+    const legacyQuestionIndexes = boardId === "food" && stored.roundId && !Array.isArray(stored.questionIndexes)
+      ? Array.from({ length: TRIVIA_ROUND_SIZE }, (_, index) => index)
+      : [];
     return {
       index: Number(stored.index) || 0,
       score: Number(stored.score) || 0,
@@ -2500,6 +2900,7 @@ function loadStoredTriviaRound(boardId = localStorage.getItem("nehaTriviaBoard")
       submitted: Boolean(stored.submitted),
       submitting: false,
       order: Array.isArray(stored.order) ? stored.order : [],
+      questionIndexes: Array.isArray(stored.questionIndexes) ? stored.questionIndexes.filter((index) => Number.isInteger(index)) : legacyQuestionIndexes,
       roundId: stored.roundId || "",
       startedAt: stored.startedAt || "",
       completedAt: stored.completedAt || ""
@@ -2526,6 +2927,7 @@ function freshTriviaState() {
     leaderboardLoading: false,
     leaderboardError: "",
     order: [],
+    questionIndexes: [],
     best: triviaBestScore(),
     roundId: "",
     startedAt: "",
@@ -2538,11 +2940,18 @@ function ensureTriviaRound() {
     state.trivia.roundId = `round-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
     state.trivia.startedAt = new Date().toISOString();
   }
+  if (!state.trivia.questionIndexes?.length) resetTriviaQuestionSet();
   if (!state.trivia.order.length) resetTriviaOrder();
   persistTriviaRound();
 }
 
 function normalizeTriviaRound() {
+  const board = activeTriviaBoard();
+  const expectedCount = Math.min(TRIVIA_ROUND_SIZE, board.questions.length);
+  const invalidDraw = !state.trivia.questionIndexes?.length
+    || state.trivia.questionIndexes.length !== expectedCount
+    || state.trivia.questionIndexes.some((index) => !Number.isInteger(index) || index < 0 || index >= board.questions.length);
+  if (invalidDraw) resetTriviaQuestionSet();
   const total = activeTriviaQuestions().length;
   state.trivia.index = Math.min(Math.max(Number(state.trivia.index) || 0, 0), total - 1);
   state.trivia.score = Math.min(Math.max(Number(state.trivia.score) || 0, 0), total);
@@ -2567,7 +2976,8 @@ function persistTriviaRound() {
     hintsRemaining: state.trivia.hintsRemaining,
     hidden: state.trivia.hidden,
     submitted: state.trivia.submitted,
-    order: state.trivia.order
+    order: state.trivia.order,
+    questionIndexes: state.trivia.questionIndexes
   };
   localStorage.setItem(triviaRoundStorageKey(), JSON.stringify(round));
 }
@@ -2642,10 +3052,11 @@ function restartTrivia() {
   state.trivia.submitting = false;
   state.trivia.leaderboardError = "";
   state.trivia.best = triviaBestScore();
+  state.trivia.questionIndexes = [];
   state.trivia.roundId = `round-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
   state.trivia.startedAt = new Date().toISOString();
   state.trivia.completedAt = "";
-  resetTriviaOrder();
+  resetTriviaQuestionSet();
   persistTriviaRound();
   renderTrivia();
 }

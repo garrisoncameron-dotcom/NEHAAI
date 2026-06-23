@@ -1,16 +1,16 @@
-const CACHE_NAME = "neha-guide-v20260622-trivia-backend";
+const CACHE_NAME = "neha-guide-v20260622-trivia-randomizer";
 const APP_ASSETS = [
   "./",
   "index.html",
-  "styles.css?v=20260622-trivia-backend",
-  "app.js?v=20260622-trivia-backend",
-  "data-bundle.js?v=20260622-trivia-backend",
-  "lead-config.js?v=20260622-trivia-backend",
+  "styles.css?v=20260622-trivia-randomizer",
+  "app.js?v=20260622-trivia-randomizer",
+  "data-bundle.js?v=20260622-trivia-randomizer",
+  "lead-config.js?v=20260622-trivia-randomizer",
   "manifest.webmanifest",
-  "assets/hs-govtech-logo.png?v=20260622-trivia-backend",
+  "assets/hs-govtech-logo.png?v=20260622-trivia-randomizer",
   "assets/bdmp-icon-color.png",
-  "assets/icon-192.png?v=20260622-trivia-backend",
-  "assets/icon-512.png?v=20260622-trivia-backend",
+  "assets/icon-192.png?v=20260622-trivia-randomizer",
+  "assets/icon-512.png?v=20260622-trivia-randomizer",
   "assets/sheraton-exhibit-hall-map.png",
   "assets/sheraton-meeting-overview.png",
   "assets/sheraton-floor-overview.png"
