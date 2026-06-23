@@ -21,6 +21,7 @@ const state = {
   reminderAlert: null,
   myDay: "",
   myMode: "day",
+  myMetricView: "",
   placeFilter: "all",
   venueMap: "exhibit",
   communityCategory: "all",
@@ -981,12 +982,14 @@ els.search.addEventListener("input", (event) => {
     state.query = value.toLowerCase();
   }
   state.myMode = value ? "all" : state.myMode;
+  if (value) state.myMetricView = "";
   renderMySchedule();
 });
 
 els.category.addEventListener("change", (event) => {
   state.category = event.target.value;
   state.myMode = "all";
+  state.myMetricView = "";
   renderSchedule();
   renderMySchedule();
 });
@@ -994,12 +997,14 @@ els.category.addEventListener("change", (event) => {
 els.status.addEventListener("change", (event) => {
   state.status = event.target.value;
   state.myMode = "all";
+  state.myMetricView = "";
   renderSchedule();
   renderMySchedule();
 });
 
 document.querySelector("#clearSaved").addEventListener("click", () => {
   state.saved = { watch: {}, attend: {} };
+  state.myMetricView = "";
   persistSaved();
   renderAll();
 });
@@ -1042,6 +1047,15 @@ els.myModeTabs.addEventListener("click", (event) => {
   const button = event.target.closest("[data-my-mode]");
   if (!button) return;
   state.myMode = button.dataset.myMode;
+  state.myMetricView = "";
+  renderMySchedule();
+});
+
+els.mySummary.addEventListener("click", (event) => {
+  const metric = event.target.closest("[data-my-metric]");
+  if (!metric) return;
+  state.myMode = "day";
+  state.myMetricView = metric.dataset.myMetric;
   renderMySchedule();
 });
 
@@ -2042,13 +2056,18 @@ function renderMySchedule() {
   els.mySavedPanel.hidden = state.myMode !== "day";
   els.myBrowsePanel.hidden = state.myMode !== "all";
   renderMyDayTabs(days, combined);
-  renderDailyGrid(combined);
+  if (state.myMetricView) {
+    renderMyMetricDetail(attending, watching);
+  } else {
+    els.myDayTabs.hidden = false;
+    renderDailyGrid(combined);
+  }
   renderConflictBanner();
   els.mySummary.innerHTML = metricHtml([
-    [attending.length, "marked attending"],
-    [watching.length, "watch-list only"],
-    [sumCe(attending), "planned CE credits"],
-    [conflictCount(attending), "time conflicts"]
+    [attending.length, "marked attending", "attending"],
+    [watching.length, "watch-list only", "watching"],
+    [sumCe(attending), "planned CE credits", "ce"],
+    [conflictCount(attending), "time conflicts", "conflicts"]
   ]);
   renderSchedule();
   renderMyAiPanel();
@@ -2253,6 +2272,7 @@ function renderMyDayTabs(days, savedSessions) {
   els.myDayTabs.querySelectorAll("button").forEach((button) => {
     button.addEventListener("click", () => {
       state.myDay = button.dataset.day;
+      state.myMetricView = "";
       renderMySchedule();
     });
   });
@@ -2269,12 +2289,59 @@ function renderDailyGrid(savedSessions) {
     `;
     return;
   }
-  els.myDailyGrid.innerHTML = dayItems.map((session) => {
+  els.myDailyGrid.innerHTML = renderSavedSessionBlocks(dayItems);
+}
+
+function renderMyMetricDetail(attending, watching) {
+  const configs = {
+    attending: {
+      title: "Marked attending",
+      note: "Sessions you have committed to attend.",
+      sessions: attending.sort(sortSessions),
+      empty: "No sessions marked attending yet."
+    },
+    watching: {
+      title: "Watch-list only",
+      note: "Sessions you are interested in but have not marked attending.",
+      sessions: watching.sort(sortSessions),
+      empty: "No watch-list-only sessions yet."
+    },
+    ce: {
+      title: "Planned CE credits",
+      note: "Attending sessions in your plan that include CE credit.",
+      sessions: attending.filter((session) => Number(session.ce) > 0).sort(sortSessions),
+      empty: "No CE-credit sessions marked attending yet."
+    },
+    conflicts: {
+      title: "Time conflicts",
+      note: "Attending sessions that overlap with another attending session.",
+      sessions: conflictSessions(attending),
+      empty: "No attending session conflicts right now."
+    }
+  };
+  const config = configs[state.myMetricView] || configs.attending;
+  els.myDayTabs.hidden = true;
+  els.myDailyGrid.innerHTML = `
+    <section class="metric-detail-panel">
+      <div>
+        <span>${escapeHtml(String(config.sessions.length))} item${config.sessions.length === 1 ? "" : "s"}</span>
+        <h3>${escapeHtml(config.title)}</h3>
+        <p>${escapeHtml(config.note)}</p>
+      </div>
+      <button type="button" data-metric-detail-back>Back to My Day</button>
+    </section>
+    ${config.sessions.length ? renderSavedSessionBlocks(config.sessions, { showDate: true }) : `<div class="empty-state">${escapeHtml(config.empty)}</div>`}
+  `;
+}
+
+function renderSavedSessionBlocks(sessions, options = {}) {
+  return sessions.map((session) => {
     const kind = state.saved.attend[session.id] ? "Attending" : "Watching";
     const conflictClass = findConflicts(session).length ? " has-conflict" : "";
+    const timeLabel = options.showDate ? `${dayLabel(session.date)}<br>${shortTime(session.start)} - ${shortTime(session.end)}` : `${shortTime(session.start)} - ${shortTime(session.end)}`;
     return `
       <article class="day-block${conflictClass}">
-        <div class="day-time">${shortTime(session.start)} - ${shortTime(session.end)}</div>
+        <div class="day-time">${timeLabel}</div>
         <div>
           <strong>${escapeHtml(session.title)}</strong>
           <span>${escapeHtml(session.location)} - ${escapeHtml(kind)}</span>
@@ -2297,6 +2364,11 @@ els.myDailyGrid.addEventListener("click", (event) => {
   }
   if (event.target.closest("[data-open-all-sessions]")) {
     state.myMode = "all";
+    state.myMetricView = "";
+    renderMySchedule();
+  }
+  if (event.target.closest("[data-metric-detail-back]")) {
+    state.myMetricView = "";
     renderMySchedule();
   }
 });
@@ -3537,11 +3609,32 @@ function conflictCount(sessions) {
   const byDay = Map.groupBy ? Map.groupBy(sessions, (session) => session.date) : groupByDate(sessions);
   byDay.forEach((items) => {
     const sorted = [...items].sort(sortSessions);
-    for (let i = 1; i < sorted.length; i += 1) {
-      if (sorted[i].start < sorted[i - 1].end) conflicts += 1;
+    for (let i = 0; i < sorted.length; i += 1) {
+      for (let j = i + 1; j < sorted.length; j += 1) {
+        if (sorted[j].start >= sorted[i].end) break;
+        if (sorted[i].start < sorted[j].end) conflicts += 1;
+      }
     }
   });
   return conflicts;
+}
+
+function conflictSessions(sessions) {
+  const ids = new Set();
+  const byDay = Map.groupBy ? Map.groupBy(sessions, (session) => session.date) : groupByDate(sessions);
+  byDay.forEach((items) => {
+    const sorted = [...items].sort(sortSessions);
+    for (let i = 0; i < sorted.length; i += 1) {
+      for (let j = i + 1; j < sorted.length; j += 1) {
+        if (sorted[j].start >= sorted[i].end) break;
+        if (sorted[i].start < sorted[j].end) {
+          ids.add(sorted[i].id);
+          ids.add(sorted[j].id);
+        }
+      }
+    }
+  });
+  return sessions.filter((session) => ids.has(session.id)).sort(sortSessions);
 }
 
 function groupByDate(items) {
@@ -3559,7 +3652,11 @@ function matchesQuery(session, query) {
 }
 
 function metricHtml(items) {
-  return items.map(([value, label]) => `<div class="metric"><strong>${escapeHtml(String(value))}</strong><span>${escapeHtml(label)}</span></div>`).join("");
+  return items.map(([value, label, action]) => {
+    const content = `<strong>${escapeHtml(String(value))}</strong><span>${escapeHtml(label)}</span>`;
+    if (!action) return `<div class="metric">${content}</div>`;
+    return `<button class="metric metric-button${state.myMetricView === action ? " active" : ""}" type="button" data-my-metric="${escapeAttr(action)}" aria-label="View ${escapeAttr(label)}">${content}</button>`;
+  }).join("");
 }
 
 function sumCe(sessions) {

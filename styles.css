@@ -562,6 +562,25 @@ select {
   border-radius: 8px;
 }
 
+.metric-button {
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+
+.metric-button:hover,
+.metric-button:focus-visible {
+  border-color: var(--cyan);
+  box-shadow: 0 10px 22px rgba(4, 0, 72, 0.08);
+  outline: 0;
+}
+
+.metric-button.active {
+  border-color: var(--red);
+  background: var(--red-wash);
+}
+
 .metric strong {
   display: block;
   font-size: 1.35rem;
@@ -586,6 +605,45 @@ select {
   display: grid;
   gap: 8px;
   margin-bottom: 18px;
+}
+
+.metric-detail-panel {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px;
+  border: 1px solid rgba(53, 176, 237, 0.28);
+  border-radius: 8px;
+  background: var(--sky-wash);
+}
+
+.metric-detail-panel span {
+  color: var(--cyan);
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.metric-detail-panel h3 {
+  color: var(--navy);
+}
+
+.metric-detail-panel p {
+  margin-top: 3px;
+  color: var(--muted);
+}
+
+.metric-detail-panel button {
+  min-height: 40px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--navy);
+  background: #fff;
+  cursor: pointer;
+  padding: 0 12px;
+  font-weight: 900;
+  white-space: nowrap;
 }
 
 .day-block {
@@ -2660,6 +2718,15 @@ select {
   .metrics-row {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px;
+  }
+
+  .metric-detail-panel {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .metric-detail-panel button {
+    width: 100%;
   }
 
   .metric {
