@@ -1410,11 +1410,13 @@ function sendDailyScheduleEmail_(schedule, sessions, scheduleDate) {
 }
 
 function sendNehaEmail_(to, subject, body) {
-  GmailApp.sendEmail(to, subject, body, {
-    from: OUTBOUND_EMAIL_FROM,
+  const effectiveEmail = String(Session.getEffectiveUser().getEmail() || Session.getActiveUser().getEmail() || "").toLowerCase();
+  const options = {
     name: OUTBOUND_EMAIL_NAME,
     replyTo: OUTBOUND_EMAIL_FROM
-  });
+  };
+  if (effectiveEmail !== OUTBOUND_EMAIL_FROM.toLowerCase()) options.from = OUTBOUND_EMAIL_FROM;
+  GmailApp.sendEmail(to, subject, body, options);
 }
 
 function parseJsonArray_(value) {
