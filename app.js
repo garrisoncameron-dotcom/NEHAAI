@@ -167,7 +167,7 @@ const viewTitles = {
   schedule: "MyNEHA Dashboard",
   my: "MyNEHA Dashboard",
   ai: "AI Session Guide",
-  kc: "Things To Do In Kansas City",
+  kc: "Fun in KC",
   venue: "Venue Navigator",
   podcast: "Beyond Data Management",
   community: "Community Connect",
@@ -401,7 +401,7 @@ document.querySelectorAll(".nav-item[data-view], .more-menu-item[data-view], .br
   });
 });
 
-els.moreMenuButton.addEventListener("click", () => {
+els.moreMenuButton?.addEventListener("click", () => {
   const expanded = els.moreMenuButton.getAttribute("aria-expanded") === "true";
   toggleMoreMenu(!expanded);
 });
@@ -954,7 +954,7 @@ function setView(view) {
   state.activeView = view;
   document.querySelectorAll(".nav-item[data-view]").forEach((item) => item.classList.toggle("active", item.dataset.view === view));
   document.querySelectorAll(".more-menu-item[data-view]").forEach((item) => item.classList.toggle("active", item.dataset.view === view));
-  els.moreMenuButton.classList.toggle("active", ["kc", "venue", "podcast", "community", "drink"].includes(view));
+  els.moreMenuButton?.classList.toggle("active", false);
   document.querySelectorAll(".view").forEach((panel) => panel.classList.toggle("active", panel.id === `${view}View`));
   els.title.textContent = viewTitles[view];
   els.searchWrap.style.display = view === "my" ? "grid" : "none";
@@ -968,6 +968,7 @@ function setView(view) {
 }
 
 function toggleMoreMenu(open) {
+  if (!els.moreMenu || !els.moreMenuButton) return;
   els.moreMenu.hidden = !open;
   els.moreMenuButton.setAttribute("aria-expanded", String(open));
 }
@@ -1862,7 +1863,7 @@ function answerHeading(intent) {
 
 function answerSummary(profile, docs, places) {
   if (profile.intent === "kc" && places.length) {
-    return `I found several nearby options that fit that ask. Start with ${places.slice(0, 2).map((place) => place.name).join(" and ")}, then use the Kansas City tab for links, walk times, and more choices.`;
+    return `I found several nearby options that fit that ask. Start with ${places.slice(0, 2).map((place) => place.name).join(" and ")}, then use Fun in KC for links, walk times, and more choices.`;
   }
   if (profile.intent === "ce") {
     return "For CE planning, favor sessions with listed CE credit and keep your attended sessions organized in MyNEHASchedule. The uploaded CE guide notes that NEHA credentials rely on continuing education contact hours during each credential cycle.";

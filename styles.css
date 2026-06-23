@@ -245,16 +245,8 @@ figcaption {
   border-color: rgba(234, 83, 83, 0.42);
 }
 
-.mobile-only {
+.venue-nav[hidden] {
   display: none;
-}
-
-.more-menu {
-  display: none;
-}
-
-.more-item {
-  display: block;
 }
 
 .rail-summary {
@@ -2426,7 +2418,7 @@ select {
     bottom: 0;
     z-index: 30;
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     gap: 0;
     padding: 7px 8px calc(7px + env(safe-area-inset-bottom));
     background: #ffffff;
@@ -2444,57 +2436,13 @@ select {
     border-radius: 8px;
     color: var(--grey-dark);
     background: transparent;
-    font-size: 0.66rem;
+    font-size: 0.62rem;
     font-weight: 800;
+    line-height: 1.05;
   }
 
-  .mobile-only {
-    display: grid;
-  }
-
-  .more-item {
+  .demo-nav {
     display: none;
-  }
-
-  .more-menu {
-    position: fixed;
-    left: 12px;
-    right: 12px;
-    bottom: calc(78px + env(safe-area-inset-bottom));
-    z-index: 35;
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px;
-    padding: 10px;
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    background: #fff;
-    box-shadow: 0 -14px 34px rgba(4, 0, 72, 0.2);
-  }
-
-  .more-menu[hidden] {
-    display: none;
-  }
-
-  .more-menu-item {
-    min-height: 52px;
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    color: var(--navy);
-    background: #f8fbfd;
-    cursor: pointer;
-    font-weight: 900;
-  }
-
-  .more-menu-item.active {
-    border-color: var(--cyan);
-    background: var(--sky-wash);
-  }
-
-  .more-menu-item.drink-nav {
-    color: #765713;
-    border-color: var(--gold);
-    background: var(--gold-wash);
   }
 
   .nav-item.active,
