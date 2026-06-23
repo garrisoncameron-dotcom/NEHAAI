@@ -385,7 +385,7 @@ loadData().then(([sessions, guide]) => {
   console.error(error);
 });
 
-document.querySelectorAll(".nav-item[data-view], .more-menu-item[data-view]").forEach((button) => {
+document.querySelectorAll(".nav-item[data-view], .more-menu-item[data-view], .brand-home[data-view]").forEach((button) => {
   button.addEventListener("click", () => {
     closeMoreMenu();
     setView(button.dataset.view);

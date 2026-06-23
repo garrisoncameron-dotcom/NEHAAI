@@ -156,6 +156,20 @@ select {
   gap: 13px;
 }
 
+.brand-home {
+  border: 0;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+}
+
+.brand-home:hover .brand-logo,
+.brand-home:focus-visible .brand-logo {
+  box-shadow: 0 0 0 2px rgba(53, 176, 237, 0.78);
+}
+
 .brand-lockup strong {
   display: block;
   font-size: 1.02rem;
