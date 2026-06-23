@@ -163,6 +163,10 @@ const els = {
   sessionNotesInput: document.querySelector("#sessionNotesInput"),
   sessionNotesSave: document.querySelector("#sessionNotesSave"),
   sessionNotesStatus: document.querySelector("#sessionNotesStatus"),
+  sessionNotesEmailForm: document.querySelector("#sessionNotesEmailForm"),
+  sessionNotesEmail: document.querySelector("#sessionNotesEmail"),
+  sessionNotesEmailSend: document.querySelector("#sessionNotesEmailSend"),
+  sessionNotesEmailStatus: document.querySelector("#sessionNotesEmailStatus"),
   sessionQuestionsPanel: document.querySelector("#sessionQuestionsPanel"),
   sessionQuestionForm: document.querySelector("#sessionQuestionForm"),
   sessionQuestionTitle: document.querySelector("#sessionQuestionTitle"),
@@ -1079,14 +1083,53 @@ els.sessionToolTabs.addEventListener("click", (event) => {
 els.sessionNotesSave.addEventListener("click", () => {
   const id = state.sessionTool.sessionId;
   if (!id) return;
-  state.sessionNotes[id] = els.sessionNotesInput.value.trim();
-  localStorage.setItem("nehaSessionNotes", JSON.stringify(state.sessionNotes));
+  saveSessionNotes(id);
   els.sessionNotesStatus.textContent = "Saved on this phone.";
   window.setTimeout(() => {
     els.sessionNotesStatus.textContent = "";
   }, 1800);
   renderSessions(els.sessionList, filteredSessions());
   renderMySchedule();
+});
+
+els.sessionNotesEmailForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const session = sessionById(state.sessionTool.sessionId);
+  if (!session) return;
+  const notes = saveSessionNotes(session.id);
+  const recipientEmail = els.sessionNotesEmail.value.trim();
+  if (!notes) {
+    els.sessionNotesEmailStatus.textContent = "Add notes before sending.";
+    return;
+  }
+  if (!recipientEmail || !els.sessionNotesEmail.checkValidity()) {
+    els.sessionNotesEmailForm.reportValidity();
+    return;
+  }
+  els.sessionNotesEmailSend.disabled = true;
+  els.sessionNotesEmailSend.textContent = "Sending...";
+  els.sessionNotesEmailStatus.textContent = "";
+  try {
+    await submitAppPayload({
+      type: "emailSessionNotes",
+      name: state.lead?.name || "",
+      agency: state.lead?.agency || "",
+      email: state.lead?.email || "",
+      recipientEmail,
+      session: sessionEmailPayload(session),
+      notes,
+      requestedAt: new Date().toISOString(),
+      source: "NEHA AEC 2026 Guide",
+      page: location.href
+    });
+    els.sessionNotesEmailStatus.textContent = "Notes email requested.";
+  } catch (error) {
+    els.sessionNotesEmailStatus.textContent = "Could not send yet. Please try again.";
+    console.error(error);
+  } finally {
+    els.sessionNotesEmailSend.disabled = false;
+    els.sessionNotesEmailSend.textContent = "Email My Notes";
+  }
 });
 
 els.sessionQuestionForm.addEventListener("submit", async (event) => {
@@ -2108,6 +2151,18 @@ function renderSessionNotes(sessionId) {
   if (document.activeElement !== els.sessionNotesInput) {
     els.sessionNotesInput.value = state.sessionNotes[sessionId] || "";
   }
+  if (!els.sessionNotesEmail.value) els.sessionNotesEmail.value = state.lead?.email || "";
+}
+
+function saveSessionNotes(sessionId) {
+  const notes = els.sessionNotesInput.value.trim();
+  if (notes) {
+    state.sessionNotes[sessionId] = notes;
+  } else {
+    delete state.sessionNotes[sessionId];
+  }
+  localStorage.setItem("nehaSessionNotes", JSON.stringify(state.sessionNotes));
+  return notes;
 }
 
 function renderSessionQuestions(sessionId) {

@@ -10,6 +10,7 @@ const SESSION_QUESTIONS_SHEET_NAME = "Session Questions";
 const SESSION_REPLIES_SHEET_NAME = "Session Question Replies";
 const SESSION_PRESENTATIONS_SHEET_NAME = "Session Presentations";
 const SCHEDULE_EMAIL_SHEET_NAME = "Schedule Email Requests";
+const SESSION_NOTES_EMAIL_SHEET_NAME = "Session Notes Email Requests";
 const SCHEDULE_SYNC_SHEET_NAME = "Synced Schedules";
 const DAILY_SCHEDULE_EMAIL_LOG_SHEET_NAME = "Daily Schedule Email Log";
 
@@ -25,6 +26,7 @@ function doPost(e) {
   if (payload.type === "sessionQuestion") return recordSessionQuestion_(payload);
   if (payload.type === "sessionQuestionReply") return recordSessionQuestionReply_(payload);
   if (payload.type === "emailSchedule") return recordScheduleEmail_(payload);
+  if (payload.type === "emailSessionNotes") return recordSessionNotesEmail_(payload);
   if (payload.type === "scheduleSync") return recordScheduleSync_(payload);
   return recordLead_(payload);
 }
@@ -306,6 +308,34 @@ function recordScheduleEmail_(payload) {
     mailStatus
   ]);
   sheet.autoResizeColumns(1, 10);
+  return jsonOutput_({ ok: true, mailStatus });
+}
+
+function recordSessionNotesEmail_(payload) {
+  const sheet = getSessionNotesEmailSheet_();
+  const session = payload.session && typeof payload.session === "object" ? payload.session : {};
+  const notes = String(payload.notes || "").trim();
+  const recipientEmail = String(payload.recipientEmail || payload.email || "").trim();
+  const mailStatus = sendSessionNotesEmail_(payload, session, notes, recipientEmail);
+
+  sheet.appendRow([
+    new Date(),
+    payload.name || "",
+    payload.agency || "",
+    payload.email || "",
+    recipientEmail,
+    session.id || "",
+    session.title || "",
+    session.date || "",
+    session.time || "",
+    session.location || "",
+    notes,
+    payload.requestedAt || "",
+    payload.source || "",
+    payload.page || "",
+    mailStatus
+  ]);
+  sheet.autoResizeColumns(1, 15);
   return jsonOutput_({ ok: true, mailStatus });
 }
 
@@ -595,6 +625,36 @@ function getScheduleEmailSheet_() {
   } else if (sheet.getLastColumn() < 10) {
     sheet.getRange(1, 10).setValue("Mail Status");
     sheet.autoResizeColumns(1, 10);
+  }
+
+  return sheet;
+}
+
+function getSessionNotesEmailSheet_() {
+  const spreadsheet = SpreadsheetApp.openById(SHEET_ID);
+  let sheet = spreadsheet.getSheetByName(SESSION_NOTES_EMAIL_SHEET_NAME);
+  if (!sheet) sheet = spreadsheet.insertSheet(SESSION_NOTES_EMAIL_SHEET_NAME);
+
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow([
+      "Received At",
+      "Name",
+      "Agency",
+      "User Email",
+      "Recipient Email",
+      "Session ID",
+      "Session Title",
+      "Session Date",
+      "Session Time",
+      "Session Location",
+      "Notes",
+      "Requested At",
+      "Source",
+      "Page",
+      "Mail Status"
+    ]);
+    sheet.setFrozenRows(1);
+    sheet.autoResizeColumns(1, 15);
   }
 
   return sheet;
@@ -1125,6 +1185,41 @@ function sendScheduleEmail_(payload, sessions) {
     return `Sent to ${email}`;
   } catch (error) {
     console.error(`Schedule email failed for ${email}: ${error}`);
+    return `Failed: ${String(error).slice(0, 220)}`;
+  }
+}
+
+function sendSessionNotesEmail_(payload, session, notes, recipientEmail) {
+  if (!recipientEmail) return "No recipient email";
+  if (!notes) return "No notes";
+  const sessionTitle = session.title || "NEHA session";
+  const body = [
+    `Hi ${payload.name || "there"},`,
+    "",
+    "Here are your private session notes from the NEHA guide.",
+    "",
+    sessionTitle,
+    `${session.date || ""} ${session.time || ""}`.trim(),
+    session.location ? `Location: ${session.location}` : "",
+    session.ce ? `CE: ${session.ce}` : "",
+    "",
+    "Notes:",
+    notes,
+    "",
+    "Open the NEHA guide to update your notes, view presentations, ask session questions, or manage your MyNEHA agenda.",
+    "",
+    "HS GovTech"
+  ].filter((line) => line !== "").join("\n");
+
+  try {
+    MailApp.sendEmail({
+      to: recipientEmail,
+      subject: `Your NEHA session notes: ${sessionTitle}`,
+      body
+    });
+    return `Sent to ${recipientEmail}`;
+  } catch (error) {
+    console.error(`Session notes email failed for ${recipientEmail}: ${error}`);
     return `Failed: ${String(error).slice(0, 220)}`;
   }
 }
