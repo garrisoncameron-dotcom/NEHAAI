@@ -2101,7 +2101,8 @@ function renderCommunity() {
   els.communityPosts.innerHTML = posts.map((post) => {
     const category = communityCategoryLabel(post.category);
     const email = post.shareEmail && post.email ? `<a href="mailto:${escapeAttr(post.email)}?subject=${encodeURIComponent(`NEHA Community Connect: ${post.title}`)}">Email ${escapeHtml(post.displayName || "attendee")}</a>` : "";
-    const image = safeImageUrl(post.imageUrl) ? `<img src="${escapeAttr(post.imageUrl)}" alt="${escapeAttr(post.title)}">` : "";
+    const imageUrl = safeImageUrl(post.imageUrl);
+    const image = imageUrl ? `<img src="${escapeAttr(imageUrl)}" alt="${escapeAttr(post.title)}" loading="lazy">` : "";
     const replies = Array.isArray(post.replies) ? post.replies.slice(0, 20) : [];
     const replyLabel = `${replies.length} ${replies.length === 1 ? "reply" : "replies"}`;
     return `
@@ -2830,10 +2831,21 @@ function relativePostTime(value) {
 function safeImageUrl(value) {
   try {
     const url = new URL(value);
-    return url.protocol === "https:" ? url.href : "";
+    if (url.protocol !== "https:") return "";
+    const driveId = driveFileIdFromUrl(url);
+    if (driveId) return `https://drive.google.com/thumbnail?id=${encodeURIComponent(driveId)}&sz=w1200`;
+    return url.href;
   } catch (error) {
     return "";
   }
+}
+
+function driveFileIdFromUrl(url) {
+  if (url.hostname !== "drive.google.com") return "";
+  const queryId = url.searchParams.get("id");
+  if (queryId) return queryId;
+  const match = url.pathname.match(/\/file\/d\/([^/]+)/);
+  return match ? match[1] : "";
 }
 
 function escapeHtml(value) {

@@ -1016,11 +1016,15 @@ function saveCommunityImage_(payload, postId) {
     const blob = Utilities.newBlob(bytes, mimeType, `${postId}-${safeName}.${extension}`);
     const file = DriveApp.createFile(blob);
     file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-    return { url: `https://drive.google.com/uc?export=view&id=${file.getId()}`, error: "" };
+    return { url: driveImageUrl_(file.getId()), error: "" };
   } catch (error) {
     console.error(`Community image upload failed for ${postId}: ${error}`);
     return { url: "", error: String(error).slice(0, 220) };
   }
+}
+
+function driveImageUrl_(fileId) {
+  return `https://drive.google.com/thumbnail?id=${encodeURIComponent(fileId)}&sz=w1200`;
 }
 
 function authorizeScriptAccess() {
