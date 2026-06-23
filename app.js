@@ -1655,7 +1655,7 @@ function renderDailyGrid(savedSessions) {
   }
   els.myDailyGrid.innerHTML = dayItems.map((session) => {
     const kind = state.saved.attend[session.id] ? "Attending" : "Watching";
-    const conflictClass = findConflicts(session).length && kind === "Attending" ? " has-conflict" : "";
+    const conflictClass = findConflicts(session).length ? " has-conflict" : "";
     return `
       <article class="day-block${conflictClass}">
         <div class="day-time">${shortTime(session.start)} - ${shortTime(session.end)}</div>
@@ -2524,12 +2524,13 @@ function toggleSaved(kind, id) {
     delete state.reminders[id];
     localStorage.setItem("nehaSessionReminders", JSON.stringify(state.reminders));
   } else {
-    if (kind === "attend") {
+    if (kind === "attend" || kind === "watch") {
       const session = sessionById(id);
       const conflicts = findConflicts(session);
       if (conflicts.length) {
-        state.pendingConflict = { id, conflicts: conflicts.map((conflict) => conflict.id) };
-        renderConflictBanner();
+        state.pendingConflict = { kind, id, conflicts: conflicts.map((conflict) => conflict.id) };
+        state.myMode = "day";
+        state.myDay = session.date;
         setView("my");
         return;
       }
@@ -2564,7 +2565,14 @@ function renderConflictBanner() {
     return;
   }
   const session = sessionById(state.pendingConflict.id);
+  const kind = state.pendingConflict.kind || "attend";
   const conflicts = state.pendingConflict.conflicts.map(sessionById).filter(Boolean);
+  if (!session || !conflicts.length) {
+    state.pendingConflict = null;
+    els.conflictBanner.hidden = true;
+    els.conflictBanner.innerHTML = "";
+    return;
+  }
   els.conflictBanner.hidden = false;
   els.conflictBanner.innerHTML = `
     <div>
@@ -2581,8 +2589,8 @@ function renderConflictBanner() {
     renderConflictBanner();
   });
   els.conflictBanner.querySelector('[data-conflict="add"]').addEventListener("click", () => {
-    state.saved.attend[session.id] = true;
-    state.saved.watch[session.id] = true;
+    state.saved[kind][session.id] = true;
+    if (kind === "attend") state.saved.watch[session.id] = true;
     state.pendingConflict = null;
     persistSaved();
     renderAll();
@@ -2591,7 +2599,7 @@ function renderConflictBanner() {
 
 function findConflicts(session) {
   if (!session) return [];
-  return getAttending().filter((attending) => attending.id !== session.id && attending.date === session.date && session.start < attending.end && session.end > attending.start);
+  return getSavedSessions().filter((saved) => saved.id !== session.id && saved.date === session.date && session.start < saved.end && session.end > saved.start);
 }
 
 function sessionById(id) {
@@ -2684,6 +2692,11 @@ function getAttending() {
 
 function getWatching() {
   return state.sessions.filter((session) => state.saved.watch[session.id]);
+}
+
+function getSavedSessions() {
+  return [...getAttending(), ...getWatching()]
+    .filter((session, index, list) => list.findIndex((item) => item.id === session.id) === index);
 }
 
 function conflictCount(sessions) {
