@@ -2630,13 +2630,16 @@ function renderPlaces() {
   els.kcSourceLinks.innerHTML = state.guide.kcSources.map((source) => `<a href="${escapeAttr(source.url)}" target="_blank" rel="noreferrer">${escapeHtml(source.name)}</a>`).join("");
   els.placeGrid.innerHTML = places.map((place) => `
     <article class="place-card" data-place-card="${state.guide.nearby.indexOf(place)}">
-      <span class="place-category">${escapeHtml(place.category)}</span>
+      <div class="place-badges">
+        <span class="place-category">${escapeHtml(place.category)}</span>
+        ${shouldSuggestRideshare(place) ? `<span class="rideshare-suggestion">May want rideshare</span>` : ""}
+      </div>
       <a class="place-title" href="${escapeAttr(placeUrl(place))}" target="_blank" rel="noreferrer">${escapeHtml(place.name)}</a>
       <small>${escapeHtml(place.meta)}</small>
       <p>${escapeHtml(place.description)}</p>
       <div class="place-actions">
         <a href="${escapeAttr(placeUrl(place))}" target="_blank" rel="noreferrer">View map</a>
-        ${shouldShowWalk(place) ? `<button type="button" data-place-directions="${state.guide.nearby.indexOf(place)}">Walk</button>` : ""}
+        <button type="button" data-place-directions="${state.guide.nearby.indexOf(place)}">Walk</button>
         <button class="rideshare-button" type="button" data-place-rideshare="${state.guide.nearby.indexOf(place)}" aria-expanded="false">Rideshare</button>
       </div>
       <div class="rideshare-options" hidden>
@@ -3461,14 +3464,14 @@ const rideshareCoordinateMap = {
   [normalizeAddress("1830 Walnut St, Kansas City, MO")]: { lat: "39.0912818", lng: "-94.5826133" }
 };
 
-function shouldShowWalk(place) {
+function shouldSuggestRideshare(place) {
   const text = `${place.category} ${place.meta} ${place.description}`.toLowerCase();
-  if (/rideshare|late-night|jazz lounge|cocktail lounge|supper club|nightlife|spirits/.test(text)) return false;
+  if (/rideshare|late-night|jazz lounge|cocktail lounge|supper club|nightlife|spirits/.test(text)) return true;
   const miles = text.match(/(\d+(?:\.\d+)?)\s*miles?/);
-  if (miles && Number(miles[1]) > 1) return false;
+  if (miles && Number(miles[1]) > 1) return true;
   const minutes = text.match(/(\d+)[-\s]*minute walk/);
-  if (minutes && Number(minutes[1]) > 20) return false;
-  return true;
+  if (minutes && Number(minutes[1]) > 20) return true;
+  return false;
 }
 
 function toggleRideshareOptions(index) {

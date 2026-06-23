@@ -1227,6 +1227,13 @@ select {
   text-decoration: none;
 }
 
+.place-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  align-items: center;
+}
+
 .place-category {
   width: fit-content;
   border-radius: 999px;
@@ -1235,6 +1242,16 @@ select {
   color: var(--navy);
   font-size: 0.78rem;
   font-weight: 700;
+}
+
+.rideshare-suggestion {
+  width: fit-content;
+  border-radius: 999px;
+  padding: 5px 9px;
+  background: rgba(230, 189, 86, 0.22);
+  color: #72530b;
+  font-size: 0.76rem;
+  font-weight: 900;
 }
 
 .venue-layout {
