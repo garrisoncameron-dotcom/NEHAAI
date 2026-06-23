@@ -138,6 +138,9 @@ const els = {
   attendCount: document.querySelector("#attendCount"),
   sessionToolModal: document.querySelector("#sessionToolModal"),
   sessionToolClose: document.querySelector("#sessionToolClose"),
+  installHelpModal: document.querySelector("#installHelpModal"),
+  installHelpClose: document.querySelector("#installHelpClose"),
+  installHelpSteps: document.querySelector("#installHelpSteps"),
   sessionToolTitle: document.querySelector("#sessionToolTitle"),
   sessionToolMeta: document.querySelector("#sessionToolMeta"),
   sessionToolTabs: document.querySelector("#sessionToolTabs"),
@@ -838,7 +841,12 @@ els.installAppButton.addEventListener("click", async () => {
     renderInstallButton();
     return;
   }
-  alert("To save this guide on iPhone: tap Share, then Add to Home Screen. On Android: open the browser menu and choose Install app or Add to Home screen.");
+  openInstallHelp();
+});
+
+els.installHelpClose.addEventListener("click", closeInstallHelp);
+els.installHelpModal.addEventListener("click", (event) => {
+  if (event.target === els.installHelpModal) closeInstallHelp();
 });
 
 window.addEventListener("beforeinstallprompt", (event) => {
@@ -1463,6 +1471,42 @@ function openSessionTool(sessionId, tab = "notes") {
 function closeSessionTool() {
   els.sessionToolModal.hidden = true;
   document.body.classList.remove("modal-open");
+}
+
+function openInstallHelp() {
+  const ua = navigator.userAgent || "";
+  const isApple = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  const isAndroid = /Android/i.test(ua);
+  const steps = isApple
+    ? [
+        ["1", "Tap the Share icon in Safari."],
+        ["2", "Choose Add to Home Screen."],
+        ["3", "Tap Add. The guide will open like an app."]
+      ]
+    : isAndroid
+      ? [
+          ["1", "Open the browser menu."],
+          ["2", "Choose Install app or Add to Home screen."],
+          ["3", "Tap Install. The guide will open like an app."]
+        ]
+      : [
+          ["1", "Open your browser menu."],
+          ["2", "Choose Install app, Add to Home screen, or Create shortcut."],
+          ["3", "Pin it for fast conference access."]
+        ];
+  els.installHelpSteps.innerHTML = steps.map(([number, text]) => `
+    <article>
+      <span>${number}</span>
+      <p>${escapeHtml(text)}</p>
+    </article>
+  `).join("");
+  els.installHelpModal.hidden = false;
+  document.body.classList.add("modal-open");
+}
+
+function closeInstallHelp() {
+  els.installHelpModal.hidden = true;
+  if (els.sessionToolModal.hidden) document.body.classList.remove("modal-open");
 }
 
 function renderSessionTool() {

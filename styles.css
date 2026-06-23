@@ -767,7 +767,8 @@ select {
   display: none;
 }
 
-.session-tool-modal {
+.session-tool-modal,
+.install-help-modal {
   width: min(760px, 100%);
   max-height: min(760px, calc(100vh - 36px));
   overflow: auto;
@@ -795,6 +796,53 @@ select {
 .session-tool-modal h2 {
   color: var(--navy);
   font-size: clamp(1.35rem, 4vw, 2rem);
+}
+
+.install-help-modal {
+  width: min(420px, 100%);
+}
+
+.install-help-modal .eyebrow {
+  color: var(--cyan);
+}
+
+.install-help-modal h2 {
+  color: var(--navy);
+  font-size: clamp(1.45rem, 5vw, 2.1rem);
+  line-height: 1.05;
+}
+
+.install-steps {
+  display: grid;
+  gap: 10px;
+}
+
+.install-steps article {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid rgba(53, 176, 237, 0.28);
+  border-radius: 8px;
+  background: var(--sky-wash);
+}
+
+.install-steps span {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  color: #fff;
+  background: var(--red);
+  font-weight: 900;
+}
+
+.install-steps p {
+  color: var(--navy);
+  font-weight: 900;
+  line-height: 1.35;
 }
 
 .session-tool-panel {
@@ -2574,6 +2622,15 @@ select {
 }
 
 @media (max-width: 620px) {
+  .install-help-backdrop {
+    align-items: end;
+    padding: 12px;
+  }
+
+  .install-help-modal {
+    width: 100%;
+  }
+
   .brand-main {
     gap: 8px;
   }
