@@ -1,4 +1,4 @@
-const CACHE_NAME = "neha-guide-v20260623-domain-backend";
+const CACHE_NAME = "neha-guide-v20260624-navigator-icon";
 const APP_ASSETS = [
   "./",
   "index.html",
@@ -9,8 +9,8 @@ const APP_ASSETS = [
   "manifest.webmanifest",
   "assets/hs-govtech-logo.png?v=20260623-domain-backend",
   "assets/bdmp-icon-color.png",
-  "assets/icon-192.png?v=20260623-domain-backend",
-  "assets/icon-512.png?v=20260623-domain-backend",
+  "assets/hsgt-navigator-icon-192.png?v=20260624-navigator-icon",
+  "assets/hsgt-navigator-icon-512.png?v=20260624-navigator-icon",
   "assets/sheraton-exhibit-hall-map.png",
   "assets/sheraton-meeting-overview.png",
   "assets/sheraton-floor-overview.png"
