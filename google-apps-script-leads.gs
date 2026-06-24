@@ -18,7 +18,9 @@ const PODCAST_CACHE_KEY = "podcastEpisodes:v1";
 const OUTBOUND_EMAIL_FROM = "NEHADailyBrief@conferenceguide.ai";
 const OUTBOUND_EMAIL_NAME = "NEHA Daily Brief";
 const HSGT_WEBSITE_URL = "https://hsgovtech.com";
+const HSGT_DEMO_URL = "https://hsgovtech.com";
 const HSGT_LOGO_URL = "https://raw.githubusercontent.com/garrisoncameron-dotcom/NEHAAI/main/assets/hs-govtech-email-logo.png";
+const HSGT_MARK_URL = "https://raw.githubusercontent.com/garrisoncameron-dotcom/NEHAAI/main/assets/hs-govtech-logo.png";
 
 function doPost(e) {
   if (!e || !e.postData) return jsonOutput_({ ok: true, authorization: authorizeScriptAccess() });
@@ -1258,7 +1260,7 @@ function sendScheduleEmail_(payload, sessions) {
   ].join("\n");
   const htmlBody = brandedEmailHtml_({
     eyebrow: "MyNEHA Schedule",
-    title: "Your MyNEHA schedule",
+    title: "Your MyNEHA Schedule",
     intro: `Hi ${escapeHtml_(payload.name || "there")}, here is your current attending schedule.`,
     content: `
       ${sessionsTableHtml_(sessions, true)}
@@ -1475,20 +1477,26 @@ function sendNehaEmail_(to, subject, body, htmlBody) {
 
 function brandedEmailHtml_({ eyebrow, title, intro, content }) {
   return `
-    <div style="margin:0;padding:0;background:#f3f7f9;font-family:Arial,Helvetica,sans-serif;color:#383748;">
-      <div style="max-width:720px;margin:0 auto;padding:24px 14px;">
-        <div style="background:#ffffff;border:1px solid #C7D2D8;border-radius:10px;overflow:hidden;">
-          <div style="padding:20px 22px;background:#040048;color:#ffffff;">
-            <img src="${HSGT_LOGO_URL}" alt="HS GovTech" width="246" height="53" style="display:block;width:246px;max-width:100%;height:auto;border-radius:6px;background:#ffffff;margin-bottom:14px;">
-            <div style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#35B0ED;font-weight:900;">${escapeHtml_(eyebrow || "NEHA Guide")}</div>
-            <h1 style="margin:6px 0 0;font-size:24px;line-height:1.2;color:#ffffff;">${escapeHtml_(title || "NEHA Guide")}</h1>
-          </div>
-          <div style="padding:22px;">
-            <p style="margin:0 0 18px;color:#383748;line-height:1.55;font-size:15px;">${intro || ""}</p>
-            ${content || ""}
-          </div>
-          ${emailSignatureHtml_()}
+    <div style="margin:0;padding:0;background:#ffffff;font-family:Arial,Helvetica,sans-serif;color:#1f1f2b;">
+      <div style="max-width:760px;margin:0 auto;padding:38px 28px 42px;background:#ffffff;">
+        <div style="padding:0 0 28px;">
+          <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;">
+            <tr>
+              <td style="vertical-align:top;padding:0;">
+                <div style="font-size:23px;line-height:1.25;color:#35B0ED;font-weight:400;">${escapeHtml_(eyebrow || "NEHA Guide")}</div>
+              </td>
+              <td style="vertical-align:top;text-align:right;padding:0 0 0 16px;width:78px;">
+                <img src="${HSGT_MARK_URL}" alt="HS GovTech" width="58" height="58" style="display:inline-block;width:58px;height:58px;border:0;outline:none;text-decoration:none;">
+              </td>
+            </tr>
+          </table>
+          <h1 style="margin:24px 0 0;font-size:42px;line-height:1.08;color:#040048;font-weight:900;letter-spacing:0;">${escapeHtml_(title || "NEHA Guide")}</h1>
         </div>
+        <div style="padding:0;">
+          <p style="margin:0 0 28px;color:#1f1f2b;line-height:1.55;font-size:17px;">${intro || ""}</p>
+          ${content || ""}
+        </div>
+        ${emailSignatureHtml_()}
       </div>
     </div>
   `;
@@ -1496,34 +1504,39 @@ function brandedEmailHtml_({ eyebrow, title, intro, content }) {
 
 function emailSignatureHtml_() {
   return `
-    <div style="border-top:1px solid #C7D2D8;padding:18px 22px;background:#f8fbfc;">
-      <div style="font-weight:900;color:#040048;">HS GovTech</div>
-      <div style="margin-top:4px;color:#383748;">Environmental health data management, inspections, permitting, analytics, and more.</div>
-      <a href="${HSGT_WEBSITE_URL}" style="display:inline-block;margin-top:10px;color:#040048;font-weight:900;text-decoration:none;">Visit hsgovtech.com</a>
+    <div style="margin-top:44px;padding-top:6px;">
+      <img src="${HSGT_LOGO_URL}" alt="HS GovTech" width="180" height="39" style="display:block;width:180px;max-width:70%;height:auto;border:0;outline:none;text-decoration:none;margin:0 0 24px;">
+      <p style="margin:0 0 22px;color:#1f1f2b;font-size:17px;line-height:1.5;max-width:650px;">Regulatory work protects real people, which is why your mission deserves software built with empathy, trust, and respect. Our unified platform is purpose-built to empower your agency with the modern, reliable, and flexible tools needed to match the immense importance of your work.</p>
+      <a href="${HSGT_DEMO_URL}" style="display:inline-block;background:#EA5353;color:#ffffff;text-decoration:none;border-radius:999px;padding:10px 18px;font-size:15px;line-height:1.2;font-weight:700;margin:0 0 26px;">Book a Demo of HS CloudSuite Today!</a>
+      <p style="margin:0;color:#1f1f2b;font-size:16px;line-height:1.45;">Your long-term partner in protecting public health<br>
+        <a href="mailto:sales@hscloudsuite.com" style="color:#040048;text-decoration:none;">sales@hscloudsuite.com</a><br>
+        <a href="${HSGT_WEBSITE_URL}" style="color:#040048;text-decoration:none;">hsgovtech.com</a>
+      </p>
     </div>
   `;
 }
 
 function sessionsTableHtml_(sessions, includeDate) {
-  const dateHeader = includeDate ? `<th style="${emailThStyle_()}">Date</th>` : "";
+  const dateHeader = includeDate ? `<th style="${emailThStyle_()}border-top-left-radius:10px;">Date</th>` : "";
+  const firstHeaderRadius = includeDate ? "" : "border-top-left-radius:10px;";
   const rows = sessions.map((session) => `
     <tr>
       ${includeDate ? `<td style="${emailTdStyle_()}">${escapeHtml_(session.date || "")}</td>` : ""}
       <td style="${emailTdStyle_()}">${escapeHtml_(session.time || "")}</td>
-      <td style="${emailTdStyle_()}"><strong style="color:#040048;">${escapeHtml_(session.title || "Untitled session")}</strong></td>
+      <td style="${emailTdStyle_()}"><strong style="color:#040048;font-weight:900;">${escapeHtml_(session.title || "Untitled session")}</strong></td>
       <td style="${emailTdStyle_()}">${escapeHtml_(session.location || "")}</td>
       <td style="${emailTdStyle_()}">${escapeHtml_(session.ce || "")}</td>
     </tr>
   `).join("");
   return `
-    <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;border:1px solid #C7D2D8;border-radius:8px;overflow:hidden;">
+    <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:separate;border-spacing:0;border:1px solid #C7D2D8;border-radius:10px;overflow:hidden;margin:0 0 8px;">
       <thead>
-        <tr style="background:#040048;color:#ffffff;">
+        <tr style="background:#35B0ED;color:#ffffff;">
           ${dateHeader}
-          <th style="${emailThStyle_()}">Time</th>
+          <th style="${emailThStyle_()}${firstHeaderRadius}">Time</th>
           <th style="${emailThStyle_()}">Session</th>
           <th style="${emailThStyle_()}">Room</th>
-          <th style="${emailThStyle_()}">CE</th>
+          <th style="${emailThStyle_()}border-top-right-radius:10px;">CE</th>
         </tr>
       </thead>
       <tbody>${rows}</tbody>
@@ -1533,20 +1546,20 @@ function sessionsTableHtml_(sessions, includeDate) {
 
 function summaryGridHtml_(items) {
   const cells = items.map(([label, value]) => `
-    <td style="width:${Math.floor(100 / Math.max(items.length, 1))}%;padding:12px;border:1px solid #C7D2D8;background:#f8fbfc;vertical-align:top;">
-      <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#A5A3AF;font-weight:900;">${escapeHtml_(label)}</div>
-      <div style="margin-top:4px;color:#040048;font-weight:900;">${escapeHtml_(value)}</div>
+    <td style="width:${Math.floor(100 / Math.max(items.length, 1))}%;padding:14px;border:1px solid #C7D2D8;background:#ffffff;vertical-align:top;">
+      <div style="font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:#35B0ED;font-weight:900;">${escapeHtml_(label)}</div>
+      <div style="margin-top:5px;color:#040048;font-weight:900;font-size:16px;line-height:1.35;">${escapeHtml_(value)}</div>
     </td>
   `).join("");
-  return `<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;"><tr>${cells}</tr></table>`;
+  return `<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;margin:0 0 8px;"><tr>${cells}</tr></table>`;
 }
 
 function emailThStyle_() {
-  return "padding:10px;border:1px solid #040048;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:#ffffff;";
+  return "padding:12px 12px;border-right:1px solid #35B0ED;border-bottom:0;text-align:left;font-size:16px;text-transform:uppercase;letter-spacing:.02em;color:#ffffff;font-weight:900;";
 }
 
 function emailTdStyle_() {
-  return "padding:11px;border:1px solid #C7D2D8;text-align:left;vertical-align:top;color:#383748;font-size:14px;line-height:1.35;";
+  return "padding:17px 12px;border-top:1px solid #C7D2D8;border-right:1px solid #C7D2D8;text-align:left;vertical-align:top;color:#1f1f2b;font-size:16px;line-height:1.35;";
 }
 
 function escapeHtml_(value) {
