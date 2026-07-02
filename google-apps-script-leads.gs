@@ -751,7 +751,7 @@ function getAlertsSheet_() {
       "Yes",
       "HS CloudSuite",
       "Want a closer look?",
-      "Book a quick HS CloudSuite demo and someone will reach out after NEHA.",
+      "Book a quick HS CloudSuite demo and someone will reach out after the conference.",
       "Book Demo",
       "demo",
       "",

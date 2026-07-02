@@ -1,9 +1,9 @@
-const CACHE_NAME = "neha-guide-v20260701-myaec-label";
+const CACHE_NAME = "neha-guide-v20260701-aec-copy";
 const APP_ASSETS = [
   "./",
   "index.html",
-  "styles.css?v=20260701-myaec-label",
-  "app.js?v=20260701-myaec-label",
+  "styles.css?v=20260701-aec-copy",
+  "app.js?v=20260701-aec-copy",
   "data-bundle.js?v=20260623-domain-backend",
   "lead-config.js?v=20260623-domain-backend",
   "manifest.webmanifest",

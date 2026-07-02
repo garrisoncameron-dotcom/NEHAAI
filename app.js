@@ -208,7 +208,7 @@ const fallbackAppAlerts = [
   {
     label: "HS CloudSuite",
     title: "Want a closer look?",
-    message: "Book a quick HS CloudSuite demo and someone will reach out after NEHA.",
+    message: "Book a quick HS CloudSuite demo and someone will reach out after the conference.",
     action: "Book Demo",
     view: "demo"
   }
