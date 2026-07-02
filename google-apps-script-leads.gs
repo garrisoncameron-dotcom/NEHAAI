@@ -1250,7 +1250,7 @@ function sendScheduleEmail_(payload, sessions) {
   const body = [
     `Hi ${payload.name || "there"},`,
     "",
-    "Here is your current MyNEHA attending schedule:",
+    "Here is your current MyAEC attending schedule:",
     "",
     ...lines,
     "",
@@ -1259,8 +1259,8 @@ function sendScheduleEmail_(payload, sessions) {
     "HS GovTech"
   ].join("\n");
   const htmlBody = brandedEmailHtml_({
-    eyebrow: "MyNEHA Schedule",
-    title: "Your MyNEHA Schedule",
+    eyebrow: "MyAEC Schedule",
+    title: "Your MyAEC Schedule",
     intro: `Hi ${escapeHtml_(payload.name || "there")}, here is your current attending schedule.`,
     content: `
       ${sessionsTableHtml_(sessions, true)}
@@ -1269,7 +1269,7 @@ function sendScheduleEmail_(payload, sessions) {
   });
 
   try {
-    sendNehaEmail_(email, "Your MyNEHA schedule", body, htmlBody);
+    sendNehaEmail_(email, "Your MyAEC schedule", body, htmlBody);
     return `Sent to ${email}`;
   } catch (error) {
     console.error(`Schedule email failed for ${email}: ${error}`);
@@ -1294,7 +1294,7 @@ function sendSessionNotesEmail_(payload, session, notes, recipientEmail) {
     "Notes:",
     notes,
     "",
-    "Open the NEHA guide to update your notes, view presentations, ask session questions, or manage your MyNEHA agenda.",
+    "Open the NEHA guide to update your notes, view presentations, ask session questions, or manage your MyAEC agenda.",
     "",
     "HS GovTech"
   ].filter((line) => line !== "").join("\n");
@@ -1314,7 +1314,7 @@ function sendSessionNotesEmail_(payload, session, notes, recipientEmail) {
         <div style="font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:#040048;font-weight:900;">Notes</div>
         <div style="margin-top:8px;padding:14px;border:1px solid #C7D2D8;border-radius:8px;background:#f8fbfc;color:#383748;line-height:1.55;white-space:pre-wrap;">${escapeHtml_(notes)}</div>
       </div>
-      <p style="margin:18px 0 0;color:#383748;line-height:1.5;">Open the NEHA guide to update your notes, view presentations, ask session questions, or manage your MyNEHA agenda.</p>
+      <p style="margin:18px 0 0;color:#383748;line-height:1.5;">Open the NEHA guide to update your notes, view presentations, ask session questions, or manage your MyAEC agenda.</p>
     `
   });
 
@@ -1437,7 +1437,7 @@ function sendDailyScheduleEmail_(schedule, sessions, scheduleDate) {
   const body = [
     `Good morning ${schedule.name || "there"},`,
     "",
-    `Here is your MyNEHA agenda for ${formattedDate}:`,
+    `Here is your MyAEC agenda for ${formattedDate}:`,
     "",
     ...lines,
     "",
@@ -1448,7 +1448,7 @@ function sendDailyScheduleEmail_(schedule, sessions, scheduleDate) {
   const htmlBody = brandedEmailHtml_({
     eyebrow: "Daily Brief",
     title: `Your NEHA agenda for ${formattedDate}`,
-    intro: `Good morning ${escapeHtml_(schedule.name || "there")}. Here is your MyNEHA agenda for today.`,
+    intro: `Good morning ${escapeHtml_(schedule.name || "there")}. Here is your MyAEC agenda for today.`,
     content: `
       ${sessionsTableHtml_(sessions, false)}
       <p style="margin:18px 0 0;color:#383748;line-height:1.5;">Open the NEHA guide to adjust your schedule, view presentations, add notes, or ask session questions.</p>

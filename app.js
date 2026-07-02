@@ -185,8 +185,8 @@ const els = {
 };
 
 const viewTitles = {
-  schedule: "MyNEHA Dashboard",
-  my: "MyNEHA Dashboard",
+  schedule: "MyAEC Dashboard",
+  my: "MyAEC Dashboard",
   ai: "AI Session Guide",
   kc: "Fun in KC",
   venue: "Venue Navigator",
@@ -1715,7 +1715,7 @@ function checkLocalSessionReminders() {
       label: "Next Up",
       title: "Session starting soon",
       message: `${upcoming.title} starts at ${shortTime(upcoming.start)} in ${upcoming.location}.`,
-      action: "Open MyNEHA",
+      action: "Open MyAEC",
       view: "my"
     };
   } else if (state.reminderAlert) {
@@ -2625,7 +2625,7 @@ function answerSummary(profile, docs, places) {
     return `I found several nearby options that fit that ask. Start with ${places.slice(0, 2).map((place) => place.name).join(" and ")}, then use Fun in KC for links, walk times, and more choices.`;
   }
   if (profile.intent === "ce") {
-    return "For CE planning, favor sessions with listed CE credit and keep your attended sessions organized in MyNEHASchedule. The uploaded CE guide notes that NEHA credentials rely on continuing education contact hours during each credential cycle.";
+    return "For CE planning, favor sessions with listed CE credit and keep your attended sessions organized in MyAEC. The uploaded CE guide notes that NEHA credentials rely on continuing education contact hours during each credential cycle.";
   }
   if (profile.intent === "brand") {
     const lead = docs.find((doc) => doc.view === "brand") || docs[0];
