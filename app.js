@@ -1518,11 +1518,26 @@ async function submitAppPayload(payload) {
   const endpoint = window.NEHA_LEAD_ENDPOINT || "";
   const supabaseBackend = window.NEHA_SUPABASE_BACKEND;
   const supabaseEnabled = Boolean(supabaseBackend?.isEnabled?.());
+  const supabaseConfig = window.NEHA_SUPABASE_CONFIG || {};
+  const edgeEnabled = Boolean(supabaseEnabled && supabaseConfig.edgeWrites && supabaseConfig.edgeEndpoint && supabaseBackend.submitPayload);
+  const writeMode = edgeEnabled ? supabaseConfig.writeMode || "google-primary" : "google-primary";
   let googleError = null;
+  let edgeError = null;
 
-  if (!endpoint && !supabaseEnabled) {
+  if (!endpoint && !supabaseEnabled && !edgeEnabled) {
     console.warn("App endpoint is not configured. Saving locally only.");
     return;
+  }
+
+  if (writeMode === "supabase-primary") {
+    try {
+      await supabaseBackend.submitPayload(payload);
+      return;
+    } catch (error) {
+      edgeError = error;
+      console.warn("Supabase primary write failed.", error);
+      if (!endpoint) throw error;
+    }
   }
 
   if (endpoint) {
@@ -1537,7 +1552,14 @@ async function submitAppPayload(payload) {
     }
   }
 
-  if (supabaseEnabled) {
+  if (edgeEnabled && writeMode === "dual") {
+    try {
+      await supabaseBackend.submitPayload(payload);
+    } catch (error) {
+      edgeError = error;
+      console.warn("Supabase Edge Function write failed.", error);
+    }
+  } else if (supabaseEnabled && writeMode !== "dual") {
     const mirrorWrite = supabaseBackend.mirrorPayload(payload).catch((error) => {
       console.warn("Supabase mirror write failed.", error);
       if (!endpoint) throw error;
@@ -1546,6 +1568,7 @@ async function submitAppPayload(payload) {
   }
 
   if (googleError) throw googleError;
+  if (edgeError && !endpoint) throw edgeError;
 }
 
 function queueScheduleSync() {

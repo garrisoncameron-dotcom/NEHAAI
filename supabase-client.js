@@ -5,7 +5,10 @@
     readFromSupabase: false,
     url: "",
     anonKey: "",
-    communityImageBucket: ""
+    communityImageBucket: "",
+    edgeEndpoint: "",
+    edgeWrites: false,
+    writeMode: "google-primary"
   };
 
   function getConfig() {
@@ -344,6 +347,21 @@
     }
   }
 
+  async function submitPayload(payload) {
+    const config = getConfig();
+    if (!isEnabled() || !config.edgeWrites || !config.edgeEndpoint) return null;
+    const response = await fetch(config.edgeEndpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload || {})
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || data?.ok === false) {
+      throw new Error(data?.error || `Supabase Edge Function failed: ${response.status}`);
+    }
+    return data;
+  }
+
   async function loadAppAlerts() {
     if (!isEnabled() || !getConfig().readFromSupabase) return null;
     const rows = await selectRows("app_alerts", {
@@ -517,6 +535,7 @@
 
   window.NEHA_SUPABASE_BACKEND = {
     isEnabled,
+    submitPayload,
     mirrorPayload,
     loadAppAlerts,
     loadDrinkStatus,

@@ -5,5 +5,8 @@ window.NEHA_SUPABASE_CONFIG = {
   readFromSupabase: true,
   url: "https://hjtyqkmjmilyitrmuief.supabase.co",
   anonKey: "sb_publishable_nxpbxkRa6G3gfLMca1fhig_Iqt3NDhs",
-  communityImageBucket: "community-images"
+  communityImageBucket: "community-images",
+  edgeEndpoint: "",
+  edgeWrites: false,
+  writeMode: "google-primary"
 };
