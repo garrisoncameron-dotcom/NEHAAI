@@ -1,12 +1,12 @@
-const CACHE_NAME = "neha-guide-v20260721-edge-auth-headers";
+const CACHE_NAME = "neha-guide-v20260721-dual-write-test";
 const APP_ASSETS = [
   "./",
   "index.html",
   "styles.css?v=20260701-aec-copy",
-  "app.js?v=20260721-edge-auth-headers",
-  "supabase-client.js?v=20260721-edge-auth-headers",
+  "app.js?v=20260721-dual-write-test",
+  "supabase-client.js?v=20260721-dual-write-test",
   "data-bundle.js?v=20260623-domain-backend",
-  "lead-config.js?v=20260721-edge-auth-headers",
+  "lead-config.js?v=20260721-dual-write-test",
   "manifest.webmanifest",
   "assets/hs-govtech-logo.png?v=20260623-domain-backend",
   "assets/bdmp-icon-color.png",
