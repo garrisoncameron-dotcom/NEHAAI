@@ -1516,15 +1516,36 @@ async function submitLead(lead) {
 
 async function submitAppPayload(payload) {
   const endpoint = window.NEHA_LEAD_ENDPOINT || "";
-  if (!endpoint) {
+  const supabaseBackend = window.NEHA_SUPABASE_BACKEND;
+  const supabaseEnabled = Boolean(supabaseBackend?.isEnabled?.());
+  let googleError = null;
+
+  if (!endpoint && !supabaseEnabled) {
     console.warn("App endpoint is not configured. Saving locally only.");
     return;
   }
-  await fetch(endpoint, {
-    method: "POST",
-    mode: "no-cors",
-    body: JSON.stringify(payload)
-  });
+
+  if (endpoint) {
+    try {
+      await fetch(endpoint, {
+        method: "POST",
+        mode: "no-cors",
+        body: JSON.stringify(payload)
+      });
+    } catch (error) {
+      googleError = error;
+    }
+  }
+
+  if (supabaseEnabled) {
+    const mirrorWrite = supabaseBackend.mirrorPayload(payload).catch((error) => {
+      console.warn("Supabase mirror write failed.", error);
+      if (!endpoint) throw error;
+    });
+    if (!endpoint) await mirrorWrite;
+  }
+
+  if (googleError) throw googleError;
 }
 
 function queueScheduleSync() {
