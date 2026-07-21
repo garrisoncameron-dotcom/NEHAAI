@@ -1,12 +1,12 @@
-const CACHE_NAME = "neha-guide-v20260720-supabase-cutover";
+const CACHE_NAME = "neha-guide-v20260720-supabase-cutover2";
 const APP_ASSETS = [
   "./",
   "index.html",
   "styles.css?v=20260701-aec-copy",
-  "app.js?v=20260720-supabase-cutover",
-  "supabase-client.js?v=20260720-supabase-cutover",
+  "app.js?v=20260720-supabase-cutover2",
+  "supabase-client.js?v=20260720-supabase-cutover2",
   "data-bundle.js?v=20260623-domain-backend",
-  "lead-config.js?v=20260720-supabase-cutover",
+  "lead-config.js?v=20260720-supabase-cutover2",
   "manifest.webmanifest",
   "assets/hs-govtech-logo.png?v=20260623-domain-backend",
   "assets/bdmp-icon-color.png",

@@ -186,6 +186,91 @@ grant select (
   created_at
 ) on public.trivia_scores to anon;
 
+create or replace view public.public_drink_redemptions as
+select
+  redemption_code,
+  display_name,
+  full_name,
+  agency,
+  issued_at,
+  status,
+  served_at,
+  served_by,
+  redeemed_at
+from public.drink_redemptions;
+
+create or replace view public.public_community_posts as
+select
+  post_id,
+  category,
+  title,
+  message,
+  image_url,
+  display_name,
+  agency,
+  share_email,
+  posted_at,
+  created_at
+from public.community_posts
+where status <> 'Hidden';
+
+create or replace view public.public_community_replies as
+select
+  post_id,
+  message,
+  display_name,
+  agency,
+  posted_at,
+  created_at
+from public.community_replies
+where status <> 'Hidden';
+
+create or replace view public.public_session_questions as
+select
+  question_id,
+  session_id,
+  title,
+  message,
+  display_name,
+  agency,
+  posted_at,
+  created_at
+from public.session_questions
+where status <> 'Hidden';
+
+create or replace view public.public_session_question_replies as
+select
+  question_id,
+  session_id,
+  message,
+  display_name,
+  agency,
+  posted_at,
+  created_at
+from public.session_question_replies
+where status <> 'Hidden';
+
+create or replace view public.public_trivia_scores as
+select
+  display_name,
+  agency,
+  score,
+  total,
+  achievement,
+  hints_used,
+  board_id,
+  board_name,
+  completed_at,
+  created_at
+from public.trivia_scores;
+
+grant select on public.public_drink_redemptions to anon;
+grant select on public.public_community_posts to anon;
+grant select on public.public_community_replies to anon;
+grant select on public.public_session_questions to anon;
+grant select on public.public_session_question_replies to anon;
+grant select on public.public_trivia_scores to anon;
+
 insert into storage.buckets (id, name, public)
 values ('community-images', 'community-images', true)
 on conflict (id) do update set public = true;

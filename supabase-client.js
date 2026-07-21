@@ -365,7 +365,7 @@
 
   async function loadDrinkStatus(code) {
     if (!isEnabled() || !getConfig().readFromSupabase || !code) return null;
-    const rows = await selectRows("drink_redemptions", {
+    const rows = await selectRows("public_drink_redemptions", {
       select: "redemption_code,display_name,full_name,agency,issued_at,status,served_at,served_by,redeemed_at",
       redemption_code: `eq.${code}`,
       limit: 1
@@ -391,13 +391,13 @@
   async function loadCommunityPosts() {
     if (!isEnabled() || !getConfig().readFromSupabase) return null;
     const [posts, replies] = await Promise.all([
-      selectRows("community_posts", {
+      selectRows("public_community_posts", {
         select: "post_id,category,title,message,image_url,display_name,agency,share_email,posted_at,created_at",
         status: "neq.Hidden",
         order: "posted_at.desc",
         limit: 60
       }),
-      selectRows("community_replies", {
+      selectRows("public_community_replies", {
         select: "post_id,message,display_name,agency,posted_at,created_at",
         status: "neq.Hidden",
         order: "posted_at.asc",
@@ -434,14 +434,14 @@
   async function loadSessionThread(sessionId) {
     if (!isEnabled() || !getConfig().readFromSupabase || !sessionId) return null;
     const [questions, replies] = await Promise.all([
-      selectRows("session_questions", {
+      selectRows("public_session_questions", {
         select: "question_id,session_id,title,message,display_name,agency,posted_at,created_at",
         session_id: `eq.${sessionId}`,
         status: "neq.Hidden",
         order: "posted_at.desc",
         limit: 30
       }),
-      selectRows("session_question_replies", {
+      selectRows("public_session_question_replies", {
         select: "question_id,session_id,message,display_name,agency,posted_at,created_at",
         session_id: `eq.${sessionId}`,
         status: "neq.Hidden",
@@ -498,7 +498,7 @@
 
   async function loadTriviaLeaderboard(boardId = "food") {
     if (!isEnabled() || !getConfig().readFromSupabase) return null;
-    const rows = await selectRows("trivia_scores", {
+    const rows = await selectRows("public_trivia_scores", {
       select: "display_name,agency,score,total,achievement,hints_used,board_id,board_name,completed_at,created_at",
       board_id: `eq.${boardId}`,
       order: "score.desc,hints_used.asc,completed_at.asc",
