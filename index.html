@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-title" content="NEHA Guide">
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="apple-touch-icon" href="assets/hsgt-navigator-icon-192.png?v=20260624-navigator-icon">
-    <link rel="stylesheet" href="styles.css?v=20260701-aec-copy">
+    <link rel="stylesheet" href="styles.css?v=20260721-hardening">
   </head>
   <body>
     <div id="leadGate" class="lead-gate" hidden>
@@ -28,7 +28,7 @@
         </label>
         <label>
           Email
-          <input id="leadEmail" name="email" type="email" autocomplete="email" required>
+          <input id="leadEmail" name="email" type="email" autocomplete="email" inputmode="email" pattern="^[^@\s]+@[^@\s]+\.[^@\s]{2,}$" title="Enter a complete email address like name@agency.gov" required>
         </label>
         <p class="lead-note">Your Privacy Matters: This is a short-term, event-specific conference guide provided by HS GovTech for NEHA attendees. HS GovTech may use your contact information to support your use of the guide and follow up about NEHA and related resources. HS GovTech does not sell, rent, trade, or distribute your contact information to third parties. By entering the guide, you agree to the <a href="assets/hs-govtech-neha-navigator-terms-privacy.docx?v=20260624-event-specific" target="_blank" rel="noopener">Terms &amp; Privacy Notice</a>.</p>
         <button type="submit">Enter Guide</button>
@@ -401,14 +401,13 @@
         <img id="imageViewerImage" src="" alt="">
         <div class="image-viewer-caption">
           <h2 id="imageViewerTitle">Community photo</h2>
-          <a id="imageViewerOpen" href="#" target="_blank" rel="noreferrer">Open original</a>
         </div>
       </section>
     </div>
 
     <script src="data-bundle.js?v=20260623-domain-backend"></script>
-    <script src="lead-config.js?v=20260721-dual-write-test"></script>
-    <script src="supabase-client.js?v=20260721-dual-write-test"></script>
-    <script src="app.js?v=20260721-dual-write-test"></script>
+    <script src="lead-config.js?v=20260721-hardening"></script>
+    <script src="supabase-client.js?v=20260721-hardening"></script>
+    <script src="app.js?v=20260721-hardening"></script>
   </body>
 </html>

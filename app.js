@@ -163,7 +163,6 @@ const els = {
   imageViewerClose: document.querySelector("#imageViewerClose"),
   imageViewerImage: document.querySelector("#imageViewerImage"),
   imageViewerTitle: document.querySelector("#imageViewerTitle"),
-  imageViewerOpen: document.querySelector("#imageViewerOpen"),
   sessionToolTitle: document.querySelector("#sessionToolTitle"),
   sessionToolMeta: document.querySelector("#sessionToolMeta"),
   sessionToolTabs: document.querySelector("#sessionToolTabs"),
@@ -951,16 +950,18 @@ els.appAlerts.addEventListener("click", (event) => {
 els.leadForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const submitButton = els.leadForm.querySelector('button[type="submit"]');
+  els.leadEmail.value = els.leadEmail.value.trim();
+  setEmailValidity(els.leadEmail);
   const lead = {
     name: els.leadName.value.trim(),
     agency: els.leadAgency.value.trim(),
-    email: els.leadEmail.value.trim(),
+    email: normalizeEmail(els.leadEmail.value),
     capturedAt: new Date().toISOString(),
     source: "NEHA AEC 2026 Guide",
     page: location.href,
     userAgent: navigator.userAgent
   };
-  if (!lead.name || !lead.agency || !lead.email || !els.leadEmail.checkValidity()) {
+  if (!lead.name || !lead.agency || !isValidEmail(lead.email) || !els.leadEmail.checkValidity()) {
     els.leadForm.reportValidity();
     return;
   }
@@ -981,6 +982,8 @@ els.leadForm.addEventListener("submit", async (event) => {
     submitButton.textContent = "Enter Guide";
   }
 });
+
+els.leadEmail.addEventListener("input", () => setEmailValidity(els.leadEmail));
 
 els.search.addEventListener("input", (event) => {
   const value = event.target.value.trim();
@@ -1277,6 +1280,15 @@ els.communityImageFile.addEventListener("change", async () => {
 els.communityForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const submitButton = els.communityForm.querySelector('button[type="submit"]');
+  const moderationMessage = communityModerationMessage({
+    title: els.communityTitle.value,
+    message: els.communityMessage.value,
+    imageName: state.communityImage?.name || ""
+  });
+  if (moderationMessage) {
+    els.communityStatus.textContent = moderationMessage;
+    return;
+  }
   const post = {
     type: "communityPost",
     category: els.communityCategoryInput.value,
@@ -1328,6 +1340,11 @@ els.communityPosts.addEventListener("submit", async (event) => {
   const submitButton = form.querySelector('button[type="submit"]');
   const status = form.querySelector(".community-reply-status");
   const message = textarea.value.trim();
+  const moderationMessage = communityModerationMessage({ message });
+  if (moderationMessage) {
+    status.textContent = moderationMessage;
+    return;
+  }
   if (!postId || !message) {
     form.reportValidity();
     return;
@@ -1512,6 +1529,58 @@ async function loadData() {
 
 async function submitLead(lead) {
   return submitAppPayload({ type: "lead", ...lead });
+}
+
+function normalizeEmail(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function isValidEmail(value) {
+  const email = normalizeEmail(value);
+  if (email.length > 254 || /\s/.test(email)) return false;
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return false;
+  const [local, domain] = email.split("@");
+  if (!local || !domain || local.length > 64) return false;
+  if (domain.includes("..") || domain.startsWith(".") || domain.endsWith(".")) return false;
+  return domain.split(".").every((part) => /^[a-z0-9-]+$/i.test(part) && !part.startsWith("-") && !part.endsWith("-"));
+}
+
+function setEmailValidity(input) {
+  const email = normalizeEmail(input.value);
+  input.setCustomValidity(email && !isValidEmail(email) ? "Please enter a complete email address like name@agency.gov." : "");
+}
+
+function communityModerationMessage(values) {
+  const text = `${values.title || ""} ${values.message || ""} ${values.imageName || ""}`;
+  if (!text.trim()) return "";
+  return hasBlockedCommunityContent(text)
+    ? "Please keep Community Connect conference-friendly. Remove explicit language or sexual content before posting."
+    : "";
+}
+
+function hasBlockedCommunityContent(value) {
+  const compact = String(value || "")
+    .toLowerCase()
+    .replace(/[@$!1|*._-]/g, "")
+    .replace(/\s+/g, " ");
+  const blockedPatterns = [
+    /\bf+u*c+k+(?:e[rd])?s?\b/,
+    /\bm+o+t+h+e+r+f+u+c+k+\w*\b/,
+    /\bs+h+i+t+\b/,
+    /\bc+u+n+t+\b/,
+    /\bb+i+t+c+h+\b/,
+    /\ba+s+s+h+o+l+e+s?\b/,
+    /\bd+i+c+k+s?\b/,
+    /\bc+o+c+k+s?\b/,
+    /\bp+e+n+i+s+\b/,
+    /\bp+u+s+s+y+\b/,
+    /\bv+a+g+i+n+a+\b/,
+    /\bb+l+o+w+j+o+b+s?\b/,
+    /\bn+u+d+e+s?\b/,
+    /\bp+o+r+n+\b/,
+    /\bxxx\b/
+  ];
+  return blockedPatterns.some((pattern) => pattern.test(compact));
 }
 
 async function submitAppPayload(payload) {
@@ -2299,7 +2368,6 @@ function openImageViewer(imageUrl, title = "Community photo") {
   els.imageViewerImage.src = imageUrl;
   els.imageViewerImage.alt = title;
   els.imageViewerTitle.textContent = title;
-  els.imageViewerOpen.href = imageUrl;
   els.imageViewerModal.hidden = false;
   document.body.classList.add("modal-open");
 }
@@ -2308,7 +2376,6 @@ function closeImageViewer() {
   els.imageViewerModal.hidden = true;
   els.imageViewerImage.removeAttribute("src");
   els.imageViewerImage.alt = "";
-  els.imageViewerOpen.href = "#";
   if (els.sessionToolModal.hidden && els.installHelpModal.hidden) document.body.classList.remove("modal-open");
 }
 

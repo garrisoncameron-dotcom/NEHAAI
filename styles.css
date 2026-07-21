@@ -955,16 +955,6 @@ select {
   white-space: nowrap;
 }
 
-.image-viewer-caption a {
-  flex: 0 0 auto;
-  border-radius: 999px;
-  padding: 8px 12px;
-  color: var(--navy);
-  background: #fff;
-  font-weight: 900;
-  text-decoration: none;
-}
-
 .install-steps {
   display: grid;
   gap: 10px;

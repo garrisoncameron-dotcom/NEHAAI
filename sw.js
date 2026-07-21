@@ -1,4 +1,4 @@
-const CACHE_NAME = "neha-guide-v20260721-dual-write-test";
+const CACHE_NAME = "neha-guide-v20260721-hardening";
 const APP_ASSETS = [
   "./",
   "index.html",
@@ -6,7 +6,7 @@ const APP_ASSETS = [
   "app.js?v=20260721-dual-write-test",
   "supabase-client.js?v=20260721-dual-write-test",
   "data-bundle.js?v=20260623-domain-backend",
-  "lead-config.js?v=20260721-dual-write-test",
+  "lead-config.js?v=20260721-hardening",
   "manifest.webmanifest",
   "assets/hs-govtech-logo.png?v=20260623-domain-backend",
   "assets/bdmp-icon-color.png",
