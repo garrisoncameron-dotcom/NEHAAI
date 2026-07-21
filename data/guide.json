@@ -92,7 +92,8 @@
       "category": "Coffee",
       "meta": "2345 Grand Blvd — 3-minute walk",
       "walk": "2345 Grand Blvd — 3-minute walk",
-      "description": "Located in the adjacent office corridor via the indoor walkway. An independent boutique favorite pulling exceptional espresso drinks, whipping up custom nutrient-dense smoothies, and offering premium toasted morning paninis."
+      "description": "Located in the adjacent office corridor via the indoor walkway. An independent boutique favorite pulling exceptional espresso drinks, whipping up custom nutrient-dense smoothies, and offering premium toasted morning paninis.",
+      "menuUrl": "https://www.grandekc.com/menu"
     },
     {
       "name": "Messenger Coffee Co. + Ibis Bakery",
@@ -106,21 +107,24 @@
       "category": "Coffee",
       "meta": "Union Station, 30 W Pershing Rd — 7-minute walk via The Link",
       "walk": "Union Station, 30 W Pershing Rd — 7-minute walk via The Link",
-      "description": "An elite, artisan-driven Italian-style espresso bar nestled directly inside the historic Grand Hall of Union Station. Famous for its meticulous pour-overs and specialty seasonal lattes."
+      "description": "An elite, artisan-driven Italian-style espresso bar nestled directly inside the historic Grand Hall of Union Station. Famous for its meticulous pour-overs and specialty seasonal lattes.",
+      "menuUrl": "https://parisicoffee.com/pages/menu"
     },
     {
       "name": "Filling Station Coffee",
       "category": "Coffee",
       "meta": "2980 McGee Trafficway — 10-minute walk",
       "walk": "2980 McGee Trafficway — 10-minute walk",
-      "description": "A cool, converted vintage mid-century gas station just south of the hotel lobby. Known for its exceptional cold brews, fresh-squeezed wellness juices, and highly rated breakfast burritos on a sunny patio."
+      "description": "A cool, converted vintage mid-century gas station just south of the hotel lobby. Known for its exceptional cold brews, fresh-squeezed wellness juices, and highly rated breakfast burritos on a sunny patio.",
+      "menuUrl": "https://fillingstationcoffee.com/"
     },
     {
       "name": "Starbucks",
       "category": "Coffee",
       "meta": "Crown Center Shops, Level 1 — 4-minute walk via The Link",
       "walk": "Crown Center Shops, Level 1 — 4-minute walk via The Link",
-      "description": "A high-volume, full-service indoor corporate location. Perfect for rapid mobile orders and signature iced drinks before starting your day."
+      "description": "A high-volume, full-service indoor corporate location. Perfect for rapid mobile orders and signature iced drinks before starting your day.",
+      "menuUrl": "https://www.starbucks.com/menu"
     },
     {
       "name": "One East Coffee Bar",
@@ -141,91 +145,104 @@
       "category": "Barbecue",
       "meta": "101 W 22nd St — 12-minute walk",
       "walk": "101 W 22nd St — 12-minute walk",
-      "description": "The definitive upscale barbecue destination in KC. Housed in a historic 110-year-old brick freight building with 25-foot ceilings, white-tablecloth service, legendary burnt ends, lamb ribs, and hickory-pit baked beans."
+      "description": "The definitive upscale barbecue destination in KC. Housed in a historic 110-year-old brick freight building with 25-foot ceilings, white-tablecloth service, legendary burnt ends, lamb ribs, and hickory-pit baked beans.",
+      "menuUrl": "https://www.jackstackbbq.com/locations/freight-house"
     },
     {
       "name": "Burnt End BBQ",
       "category": "Barbecue",
       "meta": "Crown Center Shops, Level 1 — 4-minute walk via The Link",
       "walk": "Crown Center Shops, Level 1 — 4-minute walk via The Link",
-      "description": "A championship-winning fast-casual barbecue outlet. Specializes in custom build-your-own BBQ bowls, loaded brisket mac & cheese, and competition smoked platters."
+      "description": "A championship-winning fast-casual barbecue outlet. Specializes in custom build-your-own BBQ bowls, loaded brisket mac & cheese, and competition smoked platters.",
+      "menuUrl": "https://burntendbbq.com/menu-crown-center"
     },
     {
       "name": "Novel KC",
       "category": "Dining",
       "meta": "1927 McGee St — 5-minute walk",
       "walk": "1927 McGee St — 5-minute walk",
-      "description": "A magnificent, critically acclaimed hidden gem blocks north of your hotel. Chef Ryan Brazeal offers high-concept contemporary fine dining (Hamachi crudo, seared diver scallops, handmade duck agnolotti) across from a jaw-dropping 50-foot glass tile mosaic and open kitchen."
+      "description": "A magnificent, critically acclaimed hidden gem blocks north of your hotel. Chef Ryan Brazeal offers high-concept contemporary fine dining (Hamachi crudo, seared diver scallops, handmade duck agnolotti) across from a jaw-dropping 50-foot glass tile mosaic and open kitchen.",
+      "menuUrl": "https://www.novelkc.com/dinner-menu"
     },
     {
       "name": "Pierpont’s at Union Station",
       "category": "Dining",
       "meta": "30 W Pershing Rd — 7-minute walk via The Link",
       "walk": "30 W Pershing Rd — 7-minute walk via The Link",
-      "description": "Named the \"Turn-of-the-Century\" luxury steakhouse of KC. Features aged prime steaks, fresh seafood towers, and a dramatic, multi-level 30-foot mahogany bar equipped with rolling library ladders."
+      "description": "Named the \"Turn-of-the-Century\" luxury steakhouse of KC. Features aged prime steaks, fresh seafood towers, and a dramatic, multi-level 30-foot mahogany bar equipped with rolling library ladders.",
+      "menuUrl": "https://www.pierponts.com/menu"
     },
     {
       "name": "Lidia’s Kansas City",
       "category": "Dining",
       "meta": "101 W 22nd St — 11-minute walk",
       "walk": "101 W 22nd St — 11-minute walk",
-      "description": "High-end Northern Italian dining from legendary celebrity chef Lidia Bastianich. Set in a beautifully restored industrial freight house under custom hand-blown glass chandeliers; famous for its daily unlimited three-course pasta tasting menu."
+      "description": "High-end Northern Italian dining from legendary celebrity chef Lidia Bastianich. Set in a beautifully restored industrial freight house under custom hand-blown glass chandeliers; famous for its daily unlimited three-course pasta tasting menu.",
+      "menuUrl": "https://www.lidias-kc.com/menu/menu/"
     },
     {
       "name": "Grünauer",
       "category": "Dining",
       "meta": "101 W 22nd St — 10-minute walk",
       "walk": "101 W 22nd St — 10-minute walk",
-      "description": "A deeply sophisticated Austrian-German dining room in the Freight House district. Exceptionally authentic Wiener Schnitzel, Hungarian goulash, house-made sausages, and rare imported European draft beers."
+      "description": "A deeply sophisticated Austrian-German dining room in the Freight House district. Exceptionally authentic Wiener Schnitzel, Hungarian goulash, house-made sausages, and rare imported European draft beers.",
+      "menuUrl": "https://order.toasttab.com/online/grunauer-freight-house-101-west-22nd-street"
     },
     {
       "name": "The Rockhill Grille",
       "category": "Dining",
       "meta": "2000 Grand Blvd — 8-minute walk",
       "walk": "2000 Grand Blvd — 8-minute walk",
-      "description": "A sleek, energetic New American dining room featuring deep leather booths and a wood-burning grill. Do not miss the signature duck confit tater tots, prime steaks, and premium craft cocktails."
+      "description": "A sleek, energetic New American dining room featuring deep leather booths and a wood-burning grill. Do not miss the signature duck confit tater tots, prime steaks, and premium craft cocktails.",
+      "menuUrl": "https://therockhillgrille.com/eat"
     },
     {
       "name": "Harvey’s at Union Station",
       "category": "Dining",
       "meta": "30 W Pershing Rd — 7-minute walk via The Link",
       "walk": "30 W Pershing Rd — 7-minute walk via The Link",
-      "description": "A spectacular, open-air casual restaurant sitting right on the main floor of the Union Station Grand Hall. Exceptional for monument-gazing over classic benedicts, towering club sandwiches, and hearty lunch salads."
+      "description": "A spectacular, open-air casual restaurant sitting right on the main floor of the Union Station Grand Hall. Exceptional for monument-gazing over classic benedicts, towering club sandwiches, and hearty lunch salads.",
+      "menuUrl": "https://harveyskc.com/"
     },
     {
       "name": "Spectators Gastro-Pub",
       "category": "Dining",
       "meta": "Inside the Sheraton Lobby — 0-minute walk",
       "walk": "Inside the Sheraton Lobby — 0-minute walk",
-      "description": "Your own newly refreshed on-site venue. Combines upscale sports bar energy with exceptional house-ground burgers, craft wings tossed in local barbecue glaze, and an extensive local draft beer lineup."
+      "description": "Your own newly refreshed on-site venue. Combines upscale sports bar energy with exceptional house-ground burgers, craft wings tossed in local barbecue glaze, and an extensive local draft beer lineup.",
+      "menuUrl": "https://www.marriott.com/en-us/hotels/mcicr-sheraton-kansas-city-hotel-at-crown-center/dining/"
     },
     {
       "name": "One East Urban Bar + Kitchen",
       "category": "Dining",
       "meta": "The Westin, 1 E Pershing Rd — 5-minute walk via The Link",
       "walk": "The Westin, 1 E Pershing Rd — 5-minute walk via The Link",
-      "description": "A vibrant, sunlit contemporary atrium restaurant offering regional American fare, artisanal flatbreads, and custom fresh-juice cocktails."
+      "description": "A vibrant, sunlit contemporary atrium restaurant offering regional American fare, artisanal flatbreads, and custom fresh-juice cocktails.",
+      "menuUrl": "https://www.opentable.com/r/one-east-urban-bar-and-kitchen-kansas-city"
     },
     {
       "name": "The Brick",
       "category": "Dining",
       "meta": "1727 McGee St — 11-minute walk",
       "walk": "1727 McGee St — 11-minute walk",
-      "description": "A historic, gritty, delightfully no-frills East Crossroads dive bar and local arts venue. Famous for its casual pub food, legendary meatloaf sandwiches, and eccentric neighborhood charm."
+      "description": "A historic, gritty, delightfully no-frills East Crossroads dive bar and local arts venue. Famous for its casual pub food, legendary meatloaf sandwiches, and eccentric neighborhood charm.",
+      "menuUrl": "https://www.thebrickkc.com/thebrickmenu"
     },
     {
       "name": "Panera Bread",
       "category": "Dining",
       "meta": "2405 Grand Blvd — 4-minute walk via The Link",
       "walk": "2405 Grand Blvd — 4-minute walk via The Link",
-      "description": "A familiar indoor counter option for rapid soups, structured salads, and quick deli sandwiches."
+      "description": "A familiar indoor counter option for rapid soups, structured salads, and quick deli sandwiches.",
+      "menuUrl": "https://www.panerabread.com/en-us/menu.html"
     },
     {
       "name": "SPIN! Neapolitan Pizza",
       "category": "Dining",
       "meta": "Crown Center Shops, Level 1 — 4-minute walk via The Link",
       "walk": "Crown Center Shops, Level 1 — 4-minute walk via The Link",
-      "description": "Award-winning local stone-fired pizza concept. Hand-spun thin crusts, gourmet toppings (like roasted figs, prosciutto, and goat cheese), stellar chopped salads, and a deeply curated, pizza-friendly wine list."
+      "description": "Award-winning local stone-fired pizza concept. Hand-spun thin crusts, gourmet toppings (like roasted figs, prosciutto, and goat cheese), stellar chopped salads, and a deeply curated, pizza-friendly wine list.",
+      "menuUrl": "https://www.spinpizza.com/menu-crown-center/"
     },
     {
       "name": "Empanada Madness",
@@ -414,7 +431,8 @@
       "category": "Nightlife & Spirits",
       "meta": "1725 McGee St — 9-minute walk",
       "walk": "1725 McGee St — 9-minute walk",
-      "description": "Head north on McGee into the Crossroads Arts District for a plant-filled taproom with a hyper-local neighborhood feel. Small-batch beers support local conservation efforts."
+      "description": "Head north on McGee into the Crossroads Arts District for a plant-filled taproom with a hyper-local neighborhood feel. Small-batch beers support local conservation efforts.",
+      "menuUrl": "https://www.casualanimalbrewing.com/"
     },
     {
       "name": "Mean Mule Distilling Co.",
@@ -428,7 +446,8 @@
       "category": "Nightlife & Spirits",
       "meta": "1740 Holmes St — 11-minute walk",
       "walk": "1740 Holmes St — 11-minute walk",
-      "description": "A trendy industrial-chic brewery with soaring ceilings, creative sour beers, hazy IPAs, and a culinary-forward cocktail and food program."
+      "description": "A trendy industrial-chic brewery with soaring ceilings, creative sour beers, hazy IPAs, and a culinary-forward cocktail and food program.",
+      "menuUrl": "https://order.toasttab.com/online/citybarrel"
     },
     {
       "name": "Green Lady Lounge",
@@ -442,7 +461,8 @@
       "category": "Nightlife & Spirits",
       "meta": "1830 Walnut St — 5-minute rideshare to the Crossroads District",
       "walk": "1830 Walnut St — 5-minute rideshare to the Crossroads District",
-      "description": "A spectacular upscale dinner pick blending late-night live jazz with a modern American shared-plates menu. Dark, polished, and sophisticated enough for a memorable conference-night dinner."
+      "description": "A spectacular upscale dinner pick blending late-night live jazz with a modern American shared-plates menu. Dark, polished, and sophisticated enough for a memorable conference-night dinner.",
+      "menuUrl": "https://corvino.com/menus/"
     }
   ],
   "kcSources": [
