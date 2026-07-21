@@ -217,6 +217,12 @@
   background: #fff;
 }
 
+.admin-row-actions .danger-action {
+  color: #fff;
+  border-color: var(--red);
+  background: var(--red);
+}
+
 @media (max-width: 760px) {
   .admin-shell {
     width: min(100% - 20px, 1180px);

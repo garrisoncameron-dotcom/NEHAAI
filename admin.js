@@ -53,6 +53,7 @@
   els.table.addEventListener("click", async (event) => {
     const editAlert = event.target.closest("[data-edit-alert]");
     const statusButton = event.target.closest("[data-status]");
+    const deleteButton = event.target.closest("[data-delete-table]");
     if (editAlert) {
       const row = state.rows.find((item) => item.id === editAlert.dataset.editAlert);
       if (row) fillAlertForm(row);
@@ -63,6 +64,19 @@
       table: statusButton.dataset.table,
       id: statusButton.dataset.id,
       status: statusButton.dataset.status
+      });
+      await loadSection(state.section);
+    }
+    if (deleteButton) {
+      const label = deleteButton.dataset.deleteLabel || "this record";
+      const confirmed = window.confirm(`Delete ${label}? This permanently removes the record from Supabase.`);
+      if (!confirmed) return;
+      deleteButton.disabled = true;
+      deleteButton.textContent = "Deleting...";
+      await postAdmin({
+        action: "admin:deleteRecord",
+        table: deleteButton.dataset.deleteTable,
+        id: deleteButton.dataset.deleteId
       });
       await loadSection(state.section);
     }
@@ -211,20 +225,42 @@
   }
 
   function actionHtml(section, row) {
+    const deleteAction = deleteActionHtml(section, row);
     if (section === "alerts") {
-      return `<div class="admin-row-actions"><button type="button" data-edit-alert="${escapeAttr(row.id)}">Edit</button></div>`;
+      return `<div class="admin-row-actions"><button type="button" data-edit-alert="${escapeAttr(row.id)}">Edit</button>${deleteAction}</div>`;
     }
     if (section === "community" && row.id && row.kind) {
       const table = row.kind === "Reply" ? "community_replies" : "community_posts";
       const next = row.status === "Hidden" ? "Visible" : "Hidden";
-      return `<div class="admin-row-actions"><button type="button" data-table="${table}" data-id="${escapeAttr(row.id)}" data-status="${next}">${next === "Hidden" ? "Hide" : "Show"}</button></div>`;
+      return `<div class="admin-row-actions"><button type="button" data-table="${table}" data-id="${escapeAttr(row.id)}" data-status="${next}">${next === "Hidden" ? "Hide" : "Show"}</button>${deleteAction}</div>`;
     }
     if (section === "sessionQuestions" && row.id && row.kind) {
       const table = row.kind === "Reply" ? "session_question_replies" : "session_questions";
       const next = row.status === "Hidden" ? "Visible" : "Hidden";
-      return `<div class="admin-row-actions"><button type="button" data-table="${table}" data-id="${escapeAttr(row.id)}" data-status="${next}">${next === "Hidden" ? "Hide" : "Show"}</button></div>`;
+      return `<div class="admin-row-actions"><button type="button" data-table="${table}" data-id="${escapeAttr(row.id)}" data-status="${next}">${next === "Hidden" ? "Hide" : "Show"}</button>${deleteAction}</div>`;
     }
-    return "";
+    return deleteAction ? `<div class="admin-row-actions">${deleteAction}</div>` : "";
+  }
+
+  function deleteActionHtml(section, row) {
+    const table = deleteTableFor(section, row);
+    if (!table || !row.id) return "";
+    const label = row.title || row.full_name || row.email || row.redemption_code || `${section} record`;
+    return `<button class="danger-action" type="button" data-delete-table="${escapeAttr(table)}" data-delete-id="${escapeAttr(row.id)}" data-delete-label="${escapeAttr(label)}">Delete</button>`;
+  }
+
+  function deleteTableFor(section, row) {
+    if (section === "community" && row.kind) return row.kind === "Reply" ? "community_replies" : "community_posts";
+    if (section === "sessionQuestions" && row.kind) return row.kind === "Reply" ? "session_question_replies" : "session_questions";
+    const tables = {
+      leads: "lead_captures",
+      demos: "demo_requests",
+      trivia: "trivia_scores",
+      drinks: "drink_redemptions",
+      emails: "outbound_email_log",
+      alerts: "app_alerts"
+    };
+    return tables[section] || "";
   }
 
   function cellHtml(value) {
