@@ -3,6 +3,8 @@ const TRIVIA_ROUND_SIZE = 12;
 const APP_ALERT_SNOOZE_MS = 2 * 60 * 60 * 1000;
 const PODCAST_CACHE_KEY = "nehaPodcastEpisodes";
 const PODCAST_CACHE_MS = 24 * 60 * 60 * 1000;
+const TRIVIA_QUESTION_CACHE_KEY = "nehaTriviaQuestionPools";
+const TRIVIA_QUESTION_CACHE_MS = 15 * 60 * 1000;
 
 const state = {
   sessions: [],
@@ -63,6 +65,7 @@ const state = {
     roundId: "",
     startedAt: "",
     completedAt: "",
+    poolVersion: "",
     ...loadStoredTriviaRound()
   },
   drinkTicket: JSON.parse(localStorage.getItem("nehaDrinkTicket") || "null"),
@@ -901,10 +904,11 @@ if (new URLSearchParams(location.search).has("refreshApp")) {
   refreshInstalledApp();
 }
 
-loadData().then(([sessions, guide]) => {
+loadData().then(async ([sessions, guide]) => {
   state.sessions = sessions;
   state.guide = guide;
   state.podcastEpisodes = loadCachedPodcastEpisodes();
+  await loadDynamicTriviaQuestions();
   normalizeTriviaRound();
   pruneSaved();
   hydrateControls();
@@ -1525,6 +1529,93 @@ async function loadData() {
     })
   ]);
   return [sessions, guide];
+}
+
+async function loadDynamicTriviaQuestions() {
+  const cached = loadCachedTriviaQuestions();
+  if (cached) applyDynamicTriviaQuestions(cached, "cache");
+  const supabaseBackend = window.NEHA_SUPABASE_BACKEND;
+  if (!supabaseBackend?.isEnabled?.() || !window.NEHA_SUPABASE_CONFIG?.readFromSupabase || !supabaseBackend.loadTriviaQuestions) return;
+  try {
+    const data = await Promise.race([
+      supabaseBackend.loadTriviaQuestions(),
+      new Promise((_, reject) => window.setTimeout(() => reject(new Error("Trivia question load timed out.")), 5000))
+    ]);
+    const questions = Array.isArray(data?.questions) ? data.questions : [];
+    if (applyDynamicTriviaQuestions(questions, "supabase")) {
+      localStorage.setItem(TRIVIA_QUESTION_CACHE_KEY, JSON.stringify({ cachedAt: Date.now(), questions }));
+    }
+  } catch (error) {
+    console.warn("Dynamic trivia questions could not load. Built-in question pool remains active.", error);
+  }
+}
+
+function loadCachedTriviaQuestions() {
+  try {
+    const cached = JSON.parse(localStorage.getItem(TRIVIA_QUESTION_CACHE_KEY) || "null");
+    if (!cached || !Array.isArray(cached.questions)) return null;
+    if (Date.now() - Number(cached.cachedAt || 0) > TRIVIA_QUESTION_CACHE_MS) return null;
+    return cached.questions;
+  } catch (error) {
+    console.warn("Cached trivia questions could not be restored", error);
+    return null;
+  }
+}
+
+function applyDynamicTriviaQuestions(rows, source) {
+  const grouped = rows.reduce((group, row) => {
+    const question = normalizeDynamicTriviaQuestion(row);
+    if (!question) return group;
+    if (!group[question.boardId]) group[question.boardId] = [];
+    group[question.boardId].push(question);
+    return group;
+  }, {});
+  let applied = false;
+  Object.entries(grouped).forEach(([boardId, questions]) => {
+    const board = triviaBoards[boardId];
+    if (!board || questions.length < TRIVIA_ROUND_SIZE) return;
+    const version = dynamicTriviaVersion(boardId, questions, source);
+    board.questions = questions.map(({ boardId: _boardId, updatedAt: _updatedAt, ...question }) => question);
+    board.questionsSource = source;
+    board.questionsVersion = version;
+    applied = true;
+  });
+  return applied;
+}
+
+function normalizeDynamicTriviaQuestion(row) {
+  const boardId = row.boardId === "pools" ? "pools" : row.boardId === "food" ? "food" : "";
+  const options = Array.isArray(row.options) ? row.options.map((option) => String(option || "").trim()) : [];
+  const answer = Number(row.answer);
+  const question = String(row.question || "").trim();
+  const explanation = String(row.explanation || "").trim();
+  if (!boardId || !question || !explanation || options.length !== 4 || options.some((option) => !option) || !Number.isInteger(answer) || answer < 0 || answer > 3) return null;
+  return {
+    boardId,
+    id: String(row.id || question),
+    section: String(row.section || "").trim(),
+    category: String(row.category || "").trim() || "Trivia",
+    question,
+    options,
+    answer,
+    explanation,
+    updatedAt: String(row.updatedAt || "")
+  };
+}
+
+function dynamicTriviaVersion(boardId, questions, source) {
+  const signature = questions
+    .map((question) => `${question.id}:${question.updatedAt}:${question.question}:${question.options.join("|")}:${question.answer}`)
+    .join("~");
+  return `${source}:${boardId}:${questions.length}:${hashString(signature)}`;
+}
+
+function hashString(value) {
+  let hash = 0;
+  for (let index = 0; index < value.length; index += 1) {
+    hash = ((hash << 5) - hash + value.charCodeAt(index)) | 0;
+  }
+  return Math.abs(hash).toString(36);
 }
 
 async function submitLead(lead) {
@@ -3296,6 +3387,10 @@ function activeTriviaBoard() {
   return triviaBoards[state.triviaBoard] || triviaBoards.food;
 }
 
+function activeTriviaPoolVersion(board = activeTriviaBoard()) {
+  return board.questionsVersion || `built-in:${board.id}:${board.questions.length}`;
+}
+
 function activeTriviaQuestions() {
   const board = activeTriviaBoard();
   if (!state.trivia.questionIndexes?.length) return board.questions.slice(0, Math.min(TRIVIA_ROUND_SIZE, board.questions.length));
@@ -3362,6 +3457,7 @@ function resetTriviaQuestionSet() {
   const board = activeTriviaBoard();
   const indexes = board.questions.map((_, index) => index);
   state.trivia.questionIndexes = shuffleArray(indexes).slice(0, Math.min(TRIVIA_ROUND_SIZE, indexes.length));
+  state.trivia.poolVersion = activeTriviaPoolVersion(board);
   resetTriviaOrder();
 }
 
@@ -3387,7 +3483,8 @@ function loadStoredTriviaRound(boardId = localStorage.getItem("nehaTriviaBoard")
       questionIndexes: Array.isArray(stored.questionIndexes) ? stored.questionIndexes.filter((index) => Number.isInteger(index)) : legacyQuestionIndexes,
       roundId: stored.roundId || "",
       startedAt: stored.startedAt || "",
-      completedAt: stored.completedAt || ""
+      completedAt: stored.completedAt || "",
+      poolVersion: stored.poolVersion || ""
     };
   } catch (error) {
     console.warn("Stored trivia round could not be restored", error);
@@ -3415,7 +3512,8 @@ function freshTriviaState() {
     best: triviaBestScore(),
     roundId: "",
     startedAt: "",
-    completedAt: ""
+    completedAt: "",
+    poolVersion: ""
   };
 }
 
@@ -3434,6 +3532,7 @@ function normalizeTriviaRound() {
   const expectedCount = Math.min(TRIVIA_ROUND_SIZE, board.questions.length);
   const invalidDraw = !state.trivia.questionIndexes?.length
     || state.trivia.questionIndexes.length !== expectedCount
+    || state.trivia.poolVersion !== activeTriviaPoolVersion(board)
     || state.trivia.questionIndexes.some((index) => !Number.isInteger(index) || index < 0 || index >= board.questions.length);
   if (invalidDraw) resetTriviaQuestionSet();
   const total = activeTriviaQuestions().length;
@@ -3461,7 +3560,8 @@ function persistTriviaRound() {
     hidden: state.trivia.hidden,
     submitted: state.trivia.submitted,
     order: state.trivia.order,
-    questionIndexes: state.trivia.questionIndexes
+    questionIndexes: state.trivia.questionIndexes,
+    poolVersion: state.trivia.poolVersion
   };
   localStorage.setItem(triviaRoundStorageKey(), JSON.stringify(round));
 }

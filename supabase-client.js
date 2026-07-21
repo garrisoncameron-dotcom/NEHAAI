@@ -537,6 +537,30 @@
     };
   }
 
+  async function loadTriviaQuestions() {
+    if (!isEnabled() || !getConfig().readFromSupabase) return null;
+    const rows = await selectRows("trivia_questions", {
+      select: "id,board_id,section_ref,category,question,option_a,option_b,option_c,option_d,correct_index,explanation,source_note,active,display_order,updated_at,created_at",
+      active: "eq.true",
+      order: "board_id.asc,display_order.asc,created_at.asc",
+      limit: 500
+    });
+    return {
+      questions: rows.map((row) => ({
+        id: row.id,
+        boardId: row.board_id || "food",
+        section: row.section_ref || "",
+        category: row.category || "",
+        question: row.question || "",
+        options: [row.option_a, row.option_b, row.option_c, row.option_d].map((option) => option || ""),
+        answer: Number(row.correct_index || 0),
+        explanation: row.explanation || "",
+        sourceNote: row.source_note || "",
+        updatedAt: row.updated_at || row.created_at || ""
+      }))
+    };
+  }
+
   window.NEHA_SUPABASE_BACKEND = {
     isEnabled,
     submitPayload,
@@ -546,6 +570,7 @@
     loadCommunityPosts,
     loadSessionThread,
     loadSessionPresentations,
-    loadTriviaLeaderboard
+    loadTriviaLeaderboard,
+    loadTriviaQuestions
   };
 })();
