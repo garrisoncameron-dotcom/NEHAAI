@@ -70,7 +70,8 @@
 }
 
 .admin-login form,
-.admin-alert-editor form {
+.admin-alert-editor form,
+.admin-trivia-editor form {
   display: grid;
   gap: 12px;
 }
@@ -93,7 +94,8 @@
 }
 
 .admin-app[hidden],
-.admin-alert-editor[hidden] {
+.admin-alert-editor[hidden],
+.admin-trivia-editor[hidden] {
   display: none;
 }
 
@@ -131,7 +133,7 @@
 
 .admin-summary {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 12px;
 }
 
@@ -229,6 +231,10 @@
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
+}
+
+.trivia-options-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .admin-check {

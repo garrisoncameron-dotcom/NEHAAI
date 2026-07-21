@@ -5,6 +5,7 @@
     ["leads", "Leads", "Name, agency, email, and source from first app entry."],
     ["demos", "Demo Requests", "People who asked for an HS CloudSuite demo."],
     ["trivia", "Trivia Scores", "Scores by board, including hints and achievements."],
+    ["questions", "Trivia Questions", "Editable Food Code and Pool Inspection question pool for future game cutover."],
     ["drinks", "Free Drinks", "Issued and served drink QR tickets."],
     ["community", "Community", "Community posts and replies, including image links."],
     ["sessionQuestions", "Session Q&A", "Questions and replies attached to sessions."],
@@ -34,7 +35,10 @@
     export: document.querySelector("#adminExport"),
     alertsPanel: document.querySelector("#adminAlertsPanel"),
     alertForm: document.querySelector("#alertForm"),
-    alertStatus: document.querySelector("#alertStatus")
+    alertStatus: document.querySelector("#alertStatus"),
+    triviaPanel: document.querySelector("#adminTriviaPanel"),
+    triviaForm: document.querySelector("#triviaForm"),
+    triviaStatus: document.querySelector("#triviaStatus")
   };
 
   els.form.addEventListener("submit", async (event) => {
@@ -59,6 +63,11 @@
     if (editAlert) {
       const row = state.rows.find((item) => item.id === editAlert.dataset.editAlert);
       if (row) fillAlertForm(row);
+    }
+    const editTrivia = event.target.closest("[data-edit-trivia]");
+    if (editTrivia) {
+      const row = state.rows.find((item) => item.id === editTrivia.dataset.editTrivia);
+      if (row) fillTriviaForm(row);
     }
     if (statusButton) {
       await postAdmin({
@@ -133,6 +142,40 @@
 
   document.querySelector("#alertReset").addEventListener("click", resetAlertForm);
 
+  els.triviaForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    els.triviaStatus.textContent = "Saving...";
+    try {
+      await postAdmin({
+        action: "admin:saveTriviaQuestion",
+        id: document.querySelector("#triviaId").value,
+        boardId: document.querySelector("#triviaBoard").value,
+        category: document.querySelector("#triviaCategory").value,
+        sectionRef: document.querySelector("#triviaSectionRef").value,
+        difficulty: document.querySelector("#triviaDifficulty").value,
+        question: document.querySelector("#triviaQuestion").value,
+        options: [
+          document.querySelector("#triviaOptionA").value,
+          document.querySelector("#triviaOptionB").value,
+          document.querySelector("#triviaOptionC").value,
+          document.querySelector("#triviaOptionD").value
+        ],
+        correctIndex: Number(document.querySelector("#triviaCorrect").value),
+        explanation: document.querySelector("#triviaExplanation").value,
+        sourceNote: document.querySelector("#triviaSourceNote").value,
+        displayOrder: Number(document.querySelector("#triviaOrder").value || 0),
+        active: document.querySelector("#triviaActive").checked
+      });
+      resetTriviaForm();
+      els.triviaStatus.textContent = "Question saved.";
+      await loadSection("questions");
+    } catch (error) {
+      els.triviaStatus.textContent = error.message || "Question could not be saved.";
+    }
+  });
+
+  document.querySelector("#triviaReset").addEventListener("click", resetTriviaForm);
+
   if (state.token) {
     els.token.value = state.token;
     boot();
@@ -161,6 +204,7 @@
     els.help.textContent = sectionMeta[2];
     els.table.innerHTML = `<div class="empty-state">Loading ${escapeHtml(sectionMeta[1])}...</div>`;
     els.alertsPanel.hidden = section !== "alerts";
+    els.triviaPanel.hidden = section !== "questions";
     const data = await getAdmin({ section, limit: 200 });
     state.rows = Array.isArray(data.rows) ? data.rows : [];
     state.summary = data.summary || state.summary || {};
@@ -211,6 +255,7 @@
       ["Leads", state.summary.leads],
       ["Demos", state.summary.demos],
       ["Trivia", state.summary.trivia],
+      ["Questions", state.summary.questions],
       ["Drinks", state.summary.drinks]
     ];
     els.summary.innerHTML = metrics.map(([label, value]) => `
@@ -251,6 +296,7 @@
       leads: ["submitted_at", "full_name", "agency", "email", "source"],
       demos: ["requested_at", "full_name", "agency", "email", "phone", "state", "notes"],
       trivia: ["completed_at", "board_id", "full_name", "agency", "email", "score", "total", "achievement", "hints_used"],
+      questions: ["board_id", "category", "section_ref", "question", "option_a", "option_b", "option_c", "option_d", "correct_answer", "active", "difficulty", "display_order", "updated_at"],
       drinks: ["issued_at", "redemption_code", "full_name", "agency", "email", "status", "served_at"],
       community: ["posted_at", "kind", "category", "title", "message", "display_name", "agency", "email", "status", "image_url"],
       sessionQuestions: ["posted_at", "kind", "session_title", "title", "message", "display_name", "agency", "email", "status"],
@@ -268,6 +314,9 @@
     if (section === "alerts") {
       return `<div class="admin-row-actions"><button type="button" data-edit-alert="${escapeAttr(row.id)}">Edit</button>${deleteAction}</div>`;
     }
+    if (section === "questions") {
+      return `<div class="admin-row-actions"><button type="button" data-edit-trivia="${escapeAttr(row.id)}">Edit</button>${deleteAction}</div>`;
+    }
     if (section === "community" && row.id && row.kind) {
       const table = row.kind === "Reply" ? "community_replies" : "community_posts";
       const next = row.status === "Hidden" ? "Visible" : "Hidden";
@@ -284,7 +333,7 @@
   function deleteActionHtml(section, row) {
     const table = deleteTableFor(section, row);
     if (!table || !row.id) return "";
-    const label = row.title || row.full_name || row.email || row.redemption_code || `${section} record`;
+    const label = row.title || row.question || row.full_name || row.email || row.redemption_code || `${section} record`;
     return `<button class="danger-action" type="button" data-delete-table="${escapeAttr(table)}" data-delete-id="${escapeAttr(row.id)}" data-delete-label="${escapeAttr(label)}">Delete</button>`;
   }
 
@@ -295,6 +344,7 @@
       leads: "lead_captures",
       demos: "demo_requests",
       trivia: "trivia_scores",
+      questions: "trivia_questions",
       drinks: "drink_redemptions",
       emails: "outbound_email_log",
       alerts: "app_alerts"
@@ -305,7 +355,7 @@
   function selectionCellHtml(section, row) {
     const table = deleteTableFor(section, row);
     if (!table || !row.id) return `<td class="admin-select-cell"></td>`;
-    const label = row.title || row.full_name || row.email || row.redemption_code || `${section} record`;
+    const label = row.title || row.question || row.full_name || row.email || row.redemption_code || `${section} record`;
     const key = selectionKey(table, row.id);
     return `
       <td class="admin-select-cell">
@@ -397,6 +447,36 @@
     document.querySelector("#alertId").value = "";
     document.querySelector("#alertPriority").value = "5";
     document.querySelector("#alertActive").checked = true;
+  }
+
+  function fillTriviaForm(row) {
+    document.querySelector("#triviaId").value = row.id || "";
+    document.querySelector("#triviaBoard").value = row.board_id || "food";
+    document.querySelector("#triviaCategory").value = row.category || "";
+    document.querySelector("#triviaSectionRef").value = row.section_ref || "";
+    document.querySelector("#triviaDifficulty").value = row.difficulty || "standard";
+    document.querySelector("#triviaQuestion").value = row.question || "";
+    document.querySelector("#triviaOptionA").value = row.option_a || "";
+    document.querySelector("#triviaOptionB").value = row.option_b || "";
+    document.querySelector("#triviaOptionC").value = row.option_c || "";
+    document.querySelector("#triviaOptionD").value = row.option_d || "";
+    document.querySelector("#triviaCorrect").value = String(row.correct_index ?? 0);
+    document.querySelector("#triviaExplanation").value = row.explanation || "";
+    document.querySelector("#triviaSourceNote").value = row.source_note || "";
+    document.querySelector("#triviaOrder").value = row.display_order ?? 0;
+    document.querySelector("#triviaActive").checked = row.active !== false;
+    els.triviaStatus.textContent = "Editing selected question.";
+    els.triviaPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function resetTriviaForm() {
+    els.triviaForm.reset();
+    document.querySelector("#triviaId").value = "";
+    document.querySelector("#triviaBoard").value = "food";
+    document.querySelector("#triviaDifficulty").value = "standard";
+    document.querySelector("#triviaCorrect").value = "0";
+    document.querySelector("#triviaOrder").value = "0";
+    document.querySelector("#triviaActive").checked = true;
   }
 
   function escapeHtml(value) {

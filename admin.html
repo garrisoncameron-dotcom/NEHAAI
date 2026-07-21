@@ -6,7 +6,7 @@
     <title>Conference Guide Admin</title>
     <meta name="theme-color" content="#040048">
     <link rel="stylesheet" href="styles.css?v=20260701-aec-copy">
-    <link rel="stylesheet" href="admin.css?v=20260721-admin-bulk-delete">
+    <link rel="stylesheet" href="admin.css?v=20260721-trivia-admin">
   </head>
   <body class="admin-body">
     <main class="admin-shell">
@@ -91,6 +91,95 @@
           </form>
         </section>
 
+        <section id="adminTriviaPanel" class="admin-card admin-trivia-editor" hidden>
+          <div>
+            <h2>Trivia Question Editor</h2>
+            <p>Add or update editable trivia questions in Supabase. The attendee game still keeps its built-in question pool until this table is fully verified.</p>
+          </div>
+          <form id="triviaForm">
+            <input id="triviaId" type="hidden">
+            <div class="admin-form-grid">
+              <label>
+                Board
+                <select id="triviaBoard" required>
+                  <option value="food">Food Code</option>
+                  <option value="pools">Pool Inspections</option>
+                </select>
+              </label>
+              <label>
+                Category
+                <input id="triviaCategory" type="text" maxlength="80" required>
+              </label>
+              <label>
+                Code / Source
+                <input id="triviaSectionRef" type="text" maxlength="80" placeholder="3-501.16">
+              </label>
+              <label>
+                Difficulty
+                <select id="triviaDifficulty">
+                  <option value="standard">Standard</option>
+                  <option value="easy">Easy</option>
+                  <option value="hard">Hard</option>
+                </select>
+              </label>
+            </div>
+            <label>
+              Question
+              <textarea id="triviaQuestion" rows="3" maxlength="500" required></textarea>
+            </label>
+            <div class="admin-form-grid trivia-options-grid">
+              <label>
+                Answer A
+                <input id="triviaOptionA" type="text" maxlength="220" required>
+              </label>
+              <label>
+                Answer B
+                <input id="triviaOptionB" type="text" maxlength="220" required>
+              </label>
+              <label>
+                Answer C
+                <input id="triviaOptionC" type="text" maxlength="220" required>
+              </label>
+              <label>
+                Answer D
+                <input id="triviaOptionD" type="text" maxlength="220" required>
+              </label>
+            </div>
+            <div class="admin-form-grid">
+              <label>
+                Correct Answer
+                <select id="triviaCorrect" required>
+                  <option value="0">A</option>
+                  <option value="1">B</option>
+                  <option value="2">C</option>
+                  <option value="3">D</option>
+                </select>
+              </label>
+              <label>
+                Display Order
+                <input id="triviaOrder" type="number" value="0" min="0">
+              </label>
+              <label>
+                Source Note
+                <input id="triviaSourceNote" type="text" maxlength="160" placeholder="2022 FDA Food Code">
+              </label>
+              <label class="admin-check">
+                <input id="triviaActive" type="checkbox" checked>
+                Active
+              </label>
+            </div>
+            <label>
+              Explanation
+              <textarea id="triviaExplanation" rows="3" maxlength="700" required></textarea>
+            </label>
+            <div class="admin-actions">
+              <button type="submit">Save Question</button>
+              <button id="triviaReset" type="button">New Question</button>
+            </div>
+            <p id="triviaStatus" class="admin-status"></p>
+          </form>
+        </section>
+
         <section class="admin-card">
           <div class="admin-table-head">
             <div>
@@ -104,6 +193,6 @@
       </section>
     </main>
     <script src="lead-config.js?v=20260721-admin-app-api"></script>
-    <script src="admin.js?v=20260721-admin-bulk-delete"></script>
+    <script src="admin.js?v=20260721-trivia-admin"></script>
   </body>
 </html>
