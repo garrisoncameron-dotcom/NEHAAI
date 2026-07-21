@@ -2,6 +2,12 @@
 
 This adds Supabase as a parallel backend while Google Sheets remains the production source of truth.
 
+## Current Project
+
+- Supabase project: `Conference Guide AI`
+- Project URL: `https://hjtyqkmjmilyitrmuief.supabase.co`
+- Current mode: Google Sheets primary, Supabase mirror writes enabled, Supabase reads disabled
+
 ## Phase 1: Mirror Writes
 
 1. Create a Supabase project.
@@ -14,8 +20,8 @@ window.NEHA_SUPABASE_CONFIG = {
   enabled: true,
   mirrorWrites: true,
   readFromSupabase: false,
-  url: "https://YOUR-PROJECT.supabase.co",
-  anonKey: "YOUR-ANON-PUBLIC-KEY",
+  url: "https://hjtyqkmjmilyitrmuief.supabase.co",
+  anonKey: "YOUR-PUBLISHABLE-KEY",
   communityImageBucket: ""
 };
 ```
