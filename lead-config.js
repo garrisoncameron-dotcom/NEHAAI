@@ -7,7 +7,7 @@ window.NEHA_SUPABASE_CONFIG = {
   anonKey: "sb_publishable_nxpbxkRa6G3gfLMca1fhig_Iqt3NDhs",
   communityImageBucket: "community-images",
   edgeEndpoint: "https://hjtyqkmjmilyitrmuief.supabase.co/functions/v1/app-api",
-  adminEndpoint: "https://hjtyqkmjmilyitrmuief.supabase.co/functions/v1/admin-api",
+  adminEndpoint: "https://hjtyqkmjmilyitrmuief.supabase.co/functions/v1/app-api",
   edgeWrites: true,
   writeMode: "dual"
 };
