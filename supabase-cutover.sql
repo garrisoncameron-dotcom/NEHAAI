@@ -285,3 +285,5 @@ create policy "anon read community images" on storage.objects
 create policy "anon upload community images" on storage.objects
   for insert to anon
   with check (bucket_id = 'community-images');
+
+notify pgrst, 'reload schema';

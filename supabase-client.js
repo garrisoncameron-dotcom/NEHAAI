@@ -393,13 +393,11 @@
     const [posts, replies] = await Promise.all([
       selectRows("public_community_posts", {
         select: "post_id,category,title,message,image_url,display_name,agency,share_email,posted_at,created_at",
-        status: "neq.Hidden",
         order: "posted_at.desc",
         limit: 60
       }),
       selectRows("public_community_replies", {
         select: "post_id,message,display_name,agency,posted_at,created_at",
-        status: "neq.Hidden",
         order: "posted_at.asc",
         limit: 500
       })
@@ -437,14 +435,12 @@
       selectRows("public_session_questions", {
         select: "question_id,session_id,title,message,display_name,agency,posted_at,created_at",
         session_id: `eq.${sessionId}`,
-        status: "neq.Hidden",
         order: "posted_at.desc",
         limit: 30
       }),
       selectRows("public_session_question_replies", {
         select: "question_id,session_id,message,display_name,agency,posted_at,created_at",
         session_id: `eq.${sessionId}`,
-        status: "neq.Hidden",
         order: "posted_at.asc",
         limit: 500
       })
