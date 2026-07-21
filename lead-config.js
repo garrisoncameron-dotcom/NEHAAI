@@ -2,8 +2,8 @@ window.NEHA_LEAD_ENDPOINT = "https://script.google.com/macros/s/AKfycbzfiOct307n
 window.NEHA_SUPABASE_CONFIG = {
   enabled: true,
   mirrorWrites: true,
-  readFromSupabase: false,
+  readFromSupabase: true,
   url: "https://hjtyqkmjmilyitrmuief.supabase.co",
   anonKey: "sb_publishable_nxpbxkRa6G3gfLMca1fhig_Iqt3NDhs",
-  communityImageBucket: ""
+  communityImageBucket: "community-images"
 };

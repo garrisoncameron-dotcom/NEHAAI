@@ -6,7 +6,7 @@ This adds Supabase as a parallel backend while Google Sheets remains the product
 
 - Supabase project: `Conference Guide AI`
 - Project URL: `https://hjtyqkmjmilyitrmuief.supabase.co`
-- Current mode: Google Sheets primary, Supabase mirror writes enabled, Supabase reads disabled
+- Current mode: Supabase public reads enabled with Google Sheets fallback; Google Apps Script still handles email delivery and remains a safety fallback
 
 ## Phase 1: Mirror Writes
 
@@ -32,6 +32,6 @@ window.NEHA_SUPABASE_CONFIG = {
 
 ## Phase 2: Cut Over Carefully
 
-Keep `readFromSupabase` set to `false` until the mirrored rows look right. Then move one public read at a time, starting with low-risk features such as app alerts and session presentations.
+`readFromSupabase` is now enabled for public app data such as alerts, leaderboards, community threads, session Q&A, drink ticket validation, and session presentations. Google Sheets/Apps Script remains in place as a fallback and for email delivery.
 
-The Google Apps Script can stay in place for email delivery and operational fallback until Supabase has equivalent server-side functions.
+To fully remove Google Sheets/Apps Script, replace email delivery, YouTube podcast refresh, and any admin sheet workflows with Supabase Edge Functions or a small admin backend.

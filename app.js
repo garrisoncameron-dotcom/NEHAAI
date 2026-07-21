@@ -1747,6 +1747,28 @@ function checkLocalSessionReminders() {
 }
 
 function loadAppAlerts() {
+  const supabaseBackend = window.NEHA_SUPABASE_BACKEND;
+  if (supabaseBackend?.isEnabled?.() && window.NEHA_SUPABASE_CONFIG?.readFromSupabase) {
+    return supabaseBackend.loadAppAlerts()
+      .then((data) => {
+        const alerts = Array.isArray(data?.alerts) ? data.alerts.filter(isUsableAlert) : [];
+        if (alerts.length) {
+          state.alerts = alerts;
+          renderAppAlerts();
+          return true;
+        }
+        return false;
+      })
+      .catch((error) => {
+        console.warn("Supabase alerts could not load. Falling back to Sheets.", error);
+        return false;
+      })
+      .then((loaded) => loaded || loadSheetAppAlerts());
+  }
+  return loadSheetAppAlerts();
+}
+
+function loadSheetAppAlerts() {
   const endpoint = window.NEHA_LEAD_ENDPOINT || "";
   if (!endpoint) return Promise.resolve();
   return new Promise((resolve) => {
@@ -1931,6 +1953,35 @@ function drinkQrHtml(ticket) {
 }
 
 function loadDrinkStatus() {
+  const supabaseBackend = window.NEHA_SUPABASE_BACKEND;
+  if (supabaseBackend?.isEnabled?.() && window.NEHA_SUPABASE_CONFIG?.readFromSupabase && state.drinkValidation.code) {
+    state.drinkValidation.loading = true;
+    state.drinkValidation.error = "";
+    renderFreeDrink();
+    return supabaseBackend.loadDrinkStatus(state.drinkValidation.code)
+      .then((data) => {
+        state.drinkValidation.ticket = data?.ticket || { found: false };
+        return true;
+      })
+      .catch((error) => {
+        console.warn("Supabase drink status could not load. Falling back to Sheets.", error);
+        return false;
+      })
+      .then((loaded) => {
+        if (loaded) return undefined;
+        return loadSheetDrinkStatus();
+      })
+      .finally(() => {
+        if (state.drinkValidation.loading) {
+          state.drinkValidation.loading = false;
+          renderFreeDrink();
+        }
+      });
+  }
+  return loadSheetDrinkStatus();
+}
+
+function loadSheetDrinkStatus() {
   const endpoint = window.NEHA_LEAD_ENDPOINT || "";
   if (!endpoint || !state.drinkValidation.code) return Promise.resolve();
   state.drinkValidation.loading = true;
@@ -2337,6 +2388,34 @@ function renderSessionQuestions(sessionId) {
 }
 
 function loadSessionThread(sessionId) {
+  const supabaseBackend = window.NEHA_SUPABASE_BACKEND;
+  if (supabaseBackend?.isEnabled?.() && window.NEHA_SUPABASE_CONFIG?.readFromSupabase && sessionId) {
+    state.sessionTool.loading = true;
+    renderSessionQuestions(sessionId);
+    return supabaseBackend.loadSessionThread(sessionId)
+      .then((data) => {
+        state.sessionThreads[sessionId] = data?.thread || { sessionId, questions: [] };
+        return true;
+      })
+      .catch((error) => {
+        console.warn("Supabase session thread could not load. Falling back to Sheets.", error);
+        return false;
+      })
+      .then((loaded) => {
+        if (loaded) return undefined;
+        return loadSheetSessionThread(sessionId);
+      })
+      .finally(() => {
+        if (state.sessionTool.loading) {
+          state.sessionTool.loading = false;
+          renderSessionQuestions(sessionId);
+        }
+      });
+  }
+  return loadSheetSessionThread(sessionId);
+}
+
+function loadSheetSessionThread(sessionId) {
   const endpoint = window.NEHA_LEAD_ENDPOINT || "";
   if (!endpoint || !sessionId) {
     renderSessionQuestions(sessionId);
@@ -2358,6 +2437,23 @@ function loadSessionThread(sessionId) {
 }
 
 function loadSessionPresentations() {
+  const supabaseBackend = window.NEHA_SUPABASE_BACKEND;
+  if (supabaseBackend?.isEnabled?.() && window.NEHA_SUPABASE_CONFIG?.readFromSupabase) {
+    return supabaseBackend.loadSessionPresentations()
+      .then((data) => {
+        state.presentations = data?.presentations || {};
+        return true;
+      })
+      .catch((error) => {
+        console.warn("Supabase presentations could not load. Falling back to Sheets.", error);
+        return false;
+      })
+      .then((loaded) => loaded || loadSheetSessionPresentations());
+  }
+  return loadSheetSessionPresentations();
+}
+
+function loadSheetSessionPresentations() {
   const endpoint = window.NEHA_LEAD_ENDPOINT || "";
   if (!endpoint) return Promise.resolve();
   return loadJsonp(endpoint, { action: "sessionPresentations" })
@@ -2939,6 +3035,35 @@ function renderCommunity() {
 }
 
 function loadCommunityPosts() {
+  const supabaseBackend = window.NEHA_SUPABASE_BACKEND;
+  if (supabaseBackend?.isEnabled?.() && window.NEHA_SUPABASE_CONFIG?.readFromSupabase) {
+    state.communityLoading = true;
+    renderCommunity();
+    return supabaseBackend.loadCommunityPosts()
+      .then((data) => {
+        state.communityPosts = Array.isArray(data?.posts) ? data.posts : [];
+        state.communityLoaded = true;
+        return true;
+      })
+      .catch((error) => {
+        console.warn("Supabase community posts could not load. Falling back to Sheets.", error);
+        return false;
+      })
+      .then((loaded) => {
+        if (loaded) return undefined;
+        return loadSheetCommunityPosts();
+      })
+      .finally(() => {
+        if (state.communityLoading) {
+          state.communityLoading = false;
+          renderCommunity();
+        }
+      });
+  }
+  return loadSheetCommunityPosts();
+}
+
+function loadSheetCommunityPosts() {
   const endpoint = window.NEHA_LEAD_ENDPOINT || "";
   if (!endpoint) {
     renderCommunity();
@@ -3430,6 +3555,29 @@ async function postTriviaScore() {
 }
 
 function loadTriviaLeaderboard() {
+  const supabaseBackend = window.NEHA_SUPABASE_BACKEND;
+  if (supabaseBackend?.isEnabled?.() && window.NEHA_SUPABASE_CONFIG?.readFromSupabase) {
+    state.trivia.leaderboardLoading = true;
+    state.trivia.leaderboardError = "";
+    renderTrivia();
+    return supabaseBackend.loadTriviaLeaderboard(activeTriviaBoard().id)
+      .then((data) => {
+        state.trivia.leaderboard = Array.isArray(data?.leaders) ? data.leaders : [];
+        state.trivia.leaderboardLoading = false;
+        renderTrivia();
+        return true;
+      })
+      .catch((error) => {
+        console.warn("Supabase leaderboard could not load. Falling back to Sheets.", error);
+        state.trivia.leaderboardLoading = false;
+        return false;
+      })
+      .then((loaded) => loaded || loadSheetTriviaLeaderboard());
+  }
+  return loadSheetTriviaLeaderboard();
+}
+
+function loadSheetTriviaLeaderboard() {
   const endpoint = window.NEHA_LEAD_ENDPOINT || "";
   if (!endpoint) {
     state.trivia.leaderboardError = "Leaderboard is not configured yet.";
