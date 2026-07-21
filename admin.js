@@ -58,11 +58,11 @@
       if (row) fillAlertForm(row);
     }
     if (statusButton) {
-      await postAdmin({
-        action: "setStatus",
-        table: statusButton.dataset.table,
-        id: statusButton.dataset.id,
-        status: statusButton.dataset.status
+    await postAdmin({
+      action: "admin:setStatus",
+      table: statusButton.dataset.table,
+      id: statusButton.dataset.id,
+      status: statusButton.dataset.status
       });
       await loadSection(state.section);
     }
@@ -72,7 +72,7 @@
     event.preventDefault();
     els.alertStatus.textContent = "Saving...";
     await postAdmin({
-      action: "saveAlert",
+      action: "admin:saveAlert",
       id: document.querySelector("#alertId").value,
       title: document.querySelector("#alertTitle").value,
       message: document.querySelector("#alertMessage").value,
