@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Conference Guide Admin</title>
+    <meta name="theme-color" content="#040048">
+    <link rel="stylesheet" href="styles.css?v=20260701-aec-copy">
+    <link rel="stylesheet" href="admin.css?v=20260721-supabase-admin">
+  </head>
+  <body class="admin-body">
+    <main class="admin-shell">
+      <header class="admin-hero">
+        <div class="admin-brand">
+          <img src="assets/hs-govtech-logo.png?v=20260623-domain-backend" alt="HS GovTech logo">
+          <div>
+            <p class="eyebrow">Conference Guide AI</p>
+            <h1>Admin Console</h1>
+          </div>
+        </div>
+        <a class="admin-public-link" href="./">Open attendee app</a>
+      </header>
+
+      <section id="adminLogin" class="admin-card admin-login">
+        <h2>Admin access</h2>
+        <p>Enter the admin passcode to view exports, email logs, community activity, drink tickets, and rotating app alerts.</p>
+        <form id="adminAuthForm">
+          <label>
+            Admin passcode
+            <input id="adminToken" type="password" autocomplete="current-password" required>
+          </label>
+          <button type="submit">Unlock Console</button>
+        </form>
+        <p id="adminAuthStatus" class="admin-status"></p>
+      </section>
+
+      <section id="adminApp" class="admin-app" hidden>
+        <div class="admin-toolbar">
+          <div id="adminTabs" class="admin-tabs" aria-label="Admin sections"></div>
+          <button id="adminRefresh" type="button">Refresh</button>
+        </div>
+
+        <section id="adminSummary" class="admin-summary"></section>
+
+        <section id="adminAlertsPanel" class="admin-card admin-alert-editor" hidden>
+          <div>
+            <h2>App Alerts</h2>
+            <p>Create or update the rotating in-app alert cards. These stay hidden on Podcast, Book Demo, and Free Drink.</p>
+          </div>
+          <form id="alertForm">
+            <input id="alertId" type="hidden">
+            <label>
+              Title
+              <input id="alertTitle" type="text" maxlength="120" required>
+            </label>
+            <label>
+              Message
+              <textarea id="alertMessage" rows="3" maxlength="280" required></textarea>
+            </label>
+            <div class="admin-form-grid">
+              <label>
+                Button
+                <input id="alertButton" type="text" maxlength="40" placeholder="Open">
+              </label>
+              <label>
+                Destination
+                <select id="alertView">
+                  <option value="my">MyAEC</option>
+                  <option value="trivia">EH Trivia</option>
+                  <option value="kc">Fun in KC</option>
+                  <option value="community">Community Connect</option>
+                  <option value="podcast">Podcast</option>
+                  <option value="demo">Book Demo</option>
+                  <option value="drink">Free Drink</option>
+                </select>
+              </label>
+              <label>
+                Priority
+                <input id="alertPriority" type="number" value="5" min="0" max="99">
+              </label>
+              <label class="admin-check">
+                <input id="alertActive" type="checkbox" checked>
+                Active
+              </label>
+            </div>
+            <div class="admin-actions">
+              <button type="submit">Save Alert</button>
+              <button id="alertReset" type="button">New Alert</button>
+            </div>
+            <p id="alertStatus" class="admin-status"></p>
+          </form>
+        </section>
+
+        <section class="admin-card">
+          <div class="admin-table-head">
+            <div>
+              <h2 id="adminSectionTitle">Leads</h2>
+              <p id="adminSectionHelp">Newest records from Supabase.</p>
+            </div>
+            <button id="adminExport" type="button">Export CSV</button>
+          </div>
+          <div id="adminTable" class="admin-table-wrap"></div>
+        </section>
+      </section>
+    </main>
+    <script src="lead-config.js?v=20260721-admin-endpoint"></script>
+    <script src="admin.js?v=20260721-supabase-admin"></script>
+  </body>
+</html>
