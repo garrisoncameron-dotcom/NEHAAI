@@ -352,7 +352,11 @@
     if (!isEnabled() || !config.edgeWrites || !config.edgeEndpoint) return null;
     const response = await fetch(config.edgeEndpoint, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        apikey: config.anonKey,
+        Authorization: `Bearer ${config.anonKey}`
+      },
       body: JSON.stringify(payload || {})
     });
     const data = await response.json().catch(() => ({}));
