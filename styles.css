@@ -1317,9 +1317,9 @@ select {
 }
 
 .place-actions .menu-button {
-  color: #fff;
-  border-color: var(--light-blue);
-  background: var(--light-blue);
+  color: var(--navy);
+  border-color: rgba(53, 176, 237, 0.75);
+  background: var(--sky-wash);
 }
 
 .place-actions button:disabled {

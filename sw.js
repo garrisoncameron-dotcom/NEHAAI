@@ -1,8 +1,8 @@
-const CACHE_NAME = "neha-guide-v20260721-kc-menu-links-datafix2";
+const CACHE_NAME = "neha-guide-v20260721-menu-button-visible";
 const APP_ASSETS = [
   "./",
   "index.html",
-  "styles.css?v=20260721-kc-menu-links",
+  "styles.css?v=20260721-menu-button-visible",
   "app.js?v=20260721-kc-menu-links",
   "supabase-client.js?v=20260721-trivia-live-pool",
   "data-bundle.js?v=20260721-kc-menu-links-datafix2",
