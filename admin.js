@@ -15,7 +15,8 @@
     token: sessionStorage.getItem("conferenceGuideAdminToken") || "",
     section: "leads",
     rows: [],
-    summary: {}
+    summary: {},
+    selected: new Map()
   };
 
   const els = {
@@ -54,16 +55,17 @@
     const editAlert = event.target.closest("[data-edit-alert]");
     const statusButton = event.target.closest("[data-status]");
     const deleteButton = event.target.closest("[data-delete-table]");
+    const bulkDeleteButton = event.target.closest("[data-bulk-delete]");
     if (editAlert) {
       const row = state.rows.find((item) => item.id === editAlert.dataset.editAlert);
       if (row) fillAlertForm(row);
     }
     if (statusButton) {
-    await postAdmin({
-      action: "admin:setStatus",
-      table: statusButton.dataset.table,
-      id: statusButton.dataset.id,
-      status: statusButton.dataset.status
+      await postAdmin({
+        action: "admin:setStatus",
+        table: statusButton.dataset.table,
+        id: statusButton.dataset.id,
+        status: statusButton.dataset.status
       });
       await loadSection(state.section);
     }
@@ -80,6 +82,35 @@
       });
       await loadSection(state.section);
     }
+    if (bulkDeleteButton) {
+      const records = Array.from(state.selected.values());
+      if (!records.length) return;
+      const confirmed = window.confirm(`Delete ${records.length} selected record${records.length === 1 ? "" : "s"}? This permanently removes them from Supabase.`);
+      if (!confirmed) return;
+      bulkDeleteButton.disabled = true;
+      bulkDeleteButton.textContent = "Deleting...";
+      await postAdmin({
+        action: "admin:deleteRecords",
+        records: records.map(({ table, id }) => ({ table, id }))
+      });
+      state.selected.clear();
+      await loadSection(state.section);
+    }
+  });
+
+  els.table.addEventListener("change", (event) => {
+    const checkbox = event.target.closest("[data-select-record], [data-select-all]");
+    if (!checkbox) return;
+    if (checkbox.matches("[data-select-all]")) {
+      const checkboxes = els.table.querySelectorAll("[data-select-record]");
+      checkboxes.forEach((item) => {
+        item.checked = checkbox.checked;
+        updateSelectionFromCheckbox(item);
+      });
+    } else {
+      updateSelectionFromCheckbox(checkbox);
+    }
+    updateBulkControls();
   });
 
   els.alertForm.addEventListener("submit", async (event) => {
@@ -123,6 +154,7 @@
 
   async function loadSection(section) {
     state.section = section;
+    state.selected.clear();
     const sectionMeta = sections.find(([id]) => id === section) || sections[0];
     renderTabs();
     els.title.textContent = sectionMeta[1];
@@ -192,12 +224,18 @@
       return;
     }
     const columns = columnsFor(section, rows);
+    const selectableCount = rows.filter((row) => deleteTableFor(section, row) && row.id).length;
     els.table.innerHTML = `
+      <div class="admin-bulk-bar" data-bulk-bar ${selectableCount ? "" : "hidden"}>
+        <span data-selected-count>0 selected</span>
+        <button class="danger-action" type="button" data-bulk-delete disabled>Delete Selected</button>
+      </div>
       <table class="admin-table">
-        <thead><tr>${columns.map((column) => `<th>${escapeHtml(column.label)}</th>`).join("")}<th>Actions</th></tr></thead>
+        <thead><tr><th class="admin-select-cell"><input type="checkbox" data-select-all aria-label="Select all visible records"></th>${columns.map((column) => `<th>${escapeHtml(column.label)}</th>`).join("")}<th>Actions</th></tr></thead>
         <tbody>
           ${rows.map((row) => `
             <tr>
+              ${selectionCellHtml(section, row)}
               ${columns.map((column) => `<td>${cellHtml(row[column.key])}</td>`).join("")}
               <td>${actionHtml(section, row)}</td>
             </tr>
@@ -205,6 +243,7 @@
         </tbody>
       </table>
     `;
+    updateBulkControls();
   }
 
   function columnsFor(section, rows) {
@@ -261,6 +300,61 @@
       alerts: "app_alerts"
     };
     return tables[section] || "";
+  }
+
+  function selectionCellHtml(section, row) {
+    const table = deleteTableFor(section, row);
+    if (!table || !row.id) return `<td class="admin-select-cell"></td>`;
+    const label = row.title || row.full_name || row.email || row.redemption_code || `${section} record`;
+    const key = selectionKey(table, row.id);
+    return `
+      <td class="admin-select-cell">
+        <input
+          type="checkbox"
+          data-select-record
+          data-select-key="${escapeAttr(key)}"
+          data-select-table="${escapeAttr(table)}"
+          data-select-id="${escapeAttr(row.id)}"
+          data-select-label="${escapeAttr(label)}"
+          aria-label="Select ${escapeAttr(label)}"
+          ${state.selected.has(key) ? "checked" : ""}
+        >
+      </td>
+    `;
+  }
+
+  function updateSelectionFromCheckbox(checkbox) {
+    const key = checkbox.dataset.selectKey;
+    if (!key) return;
+    if (checkbox.checked) {
+      state.selected.set(key, {
+        table: checkbox.dataset.selectTable,
+        id: checkbox.dataset.selectId,
+        label: checkbox.dataset.selectLabel
+      });
+    } else {
+      state.selected.delete(key);
+    }
+  }
+
+  function updateBulkControls() {
+    const bulkBar = els.table.querySelector("[data-bulk-bar]");
+    const countLabel = els.table.querySelector("[data-selected-count]");
+    const bulkButton = els.table.querySelector("[data-bulk-delete]");
+    const selectAll = els.table.querySelector("[data-select-all]");
+    const checkboxes = Array.from(els.table.querySelectorAll("[data-select-record]"));
+    const selectedVisible = checkboxes.filter((checkbox) => checkbox.checked).length;
+    if (countLabel) countLabel.textContent = `${selectedVisible} selected`;
+    if (bulkButton) bulkButton.disabled = selectedVisible === 0;
+    if (bulkBar) bulkBar.hidden = checkboxes.length === 0;
+    if (selectAll) {
+      selectAll.checked = checkboxes.length > 0 && selectedVisible === checkboxes.length;
+      selectAll.indeterminate = selectedVisible > 0 && selectedVisible < checkboxes.length;
+    }
+  }
+
+  function selectionKey(table, id) {
+    return `${table}:${id}`;
   }
 
   function cellHtml(value) {

@@ -158,6 +158,36 @@
   overflow: auto;
 }
 
+.admin-bulk-bar {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 760px;
+  margin-bottom: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.admin-bulk-bar[hidden] {
+  display: none;
+}
+
+.admin-bulk-bar span {
+  color: var(--navy);
+  font-weight: 900;
+}
+
+.admin-bulk-bar button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .admin-table {
   width: 100%;
   border-collapse: collapse;
@@ -176,6 +206,19 @@
   padding: 11px;
   border-bottom: 1px solid var(--line);
   vertical-align: top;
+}
+
+.admin-select-cell {
+  width: 44px;
+  min-width: 44px;
+  text-align: center;
+}
+
+.admin-select-cell input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--red);
+  cursor: pointer;
 }
 
 .admin-table code {
@@ -240,9 +283,16 @@
   .admin-public-link,
   .admin-toolbar button,
   .admin-table-head button,
+  .admin-bulk-bar button,
   .admin-card button {
     width: 100%;
     text-align: center;
+  }
+
+  .admin-bulk-bar {
+    align-items: stretch;
+    flex-direction: column;
+    min-width: 760px;
   }
 
   .admin-summary,
