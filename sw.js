@@ -1,11 +1,11 @@
-const CACHE_NAME = "neha-guide-v20260721-trivia-live-pool";
+const CACHE_NAME = "neha-guide-v20260721-kc-menu-links";
 const APP_ASSETS = [
   "./",
   "index.html",
-  "styles.css?v=20260701-aec-copy",
-  "app.js?v=20260721-trivia-live-pool",
+  "styles.css?v=20260721-kc-menu-links",
+  "app.js?v=20260721-kc-menu-links",
   "supabase-client.js?v=20260721-trivia-live-pool",
-  "data-bundle.js?v=20260623-domain-backend",
+  "data-bundle.js?v=20260721-kc-menu-links",
   "lead-config.js?v=20260721-hardening",
   "manifest.webmanifest",
   "assets/hs-govtech-logo.png?v=20260623-domain-backend",

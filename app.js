@@ -3094,6 +3094,7 @@ function renderPlaces() {
       <p>${escapeHtml(place.description)}</p>
       <div class="place-actions">
         <a href="${escapeAttr(placeUrl(place))}" target="_blank" rel="noreferrer">View map</a>
+        ${place.menuUrl ? `<a class="menu-button" href="${escapeAttr(place.menuUrl)}" target="_blank" rel="noreferrer">Menu</a>` : ""}
         <button type="button" data-place-directions="${state.guide.nearby.indexOf(place)}">Walk</button>
         <button class="rideshare-button" type="button" data-place-rideshare="${state.guide.nearby.indexOf(place)}" aria-expanded="false">Rideshare</button>
       </div>

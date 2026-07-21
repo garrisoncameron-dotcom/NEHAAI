@@ -1316,6 +1316,12 @@ select {
   background: rgba(4, 0, 72, 0.08);
 }
 
+.place-actions .menu-button {
+  color: #fff;
+  border-color: var(--light-blue);
+  background: var(--light-blue);
+}
+
 .place-actions button:disabled {
   color: #617282;
   border-color: #d1dde5;
