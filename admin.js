@@ -143,10 +143,15 @@
   }
 
   function adminHeaders() {
-    return {
+    const headers = {
       "Content-Type": "application/json",
       "x-admin-token": state.token
     };
+    if (config.anonKey) {
+      headers.apikey = config.anonKey;
+      headers.Authorization = `Bearer ${config.anonKey}`;
+    }
+    return headers;
   }
 
   function renderTabs() {
