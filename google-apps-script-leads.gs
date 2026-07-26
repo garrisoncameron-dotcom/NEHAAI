@@ -79,20 +79,38 @@ function jsonOutput_(payload, callback) {
 
 function recordLead_(payload) {
   const sheet = getLeadSheet_();
-  sheet.appendRow([
-    new Date(),
+  const email = String(payload.email || "").trim().toLowerCase();
+  const values = [
     payload.name || "",
     payload.agency || "",
-    payload.email || "",
+    email,
     payload.capturedAt || "",
     payload.source || "",
     payload.page || "",
     payload.userAgent || ""
-  ]);
+  ];
+  const existingRow = findLeadRowByEmail_(sheet, email);
+  if (existingRow > 1) {
+    sheet.getRange(existingRow, 2, 1, values.length).setValues([values]);
+  } else {
+    sheet.appendRow([
+      new Date(),
+      ...values
+    ]);
+  }
 
   return ContentService
     .createTextOutput(JSON.stringify({ ok: true }))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+function findLeadRowByEmail_(sheet, email) {
+  if (!email || sheet.getLastRow() < 2) return -1;
+  const emails = sheet.getRange(2, 4, sheet.getLastRow() - 1, 1).getValues();
+  for (let index = 0; index < emails.length; index++) {
+    if (String(emails[index][0] || "").trim().toLowerCase() === email) return index + 2;
+  }
+  return -1;
 }
 
 function recordTriviaScore_(payload) {

@@ -166,8 +166,22 @@
       ...userFields(payload),
       source: text(payload.source),
       page_url: text(payload.page),
-      submitted_at: text(payload.submittedAt || payload.createdAt || new Date().toISOString())
+      submitted_at: text(payload.capturedAt || payload.submittedAt || payload.createdAt || new Date().toISOString())
     };
+  }
+
+  async function upsertLeadRow(row) {
+    const email = text(row.email);
+    if (!email) return insertRow("lead_captures", row);
+    const existing = await selectRows("lead_captures", {
+      select: "id",
+      email: `eq.${email}`,
+      order: "created_at.asc",
+      limit: "1"
+    });
+    const id = text(existing?.[0]?.id);
+    if (!id) return insertRow("lead_captures", row);
+    return patchRows("lead_captures", { id: `eq.${id}` }, row);
   }
 
   function mapPayload(payload) {
@@ -337,7 +351,7 @@
       }
     }
     const rows = mapPayload(workingPayload);
-    await Promise.all(rows.map(([table, row]) => insertRow(table, row)));
+    await Promise.all(rows.map(([table, row]) => table === "lead_captures" ? upsertLeadRow(row) : insertRow(table, row)));
     if (text(payload?.type) === "drinkServed") {
       await patchRows("drink_redemptions", { redemption_code: `eq.${text(payload.code || payload.drinkCode)}` }, {
         status: "Served",
