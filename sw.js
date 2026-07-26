@@ -1,8 +1,8 @@
-const CACHE_NAME = "neha-guide-v20260726-lead-dedupe-fix";
+const CACHE_NAME = "neha-guide-v20260726-mobile-login";
 const APP_ASSETS = [
   "./",
   "index.html",
-  "styles.css?v=20260721-menu-button-visible",
+  "styles.css?v=20260726-mobile-login",
   "app.js?v=20260721-kc-menu-links",
   "supabase-client.js?v=20260726-lead-dedupe-fix",
   "data-bundle.js?v=20260721-kc-menu-links-datafix2",

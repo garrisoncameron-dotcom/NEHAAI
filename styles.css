@@ -54,6 +54,8 @@ body.lead-locked {
 
 .lead-card {
   width: min(440px, 100%);
+  max-height: calc(100dvh - 36px);
+  overflow-y: auto;
   display: grid;
   gap: 12px;
   padding: 24px;
@@ -2877,6 +2879,69 @@ select {
 }
 
 @media (max-width: 620px) {
+  body.lead-locked {
+    padding-bottom: 0;
+  }
+
+  .lead-gate {
+    align-items: start;
+    padding: max(12px, env(safe-area-inset-top)) 14px max(12px, env(safe-area-inset-bottom));
+    overflow-y: auto;
+  }
+
+  .lead-card {
+    width: 100%;
+    max-height: calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    gap: 9px;
+    padding: 18px;
+  }
+
+  .lead-logo {
+    width: 42px;
+    height: 44px;
+  }
+
+  .lead-card .eyebrow {
+    margin: 0;
+    font-size: 0.68rem;
+  }
+
+  .lead-card h2 {
+    margin: 0;
+    font-size: 1.7rem;
+    line-height: 1.05;
+  }
+
+  .lead-copy,
+  .lead-note {
+    margin: 0;
+    line-height: 1.32;
+  }
+
+  .lead-copy {
+    font-size: 0.92rem;
+  }
+
+  .lead-note {
+    font-size: 0.74rem;
+  }
+
+  .lead-card label {
+    gap: 4px;
+    font-size: 0.92rem;
+  }
+
+  .lead-card input {
+    min-height: 42px;
+  }
+
+  .lead-card button {
+    position: sticky;
+    bottom: 0;
+    min-height: 48px;
+    box-shadow: 0 -8px 18px rgba(255, 255, 255, 0.92);
+  }
+
   .install-help-backdrop {
     align-items: end;
     padding: 12px;
